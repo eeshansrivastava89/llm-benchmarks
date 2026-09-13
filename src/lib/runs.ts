@@ -1,8 +1,8 @@
 import { mkdir, readdir, readFile, rm, rmdir, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { isPathInside, resolveRunAssetPath } from "./asset-paths.ts";
-import type { RunPaths } from "./paths";
-import type { DsScorecard, DsSummary, RunError, RunMetadata } from "./types";
+import type { RunPaths } from "./paths.ts";
+import type { DsScorecard, DsSummary, RunError, RunMetadata } from "./types.ts";
 
 export type RunMetadataUpdate = Partial<Omit<RunMetadata, "runId">>;
 

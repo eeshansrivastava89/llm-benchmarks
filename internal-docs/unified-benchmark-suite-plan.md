@@ -1,6 +1,6 @@
 # Unified Benchmark Suite Plan
 
-**Status:** Phase 1 complete; Phase 2 not started  
+**Status:** Phase 2 complete; Phase 3 not started
 **Primary command:** `bench`  
 **Scope:** Repository consolidation, Inspect/visual/data-science execution, and local viewer orchestration
 
@@ -445,14 +445,14 @@ Exit criteria:
 
 ### Phase 2: Share visual benchmark discovery and run preparation
 
-- [ ] Add validated `kind` parsing to visual benchmark frontmatter.
-- [ ] Make the visual TypeScript modules directly importable by Node using explicit runtime extensions.
-- [ ] Add a small Bench-facing adapter around `loadBenchmarks()` and `prepareRun()`; do not duplicate their implementations.
-- [ ] Discover Visual and Data Science categories from frontmatter.
-- [ ] Remove the external visual repository root and runner-API concept from Bench configuration.
-- [ ] Validate data-science access configuration before preparing a run.
-- [ ] Add tests proving exactly the current five visual benchmarks and one data-science benchmark are discovered without hardcoded IDs.
-- [ ] Add fixture-based tests for visual and data-science run metadata and assets.
+- [x] Add validated `kind` parsing to visual benchmark frontmatter.
+- [x] Make the visual TypeScript modules directly importable by Node using explicit runtime extensions.
+- [x] Add a small Bench-facing adapter around `loadBenchmarks()` and `prepareRun()`; do not duplicate their implementations.
+- [x] Discover Visual and Data Science categories from frontmatter.
+- [x] Remove the external visual repository root and runner-API concept from Bench configuration.
+- [x] Validate data-science access configuration before preparing a run.
+- [x] Add tests proving exactly the current five visual benchmarks and one data-science benchmark are discovered without hardcoded IDs.
+- [x] Add fixture-based tests for visual and data-science run metadata and assets.
 
 Exit criteria:
 

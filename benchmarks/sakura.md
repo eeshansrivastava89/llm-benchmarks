@@ -1,5 +1,6 @@
 ---
 id: sakura
+kind: visual
 title: Sakura Tree
 description: Dreamy Japanese cherry blossom tree animation with falling petals.
 ---

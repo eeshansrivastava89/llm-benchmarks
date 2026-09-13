@@ -5,8 +5,8 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { generateStaticExport } from "../../src/lib/export";
-import type { RunMetadata } from "../../src/lib/types";
+import { generateStaticExport } from "../../src/lib/export.ts";
+import type { RunMetadata } from "../../src/lib/types.ts";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const execFileAsync = promisify(execFile);
@@ -21,6 +21,7 @@ async function writeBenchmark(directory: string) {
     join(directory, "sakura.md"),
     `---
 id: sakura
+kind: visual
 title: Sakura Particle Field
 description: Animated sakura scene.
 ---
@@ -132,6 +133,7 @@ describe("generateStaticExport", () => {
       benchmarks: [
         {
           id: "sakura",
+          kind: "visual",
           title: "Sakura Particle Field",
           description: "Animated sakura scene.",
           prompt: "Create a sakura animation with layered petals."

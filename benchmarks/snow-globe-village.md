@@ -1,5 +1,6 @@
 ---
 id: snow-globe-village
+kind: visual
 title: Snow Globe Village
 description: Magical snow globe with a cozy winter village, swirling snow, glass shine, and Santa sleigh loop.
 ---

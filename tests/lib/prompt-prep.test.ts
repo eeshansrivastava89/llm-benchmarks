@@ -2,14 +2,15 @@ import { mkdtemp, readFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { prepareRun } from "../../src/lib/prompt-prep";
-import { loadBenchmarks } from "../../src/lib/benchmarks";
-import type { BenchmarkRecord } from "../../src/lib/types";
+import { prepareRun } from "../../src/lib/prompt-prep.ts";
+import { loadBenchmarks } from "../../src/lib/benchmarks.ts";
+import type { BenchmarkRecord } from "../../src/lib/types.ts";
 
 const BENCHMARKS = join(import.meta.dirname, "..", "..", "benchmarks");
 
 const benchmark: BenchmarkRecord = {
   id: "sakura",
+  kind: "visual",
   title: "Sakura Tree",
   description: "Dreamy cherry blossom animation.",
   prompt: "Animate a cherry blossom tree."
@@ -149,6 +150,7 @@ describe("prepareRun", () => {
     const runsRoot = await mkdtemp(join(tmpdir(), "viewer-prep-ds-runs-"));
     const dsBenchmark: BenchmarkRecord = {
       id: "ab-test-analysis",
+      kind: "data-science",
       title: "A/B Test Production Analysis",
       description: "Analyze the A/B test.",
       prompt: "Analyze the A/B test data from Supabase."
@@ -158,7 +160,11 @@ describe("prepareRun", () => {
       modelId: "qwen3-30b-a3b",
       kind: "data-science",
       runsRoot,
-      now: new Date("2026-05-26T04:00:32.122Z")
+      now: new Date("2026-05-26T04:00:32.122Z"),
+      dataScienceAccess: {
+        baseUrl: "https://example.supabase.co/",
+        anonKey: "test-anon-key"
+      }
     });
 
     expect(prepared.run).toMatchObject({
@@ -179,5 +185,45 @@ describe("prepareRun", () => {
     expect(prepared.prompt).toContain("Analyze the A/B test data from Supabase.");
     expect(prepared.run.assets.html).toBeUndefined();
     expect(prepared.run.assets.preview).toBeUndefined();
+    await expect(readFile(prepared.paths.supabaseConfigPath, "utf8")).resolves.toContain(
+      "https://example.supabase.co/rest/v1/posthog_events"
+    );
+    expect((await stat(prepared.paths.supabaseConfigPath)).mode & 0o777).toBe(0o600);
+  });
+
+  it("rejects missing data-science access before creating a run folder", async () => {
+    const runsRoot = await mkdtemp(join(tmpdir(), "viewer-prep-ds-missing-"));
+    const dsBenchmark: BenchmarkRecord = {
+      id: "ab-test-analysis",
+      kind: "data-science",
+      title: "A/B Test Production Analysis",
+      description: "Analyze the A/B test.",
+      prompt: "Analyze the A/B test data from Supabase."
+    };
+
+    await expect(prepareRun({
+      benchmark: dsBenchmark,
+      modelId: "qwen3-30b-a3b",
+      runsRoot,
+      now: new Date("2026-05-26T04:00:32.122Z")
+    })).rejects.toThrow(/SUPABASE_URL and SUPABASE_ANON_KEY/);
+
+    await expect(stat(join(runsRoot, "ab-test-analysis"))).rejects.toMatchObject({
+      code: "ENOENT"
+    });
+  });
+
+  it("rejects a run kind that disagrees with benchmark frontmatter", async () => {
+    const runsRoot = await mkdtemp(join(tmpdir(), "viewer-prep-kind-mismatch-"));
+    await expect(prepareRun({
+      benchmark,
+      modelId: "model-a",
+      kind: "data-science",
+      dataScienceAccess: {
+        baseUrl: "https://example.supabase.co",
+        anonKey: "test-anon-key"
+      },
+      runsRoot
+    })).rejects.toThrow(/does not match benchmark kind/);
   });
 });

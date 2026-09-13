@@ -36,7 +36,9 @@ export function renderBenchmarks() {
       label: run.benchmark?.title ?? run.benchmark?.id
     }))
     .filter((item) => item.id && item.label);
-  const kindBenchmarks = state.benchmarks.filter((b) => benchmarkMatchesKind(b.id, state.selectedKind));
+  const kindBenchmarks = state.benchmarks.filter((benchmark) =>
+    benchmarkMatchesKind(benchmark, state.selectedKind)
+  );
   const benchmarkOptions = kindBenchmarks.map((benchmark) => ({ id: benchmark.id, label: benchmark.title }));
   const options = uniqueBy([...benchmarkOptions, ...runOptions], (item) => item.id);
   if (state.selectedBenchmark !== "all" && !options.some((option) => option.id === state.selectedBenchmark)) {

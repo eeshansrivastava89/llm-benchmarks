@@ -158,6 +158,7 @@ function assertPathInsideExportRoot(path: string, root: string): void {
 function toStaticBenchmark(benchmark: BenchmarkRecord): BenchmarkRecord {
   return {
     id: benchmark.id,
+    ...(benchmark.kind ? { kind: benchmark.kind } : {}),
     title: benchmark.title,
     description: benchmark.description,
     prompt: benchmark.prompt

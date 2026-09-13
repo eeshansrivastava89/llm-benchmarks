@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-05-07T04-00-32-122Z",
+  "benchmark": {
+    "id": "sakura",
+    "kind": "visual",
+    "title": "Sakura Tree",
+    "description": "Dreamy Japanese cherry blossom tree animation with falling petals.",
+    "prompt": "<benchmark-prompt>",
+    "sourcePath": "<benchmark-source>"
+  },
+  "model": {
+    "id": "model-a",
+    "slug": "model-a"
+  },
+  "status": "prepared",
+  "createdAt": "2026-05-07T04:00:32.122Z",
+  "updatedAt": "2026-05-07T04:00:32.122Z",
+  "preparedAt": "2026-05-07T04:00:32.122Z",
+  "runDirectory": "<run-directory>",
+  "assets": {
+    "metadata": "metadata.json",
+    "prompt": "prompt.md",
+    "html": "index.html",
+    "preview": "preview.png",
+    "video": "preview.webm",
+    "rawResponse": "response.raw.txt"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "cloud",
+    "intendedRunner": "Pi",
+    "backendLabel": "Cloud",
+    "baseUrl": "https://api.example.test/v1",
+    "model": "model-a",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": false
+    }
+  },
+  "tool": "pi"
+}

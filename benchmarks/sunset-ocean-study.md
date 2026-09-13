@@ -1,5 +1,6 @@
 ---
 id: sunset-ocean-study
+kind: visual
 title: Sunset Ocean Study
 description: Golden-hour ocean scene with rolling waves, reflected sunlight, and atmospheric rays.
 ---

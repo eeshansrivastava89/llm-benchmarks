@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "kind": "data-science",
+  "runId": "2026-05-26T04-00-32-122Z",
+  "benchmark": {
+    "id": "ab-test-analysis",
+    "kind": "data-science",
+    "title": "A/B Test Production Analysis",
+    "description": "Run a full production A/B test analysis against live Supabase data, including statistical tests, guardrail checks, visualizations, and a grounded ship/don't-ship recommendation.",
+    "prompt": "<benchmark-prompt>",
+    "sourcePath": "<benchmark-source>"
+  },
+  "model": {
+    "id": "model-ds",
+    "slug": "model-ds"
+  },
+  "status": "prepared",
+  "createdAt": "2026-05-26T04:00:32.122Z",
+  "updatedAt": "2026-05-26T04:00:32.122Z",
+  "preparedAt": "2026-05-26T04:00:32.122Z",
+  "runDirectory": "<run-directory>",
+  "assets": {
+    "metadata": "metadata.json",
+    "prompt": "prompt.md",
+    "rawResponse": "response.raw.txt",
+    "ds": {
+      "notebook": "analysis.ipynb",
+      "summary": "summary.json",
+      "chartDistribution": "chart-distribution.png",
+      "chartTreatmentEffect": "chart-treatment-effect.png",
+      "chartCompletionRates": "chart-completion-rates.png"
+    }
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "cloud",
+    "intendedRunner": "Pi",
+    "backendLabel": "Cloud",
+    "model": "model-ds",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": false
+    }
+  },
+  "tool": "pi"
+}

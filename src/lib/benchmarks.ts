@@ -1,16 +1,16 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export interface BenchmarkDefinition {
-  id: string;
-  title: string;
-  description: string;
-  prompt: string;
+import type { BenchmarkRecord, RunKind } from "./types.ts";
+
+export interface BenchmarkDefinition extends BenchmarkRecord {
+  kind: RunKind;
   sourcePath: string;
 }
 
 interface BenchmarkFrontmatter {
   id?: unknown;
+  kind?: unknown;
   title?: unknown;
   description?: unknown;
 }
@@ -79,6 +79,7 @@ export async function loadBenchmarks(
     const frontmatter = parsed.data as BenchmarkFrontmatter;
 
     const id = readRequiredString(frontmatter, "id", filename);
+    const kind = readBenchmarkKind(frontmatter, filename);
     const title = readRequiredString(frontmatter, "title", filename);
     const description = readRequiredString(frontmatter, "description", filename);
 
@@ -92,6 +93,7 @@ export async function loadBenchmarks(
     seenIds.set(id, filename);
     benchmarks.push({
       id,
+      kind,
       title,
       description,
       prompt: parsed.content.trim(),
@@ -100,6 +102,19 @@ export async function loadBenchmarks(
   }
 
   return benchmarks;
+}
+
+function readBenchmarkKind(
+  frontmatter: BenchmarkFrontmatter,
+  filename: string
+): RunKind {
+  const value = readRequiredString(frontmatter, "kind", filename);
+  if (value !== "visual" && value !== "data-science") {
+    throw new Error(
+      `Benchmark ${filename} has invalid frontmatter field "kind": expected "visual" or "data-science".`
+    );
+  }
+  return value;
 }
 
 function readRequiredString(

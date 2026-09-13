@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildRunPaths, createRunId, slugModelId } from "../../src/lib/paths";
+import { buildRunPaths, createRunId, slugModelId } from "../../src/lib/paths.ts";
 
 describe("slugModelId", () => {
   it("creates deterministic lowercase filesystem-safe model slugs", () => {
@@ -63,6 +63,7 @@ describe("buildRunPaths", () => {
     expect(paths.commandPath).toBe(join(paths.runDirectory, "command.txt"));
     expect(paths.htmlPath).toBe(join(paths.runDirectory, "index.html"));
     expect(paths.previewPath).toBe(join(paths.runDirectory, "preview.png"));
+    expect(paths.supabaseConfigPath).toBe(join(paths.runDirectory, "supabase.json"));
   });
 
   it("rejects path-like benchmark IDs before constructing run folders", () => {

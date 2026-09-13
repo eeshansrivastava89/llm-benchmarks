@@ -1,13 +1,14 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildToolPrompt } from "../../src/lib/prompt-prep";
-import { loadBenchmarks } from "../../src/lib/benchmarks";
+import { buildToolPrompt } from "../../src/lib/prompt-prep.ts";
+import { loadBenchmarks } from "../../src/lib/benchmarks.ts";
 
 const BENCHMARKS = join(import.meta.dirname, "..", "..", "benchmarks");
 
 describe("buildToolPrompt", () => {
   const visualBenchmark = {
     id: "sakura",
+    kind: "visual" as const,
     title: "Sakura Tree",
     description: "Cherry blossom animation.",
     prompt: "Animate a cherry blossom tree.",
@@ -16,6 +17,7 @@ describe("buildToolPrompt", () => {
 
   const dsBenchmark = {
     id: "ab-test-analysis",
+    kind: "data-science" as const,
     title: "A/B Test Analysis",
     description: "Analyze the A/B test.",
     prompt: "Analyze the A/B test data from Supabase.",
@@ -61,21 +63,31 @@ describe("loadBenchmarks", () => {
     }
   });
 
-  it("visual benchmarks include HTML creation instructions in their .md files", async () => {
+  it("discovers exactly five visual benchmarks from frontmatter", async () => {
     const benchmarks = await loadBenchmarks(BENCHMARKS);
-    const visualIds = ["sakura", "snow-globe-village", "sunset-ocean-study", "solar-system", "macro-wildflower-meadow"];
-    const visualBenchmarks = benchmarks.filter((b) => visualIds.includes(b.id));
-    expect(visualBenchmarks).toHaveLength(visualIds.length);
+    const visualBenchmarks = benchmarks.filter((benchmark) => benchmark.kind === "visual");
+    expect(visualBenchmarks.map((benchmark) => benchmark.id).sort()).toEqual([
+      "macro-wildflower-meadow",
+      "sakura",
+      "snow-globe-village",
+      "solar-system",
+      "sunset-ocean-study"
+    ]);
     for (const benchmark of visualBenchmarks) {
       expect(benchmark.prompt).toContain("Create a complete, self-contained HTML file");
       expect(benchmark.prompt).toContain("Write the file as `index.html`");
     }
   });
 
-  it("data-science benchmarks do not include HTML instructions", async () => {
+  it("discovers exactly one data-science benchmark from frontmatter", async () => {
     const benchmarks = await loadBenchmarks(BENCHMARKS);
-    const ds = benchmarks.find((b) => b.id === "ab-test-analysis");
-    expect(ds).toBeDefined();
+    const dataScienceBenchmarks = benchmarks.filter(
+      (benchmark) => benchmark.kind === "data-science"
+    );
+    expect(dataScienceBenchmarks.map((benchmark) => benchmark.id)).toEqual([
+      "ab-test-analysis"
+    ]);
+    const [ds] = dataScienceBenchmarks;
     if (ds) {
       expect(ds.prompt).not.toContain("Create a complete, self-contained HTML file");
       expect(ds.prompt).not.toContain("Write the file as `index.html`");

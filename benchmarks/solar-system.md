@@ -1,5 +1,6 @@
 ---
 id: solar-system
+kind: visual
 title: Solar System
 description: Realistic animated solar system with visible planets and orbital motion.
 ---

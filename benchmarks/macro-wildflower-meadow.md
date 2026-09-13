@@ -1,5 +1,6 @@
 ---
 id: macro-wildflower-meadow
+kind: visual
 title: Macro Wildflower Meadow
 description: Close-up colorful meadow scene with detailed butterflies, bees, flowers, and wind motion.
 ---

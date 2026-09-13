@@ -14,6 +14,7 @@ export type RunnerMode =
 
 export interface BenchmarkRecord {
   id: string;
+  kind?: RunKind;
   title: string;
   description: string;
   prompt: string;
@@ -203,5 +204,6 @@ export interface PreparedRun {
     htmlPath: string;
     metadataPath: string;
     previewPath: string;
+    supabaseConfigPath: string;
   };
 }

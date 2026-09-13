@@ -31,6 +31,7 @@ export interface RunPaths {
   htmlPath: string;
   previewPath: string;
   videoPath: string;
+  supabaseConfigPath: string;
 }
 
 export function slugModelId(
@@ -94,7 +95,8 @@ export function buildRunPaths(input: BuildRunPathsInput): RunPaths {
     commandPath: join(runDirectory, "command.txt"),
     htmlPath: join(runDirectory, "index.html"),
     previewPath: join(runDirectory, "preview.png"),
-    videoPath: join(runDirectory, "preview.webm")
+    videoPath: join(runDirectory, "preview.webm"),
+    supabaseConfigPath: join(runDirectory, "supabase.json")
   };
 }
 

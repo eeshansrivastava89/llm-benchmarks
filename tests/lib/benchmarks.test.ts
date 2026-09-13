@@ -2,7 +2,7 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
-import { loadBenchmarks } from "../../src/lib/benchmarks";
+import { loadBenchmarks } from "../../src/lib/benchmarks.ts";
 
 async function createBenchmarkDir(files: Record<string, string>) {
   const dir = await mkdtemp(join(tmpdir(), "llm-benchmarks-"));
@@ -21,6 +21,7 @@ describe("loadBenchmarks", () => {
     const benchmarkDir = await createBenchmarkDir({
       "sakura.md": `---
 id: sakura
+kind: visual
 title: Sakura Tree
 description: Dreamy cherry blossom animation.
 ---
@@ -34,6 +35,7 @@ Animate a cherry blossom tree.
     expect(benchmarks).toEqual([
       {
         id: "sakura",
+        kind: "visual",
         title: "Sakura Tree",
         description: "Dreamy cherry blossom animation.",
         prompt: "Animate a cherry blossom tree.",
@@ -46,6 +48,7 @@ Animate a cherry blossom tree.
     const benchmarkDir = await createBenchmarkDir({
       "broken.md": `---
 id: broken
+kind: visual
 title: Broken Benchmark
 ---
 
@@ -58,10 +61,42 @@ Missing a description.
     );
   });
 
+  it("rejects missing and invalid benchmark kinds", async () => {
+    const missingKindDir = await createBenchmarkDir({
+      "missing-kind.md": `---
+id: missing-kind
+title: Missing Kind
+description: Missing kind.
+---
+
+Prompt.
+`
+    });
+    const invalidKindDir = await createBenchmarkDir({
+      "invalid-kind.md": `---
+id: invalid-kind
+kind: image
+ title: Invalid Kind
+description: Invalid kind.
+---
+
+Prompt.
+`
+    });
+
+    await expect(loadBenchmarks(missingKindDir)).rejects.toThrow(
+      /missing-kind\.md.*kind/
+    );
+    await expect(loadBenchmarks(invalidKindDir)).rejects.toThrow(
+      /invalid-kind\.md.*expected "visual" or "data-science"/
+    );
+  });
+
   it("rejects duplicate benchmark IDs with a clear error", async () => {
     const benchmarkDir = await createBenchmarkDir({
       "first.md": `---
 id: duplicate
+kind: visual
 title: First
 description: First benchmark.
 ---
@@ -70,6 +105,7 @@ First prompt.
 `,
       "second.md": `---
 id: duplicate
+kind: visual
 title: Second
 description: Second benchmark.
 ---

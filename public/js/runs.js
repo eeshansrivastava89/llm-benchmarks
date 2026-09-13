@@ -1,13 +1,8 @@
 import { state } from "./state.js";
 import { uniqueBy } from "./utils.js";
 
-const DS_BENCHMARK_IDS = new Set(["ab-test-analysis"]);
-
-export function benchmarkMatchesKind(benchmarkId, kind) {
-  if (kind === "data-science") {
-    return DS_BENCHMARK_IDS.has(benchmarkId);
-  }
-  return !DS_BENCHMARK_IDS.has(benchmarkId);
+export function benchmarkMatchesKind(benchmark, kind) {
+  return (benchmark?.kind ?? "visual") === kind;
 }
 
 export function filteredRuns() {
