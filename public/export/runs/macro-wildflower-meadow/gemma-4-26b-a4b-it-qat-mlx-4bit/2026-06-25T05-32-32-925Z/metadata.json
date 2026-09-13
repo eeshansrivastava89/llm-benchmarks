@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-25T05-32-32-925Z",
+  "benchmark": {
+    "id": "macro-wildflower-meadow",
+    "title": "Macro Wildflower Meadow",
+    "description": "Close-up colorful meadow scene with detailed butterflies, bees, flowers, and wind motion.",
+    "prompt": "Create a complete, self-contained HTML file for the request below. Write the file as `index.html` in the current working directory. Do not create any folders, do not infer a filesystem path, and do not print the HTML in chat. The HTML must include all CSS and JavaScript inline and must not depend on external network assets.\n\nCreate a full-screen animated close-up meadow scene on a bright breezy day, as if viewed from inside a small patch of wildflowers. Show foreground flowers with detailed petals, stems, and leaves, with butterflies and bees moving through the scene on curved flight paths. Use a vivid, saturated color palette with fresh greens and warm sunlight. Add wind motion: stems sway gently, petals flutter, and insects ride small gusts.\n\nCompose the subject centered and fully visible within the viewport. Keep rendering lightweight so the animation runs smoothly in real time and loops naturally. Use a full-page canvas and no external libraries."
+  },
+  "model": {
+    "id": "gemma-4-26B-A4B-it-QAT-MLX-4bit",
+    "slug": "gemma-4-26b-a4b-it-qat-mlx-4bit",
+    "displayName": "Gemma 4 26B A4B QAT MLX 4bit (it)"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-25T05:32:32.925Z",
+  "updatedAt": "2026-06-25T05:37:58.892Z",
+  "preparedAt": "2026-06-25T05:32:32.925Z",
+  "completedAt": "2026-06-25T05:37:58.892Z",
+  "runDirectory": "export/runs/macro-wildflower-meadow/gemma-4-26b-a4b-it-qat-mlx-4bit/2026-06-25T05-32-32-925Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "omlx",
+    "intendedRunner": "Pi",
+    "backendLabel": "oMLX",
+    "model": "gemma-4-26B-A4B-it-QAT-MLX-4bit",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 22332,
+      "completionTokens": 9570,
+      "totalTokens": 31902
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-25T05:37:58.892Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-25T05:37:58.892Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1608,
+        "frames": 193,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-15T00-36-09-681Z",
+  "benchmark": {
+    "id": "snow-globe-village",
+    "title": "Snow Globe Village",
+    "description": "Magical snow globe with a cozy winter village, swirling snow, glass shine, and Santa sleigh loop.",
+    "prompt": "Create a complete, self-contained HTML file for the request below.\nWrite the file as `index.html` in the current working directory.\nDo not create any folders, do not infer a filesystem path, and do not print the HTML in chat.\n\nThe HTML must include all CSS and JavaScript inline and must not depend on external network assets.\nCreate a full-screen animated snow globe scene. The snow globe should sit centered on a warm wooden table and must fit comfortably inside the viewport, with the full glass dome, base, and reflections visible without cropping. Inside the globe, build a cozy alpine winter village with small houses, glowing windows, pine trees, snowy hills, and a simple clock tower or chapel silhouette. The village should feel detailed and charming, but use clean readable shapes rather than tiny clutter.\n\nAnimate thousands of snowflakes swirling inside the globe with layered depth: some flakes close to the glass, some around the village, and some fading into the background. The snow should move with believable globe-like physics: circular wind currents, varied speeds, gentle rotation, drifting arcs, and occasional soft gusts. Add a tiny Santa sleigh silhouette looping smoothly around the sky inside the globe; keep it simple and readable, like a dark cutout with a few reindeer shapes or a sleigh trail, so the animation does not depend on complex character anatomy.\n\nMake the glass dome visually convincing with curved highlights, soft reflections, subtle refraction, a frosted rim, and a bright specular shine that moves slightly as the scene animates. Add warm bokeh holiday lights outside the globe in the dark background, plus a polished base with a faint reflection on the table. The mood should be magical, cinematic, cozy, and festive without becoming visually cluttered.\n\nThe animation should loop naturally, run smoothly in real time, adapt to the browser viewport, and keep the globe as the clear centered subject. Use a full-page canvas or SVG and no external libraries.\n\nAfter generating the HTML, do a visual review of the animation using Playwright to ensure it meets the criteria above, and make any necessary adjustments until the animation is accurate and meets the desired quality & performance standards."
+  },
+  "model": {
+    "id": "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL",
+    "slug": "gemma-4-26b-a4b-it-qat-ud-q4-k-xl-66aa09c38f"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-15T00:36:09.681Z",
+  "updatedAt": "2026-06-15T03:32:31.858Z",
+  "preparedAt": "2026-06-15T00:36:09.681Z",
+  "completedAt": "2026-06-15T03:32:31.858Z",
+  "runDirectory": "export/runs/snow-globe-village/gemma-4-26b-a4b-it-qat-ud-q4-k-xl-66aa09c38f/2026-06-15T00-36-09-681Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "llama-cpp-mtp",
+    "intendedRunner": "Pi",
+    "backendLabel": "llama.cpp MTP",
+    "model": "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 20360,
+      "completionTokens": 13512,
+      "totalTokens": 33872
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-15T03:32:31.858Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-15T03:32:31.858Z",
+      "quality": {
+        "measuredFps": 120.1,
+        "minFps": 12,
+        "sampleMs": 1608,
+        "frames": 193,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

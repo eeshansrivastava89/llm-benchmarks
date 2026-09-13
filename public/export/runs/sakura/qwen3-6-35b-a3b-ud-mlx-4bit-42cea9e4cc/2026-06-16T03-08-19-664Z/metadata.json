@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-16T03-08-19-664Z",
+  "benchmark": {
+    "id": "sakura",
+    "title": "Sakura Tree",
+    "description": "Dreamy Japanese cherry blossom tree animation with falling petals.",
+    "prompt": "Create a complete, self-contained HTML file for the request below.\nWrite the file as `index.html` in the current working directory.\nDo not create any folders, do not infer a filesystem path, and do not print the HTML in chat.\n\nThe HTML must include all CSS and JavaScript inline and must not depend on external network assets.\nAnimate a dreamy Japanese cherry blossom tree in full bloom during a gentle petal storm. The complete tree must fit comfortably inside the viewport. Compose the tree as a centered full-body subject, not a cropped close-up. Keep the trunk base near the lower part of the canvas, but do not let it extend below the viewport. The crown should use no more than about 80% of the canvas width and 70% of the canvas height, so no branches or blossoms are clipped. Use dark, elegant lines for the trunk and branches, with pink-white blossoms throughout. Thousands of delicate pink and white petals should fall continuously with realistic physics: subtle rotation, wind-curved paths, varied speeds, and occasional small gusts. Add a soft pastel sky gradient from light pink to lavender, distant misty mountains, a few petals accumulating on the ground, and subtle sunlight from the top right. The scene should feel poetic and serene, loop naturally, and run in real time. Use a full-page canvas and no external libraries.\n\nAfter generating the HTML, do a visual review of the animation using Playwright to ensure it meets the criteria above, and make any necessary adjustments until the animation is accurate and meets the desired quality & performance standards.\n\nOptimize for smooth playback: the scene should animate at 30+ fps at 1080p. Prefer lightweight rendering for particles (e.g. simple shapes, cached sprites, batched draws) and avoid heavy per-frame effects that would drop the frame rate."
+  },
+  "model": {
+    "id": "Qwen3.6-35B-A3B-UD-MLX-4bit",
+    "slug": "qwen3-6-35b-a3b-ud-mlx-4bit-42cea9e4cc",
+    "displayName": "Qwen 3.6 35B A3B 4bit › UD-MLX"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-16T03:08:19.664Z",
+  "updatedAt": "2026-06-16T03:35:06.205Z",
+  "preparedAt": "2026-06-16T03:08:19.664Z",
+  "completedAt": "2026-06-16T03:35:06.205Z",
+  "runDirectory": "export/runs/sakura/qwen3-6-35b-a3b-ud-mlx-4bit-42cea9e4cc/2026-06-16T03-08-19-664Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "omlx",
+    "intendedRunner": "Pi",
+    "backendLabel": "oMLX",
+    "model": "Qwen3.6-35B-A3B-UD-MLX-4bit",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 118547,
+      "completionTokens": 48490,
+      "totalTokens": 167037
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-16T03:35:06.205Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-16T03:35:06.205Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1608,
+        "frames": 193,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

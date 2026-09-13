@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-05-12T14-37-32-896Z",
+  "benchmark": {
+    "id": "sunset-ocean-study",
+    "title": "Sunset Ocean Study",
+    "description": "Golden-hour ocean scene with rolling waves, reflected sunlight, and atmospheric rays.",
+    "prompt": "Create a full-screen animated ocean sunset viewed from low above the water, looking toward the horizon. The sun should be partially visible, with about one third of the disk above the horizon and two thirds below it, so the scene feels like late golden hour rather than midday. Use a warm palette of amber, peach, coral, rose, lavender, and deep blue shadows. The ocean should have broad rolling waves moving toward the viewer, with smaller ripples layered on top and bright reflected highlights forming a shimmering path from the sun to the foreground.\n\nAdd soft volumetric-looking sun rays breaking through thin clouds, but keep them subtle and elegant. Clouds should be stretched horizontally near the horizon, with glowing edges and darker undersides. The water should show changing reflections, foam accents on a few wave crests, and gentle color shifts from warm near the sun to cooler blue-violet in the foreground. Keep the composition clean: one horizon line, one sun, a readable wave rhythm, and no cluttered objects. The animation should loop naturally, run smoothly, adapt to the browser viewport, and keep the horizon, sun, and wave composition visible without awkward cropping.\n\nKeep the implementation performant while maximizing creativity. Use no external libraries.\n\nBuild and edit the file in small chunks instead of writing a monolith in one go, so it's easier for you to modify and debug components if anything doesn't work as expected."
+  },
+  "model": {
+    "id": "Qwen3.6-27B-4bit",
+    "slug": "qwen3-6-27b-4bit-5854adbd00"
+  },
+  "status": "completed",
+  "createdAt": "2026-05-12T14:37:32.896Z",
+  "updatedAt": "2026-05-13T06:51:22.844Z",
+  "preparedAt": "2026-05-12T14:37:32.896Z",
+  "completedAt": "2026-05-13T06:51:22.844Z",
+  "runDirectory": "export/runs/sunset-ocean-study/qwen3-6-27b-4bit-5854adbd00/2026-05-12T14-37-32-896Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "omlx",
+    "intendedRunner": "Pi",
+    "backendLabel": "oMLX",
+    "model": "Qwen3.6-27B-4bit",
+    "retries": 0
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-05-13T06:51:22.844Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-05-13T06:51:22.844Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1600,
+        "frames": 192,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

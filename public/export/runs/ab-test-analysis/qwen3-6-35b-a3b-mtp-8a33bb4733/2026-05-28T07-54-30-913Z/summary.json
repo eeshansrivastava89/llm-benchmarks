@@ -1,0 +1,49 @@
+{
+  "status": "significant",
+  "recommended_variant": "A",
+  "decision": "Variant A is recommended. Variant B has a significantly lower completion rate, indicating the 5-pineapple configuration is too difficult for players.",
+  "metrics": [
+    {
+      "label": "Completion Time",
+      "value": "A: 5.73s, B: 8.93s",
+      "delta": "-3.20s",
+      "delta_direction": "down",
+      "context": "Welch's t-test: p=0.000556, Cohen's d=-0.3987 (small)"
+    },
+    {
+      "label": "Completion Rate",
+      "value": "A: 89.0%, B: 70.8%",
+      "delta": "+0.1814",
+      "delta_direction": "up",
+      "context": "Chi-squared test: p=0.000019"
+    },
+    {
+      "label": "Repeat Rate",
+      "value": "A: 53.6%, B: 40.2%",
+      "delta": "+0.1340",
+      "delta_direction": "up",
+      "context": "z-test: p=0.008139"
+    },
+    {
+      "label": "Effect Size",
+      "value": "Cohen's d = -0.3987",
+      "context": "small effect size"
+    }
+  ],
+  "raw_stats": {
+    "p_value": 0.0005564632317720067,
+    "cohens_d": -0.39874956677641954,
+    "mean_a": 5.729217391304347,
+    "mean_b": 8.932675675675677,
+    "std_a": 7.715348312532342,
+    "std_b": 8.366568819561907,
+    "completion_rate_a": 0.8895027624309392,
+    "completion_rate_b": 0.7081339712918661,
+    "repeat_rate_a": 0.5359116022099447,
+    "repeat_rate_b": 0.4019138755980861,
+    "srm_p_value": 0.5736951117131985
+  },
+  "warnings": [],
+  "methodology": "Welch's t-test for completion time (per puzzle_completed event). Chi-squared test for completion rate (completed/started). z-test for repeat rate (repeated/started). SRM check via chi-squared on variant allocation. Cohen's d for effect size.",
+  "generated_at": "2026-05-28T08:04:39.243537+00:00"
+}

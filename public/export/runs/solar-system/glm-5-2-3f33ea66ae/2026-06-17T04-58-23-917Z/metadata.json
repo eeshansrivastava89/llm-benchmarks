@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-17T04-58-23-917Z",
+  "benchmark": {
+    "id": "solar-system",
+    "title": "Solar System",
+    "description": "Realistic animated solar system with visible planets and orbital motion.",
+    "prompt": "Create a complete, self-contained HTML file for the request below.\nWrite the file as `index.html` in the current working directory.\nDo not create any folders, do not infer a filesystem path, and do not print the HTML in chat.\n\nThe HTML must include all CSS and JavaScript inline and must not depend on external network assets.\nBuild an HTML animation of the solar system with the Sun at the center and all planets orbiting around it. Make the scene as realistic as practical while keeping all planets visible: the Sun should glow clearly but must not be so large that it hides or overwhelms Mercury, Venus, Earth, or Mars. Preserve the relative scale of orbital distances, use accurate orbital shapes, realistic planet colors, and visible rings where appropriate. Show the system from roughly a 30-degree viewing angle rather than directly overhead. Include as many realistic visual details as possible while keeping the animation smooth. Make sure the full solar system composition fits cleanly within the browser viewport without cropping important planets or orbital paths.\n\nAfter generating the HTML, do a visual review of the animation using Playwright to ensure it meets the criteria above, and make any necessary adjustments until the animation is accurate and meets the desired quality & performance standards.\n\nOptimize for smooth playback: the scene should animate at 30+ fps at 1080p. Prefer simple shapes and efficient canvas draws for planets and orbits, and avoid heavy per-frame glow or blur effects that would drop the frame rate."
+  },
+  "model": {
+    "id": "GLM 5.2",
+    "slug": "glm-5-2-3f33ea66ae",
+    "displayName": "GLM 5.2"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-17T04:58:23.917Z",
+  "updatedAt": "2026-06-17T05:23:51.302Z",
+  "preparedAt": "2026-06-17T04:58:23.917Z",
+  "completedAt": "2026-06-17T05:23:51.302Z",
+  "runDirectory": "export/runs/solar-system/glm-5-2-3f33ea66ae/2026-06-17T04-58-23-917Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "manual",
+    "modelSource": "cloud",
+    "backendLabel": "cloud",
+    "model": "GLM 5.2",
+    "retries": 0
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-17T05:23:51.302Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-17T05:23:51.302Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1600,
+        "frames": 192,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

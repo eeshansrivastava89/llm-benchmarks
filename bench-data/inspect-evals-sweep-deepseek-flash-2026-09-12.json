@@ -1,0 +1,1496 @@
+{
+  "schemaVersion": 1,
+  "sweep": {
+    "date": "2026-09-12",
+    "model": "deepseek/deepseek-flash",
+    "inspectAiVersion": "0.3.263",
+    "inspectEvalsVersion": "0.17.0",
+    "sampleLimit": 1,
+    "sampleShuffle": 42,
+    "report": "internal-docs/benchmark-sweep-deepseek-flash-2026-09-12.md"
+  },
+  "tasks": {
+    "inspect_evals/abstention_bench": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'hydra'"
+    },
+    "inspect_evals/agent_bench_os": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/agent_threat_bench_autonomy_hijack": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agent_threat_bench_data_exfil": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agent_threat_bench_memory_poison": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agentdojo": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ImportError: email-validator is not installed, run `pip install 'pydantic[email]'`"
+    },
+    "inspect_evals/agentharm": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/agentharm_benign": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/agentic_misalignment": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise Anthropic client"
+    },
+    "inspect_evals/agie_aqua_rat": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agie_logiqa_en": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agie_lsat_ar": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agie_lsat_lr": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agie_lsat_rc": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agie_math": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agie_sat_en": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agie_sat_en_without_passage": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/agie_sat_math": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/aime2024": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/aime2025": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/aime2026": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/air_bench": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/anima": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/ape_eval": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/apps": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/arc_challenge": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/arc_easy": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/assistant_bench_closed_book_one_shot": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/assistant_bench_closed_book_zero_shot": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/assistant_bench_web_browser": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/assistant_bench_web_search_one_shot": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ValueError: No valid provider found."
+    },
+    "inspect_evals/assistant_bench_web_search_zero_shot": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ValueError: No valid provider found."
+    },
+    "inspect_evals/b3": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ImportError: rouge_score is not installed. Install with `uv sync --extra b3` to run the b3 benchmark."
+    },
+    "inspect_evals/bbeh": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/bbeh_mini": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/bbh": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/bbq": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/bfcl": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/bigcodebench": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/bold": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'torch'"
+    },
+    "inspect_evals/boolq": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/browse_comp": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ValueError: No model specified (and no model environment variable defined)"
+    },
+    "inspect_evals/chembench": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/class_eval": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/coconot": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/commonsense_qa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/compute_eval": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/core_bench": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/cti_realm_25": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
+    },
+    "inspect_evals/cti_realm_25_minimal": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
+    },
+    "inspect_evals/cti_realm_25_seeded": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
+    },
+    "inspect_evals/cti_realm_50": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
+    },
+    "inspect_evals/cve_bench": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "AssertionError: To use CVEBench, please install the optional dependency by running `pip install https://github.com/Scott-Simmons/cve-bench.git` if you installed inspect_evals via pip or `uv sync --group cve_bench` if you are working inside the inspect_evals repo."
+    },
+    "inspect_evals/cybench": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'inspect_cyber'"
+    },
+    "inspect_evals/cybergym": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'inspect_cyber'"
+    },
+    "inspect_evals/cybermetric_10000": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/cybermetric_2000": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/cybermetric_500": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/cybermetric_80": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/cyse2_interpreter_abuse": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/cyse2_prompt_injection": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/cyse2_vulnerability_exploit": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/cyse3_visual_prompt_injection": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/cyse4_autocomplete": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/cyse4_instruct": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/cyse4_malware_analysis": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/cyse4_mitre": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/cyse4_mitre_frr": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/cyse4_multilingual_prompt_injection": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/cyse4_multiturn_phishing": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/cyse4_threat_intelligence": {
+      "result": "blocked",
+      "category": "network_or_remote_service",
+      "recommendation": "needs_investigation",
+      "diagnostic": "tenacity.RetryError: RetryError[<Future at 0x116884980 state=finished raised ConnectError>]"
+    },
+    "inspect_evals/docvqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/drop": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/ds1000": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/fortress_adversarial": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/fortress_benign": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/frontier_cs": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/frontier_cs_algorithmic": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/frontier_cs_research": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/frontierscience": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise deepseek client"
+    },
+    "inspect_evals/gaia": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "huggingface_hub.errors.GatedRepoError: 403 Client Error. (Request ID omitted)"
+    },
+    "inspect_evals/gaia_level1": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "huggingface_hub.errors.GatedRepoError: 403 Client Error. (Request ID omitted)"
+    },
+    "inspect_evals/gaia_level2": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "huggingface_hub.errors.GatedRepoError: 403 Client Error. (Request ID omitted)"
+    },
+    "inspect_evals/gaia_level3": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "huggingface_hub.errors.GatedRepoError: 403 Client Error. (Request ID omitted)"
+    },
+    "inspect_evals/gdm_classifier_evasion": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: No authentication for the Google provider: set the GOOGLE_API_KEY (or GEMINI_API_KEY) environment variable, or use OAuth / Application Default Credentials via `-M use_adc=true` or GOOGLE_USE_ADC=true."
+    },
+    "inspect_evals/gdm_cover_your_tracks": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: No authentication for the Google provider: set the GOOGLE_API_KEY (or GEMINI_API_KEY) environment variable, or use OAuth / Application Default Credentials via `-M use_adc=true` or GOOGLE_USE_ADC=true."
+    },
+    "inspect_evals/gdm_in_house_ctf": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_intercode_ctf": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_oversight_pattern": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_approved_directories": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_calculator_improvement": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_context_length_mod_instrumental_only": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_context_length_mod_irreversibility_only": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_database_tool": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_latency_calculator": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_max_messages_calculator": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_max_tokens": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_oversight_frequency": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_read_logs": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_self_reasoning_turn_off_filters": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gdm_sp01_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp01_milestones": {
+      "result": "blocked",
+      "category": "missing_configuration",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Exception: GDM_SELF_PROLIFERATION_DEV is not set. Set the GDM_SELF_PROLIFERATION_DEV environment variable to run this eval."
+    },
+    "inspect_evals/gdm_sp02_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp02_milestones": {
+      "result": "blocked",
+      "category": "missing_configuration",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Exception: GDM_SELF_PROLIFERATION_DEV is not set. Set the GDM_SELF_PROLIFERATION_DEV environment variable to run this eval."
+    },
+    "inspect_evals/gdm_sp03_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp03_milestones": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp04_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp04_milestones": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp05_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp05_milestones": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp07_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp07_milestones": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp08_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp08_milestones": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp09_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp09_milestones": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp10_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp10_milestones": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp12_e2e": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_sp12_milestones": {
+      "result": "blocked",
+      "category": "upstream_asset_error",
+      "recommendation": "deprioritize_until_upstream_fix",
+      "diagnostic": "RuntimeError: Failed to download required files from GitHub: Failed to download src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip from GitHub. HTTP Error 404: Not Found. URL: https://raw.githubusercontent.com/UKGovernmentBEIS/inspect_evals/0.17.0/src/inspect_evals/gdm_self_proliferation/data/sp08/secrets.zip. Check your internet connection and GitHub repository access."
+    },
+    "inspect_evals/gdm_strategic_rule_breaking": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: No authentication for the Google provider: set the GOOGLE_API_KEY (or GEMINI_API_KEY) environment variable, or use OAuth / Application Default Credentials via `-M use_adc=true` or GOOGLE_USE_ADC=true."
+    },
+    "inspect_evals/gdpval": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/gpqa_diamond": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/gsm8k": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/healthbench": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/healthbench_consensus": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/healthbench_hard": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/healthbench_meta_eval": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/hellaswag": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/hle": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "datasets.exceptions.DatasetNotFoundError: Dataset 'cais/hle' is a gated dataset on the Hub. Visit the dataset page at https://huggingface.co/datasets/cais/hle to ask for access."
+    },
+    "inspect_evals/humaneval": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/ifeval": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "AssertionError: To use instruction_following_eval, please install the optional dependency by running `pip install https://github.com/josejg/instruction_following_eval` if you installed inspect_evals via pip or `uv sync --group ifeval` if you are working inside the inspect_evals repo."
+    },
+    "inspect_evals/ifevalcode": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/infinite_bench_code_debug": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/infinite_bench_code_run": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/infinite_bench_kv_retrieval": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/infinite_bench_longbook_choice_eng": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/infinite_bench_longdialogue_qa_eng": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/infinite_bench_math_calc": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/infinite_bench_math_find": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/infinite_bench_number_string": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/infinite_bench_passkey": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/instrumentaleval": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/ipi_coding_agent": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/kernelbench": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'torch'"
+    },
+    "inspect_evals/lab_bench_cloning_scenarios": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/lab_bench_dbqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/lab_bench_figqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/lab_bench_litqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/lab_bench_protocolqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/lab_bench_seqqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/lab_bench_suppqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/lab_bench_tableqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/lingoly": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "datasets.exceptions.DatasetNotFoundError: Dataset 'ambean/lingOly' is a gated dataset on the Hub. Visit the dataset page at https://huggingface.co/datasets/ambean/lingOly to ask for access."
+    },
+    "inspect_evals/lingoly_too": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/livebench": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "AssertionError: To use LiveBench, please install the optional dependency by running `pip install https://github.com/LiveBench/LiveBench.git` if you installed inspect_evals via pip or `uv sync --group livebench` if you are working inside the inspect_evals repo."
+    },
+    "inspect_evals/livecodebench_pro": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "datasets.exceptions.DatasetNotFoundError: Dataset 'QAQAQAQAQ/LiveCodeBench-Pro' is a gated dataset on the Hub. Visit the dataset page at https://huggingface.co/datasets/QAQAQAQAQ/LiveCodeBench-Pro to ask for access."
+    },
+    "inspect_evals/macbench": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/make_me_pay": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: No authentication for the Google provider: set the GOOGLE_API_KEY (or GEMINI_API_KEY) environment variable, or use OAuth / Application Default Credentials via `-M use_adc=true` or GOOGLE_USE_ADC=true."
+    },
+    "inspect_evals/makemesay": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'nltk'"
+    },
+    "inspect_evals/mask": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/math": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'sympy'"
+    },
+    "inspect_evals/mathvista": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/mbpp": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/medqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/mgsm": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/mind2web": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/mind2web_sc": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/mle_bench": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "AssertionError: To use MLE-bench, please install the optional dependency by running `pip install https://github.com/openai/mle-bench.git` if you installed inspect_evals via pip or `uv sync --group mle_bench` if you are working inside the inspect_evals repo."
+    },
+    "inspect_evals/mle_bench_full": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "AssertionError: To use MLE-bench, please install the optional dependency by running `pip install https://github.com/openai/mle-bench.git` if you installed inspect_evals via pip or `uv sync --group mle_bench` if you are working inside the inspect_evals repo."
+    },
+    "inspect_evals/mle_bench_lite": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "AssertionError: To use MLE-bench, please install the optional dependency by running `pip install https://github.com/openai/mle-bench.git` if you installed inspect_evals via pip or `uv sync --group mle_bench` if you are working inside the inspect_evals repo."
+    },
+    "inspect_evals/mlrc_bench": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "RuntimeError: AICROWD_API_KEY environment variable is required for the product-rec task. Export it in your shell or add it to ./.env (AICROWD_API_KEY=...)."
+    },
+    "inspect_evals/mmiu": {
+      "result": "blocked",
+      "category": "network_or_remote_service",
+      "recommendation": "needs_investigation",
+      "diagnostic": "tenacity.RetryError: RetryError[<Future at 0x118298980 state=finished raised ReadTimeout>]"
+    },
+    "inspect_evals/mmlu_0_shot": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/mmlu_5_shot": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/mmlu_pro": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/mmmu_multiple_choice": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/mmmu_open": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/moru": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/musr": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/niah": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/novelty_bench": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'torch'"
+    },
+    "inspect_evals/onet_m6": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/osworld": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/osworld_small": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/paperbench": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/paperbench_score": {
+      "result": "blocked",
+      "category": "missing_asset",
+      "recommendation": "needs_investigation",
+      "diagnostic": "FileNotFoundError: No submission metadata files found in submissions. Run the agent task with save_submission first."
+    },
+    "inspect_evals/paws": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/persistbench_beneficial_memory": {
+      "result": "blocked",
+      "category": "model_incompatible",
+      "recommendation": "needs_investigation",
+      "diagnostic": "BadRequestError('Error code: 400 - {\\'error\\': {\\'message\\': \\'Provider returned error\\', \\'code\\': 400, \\'metadata\\': {\\'raw\\': \\'[{\\\\n \"error\": {\\\\n \"code\": 400,\\\\n \"message\": \"Requested maximum tokens of 131072 exceeds the maximum output tokens limit: 102400.\",\\\\n \"status\": \"INVALID_ARGUMENT\"\\\\n }\\\\n}\\\\n]\\', \\'provider_name\\': \\'Google\\', \\'is_byok\\': False}}, \\'user_id\\': \\'user_30nuE5pKQkVC9exp2zzOb40narW\\'}')"
+    },
+    "inspect_evals/persistbench_cross_domain": {
+      "result": "blocked",
+      "category": "model_incompatible",
+      "recommendation": "needs_investigation",
+      "diagnostic": "BadRequestError('Error code: 400 - {\\'error\\': {\\'message\\': \\'Provider returned error\\', \\'code\\': 400, \\'metadata\\': {\\'raw\\': \\'[{\\\\n \"error\": {\\\\n \"code\": 400,\\\\n \"message\": \"Requested maximum tokens of 131072 exceeds the maximum output tokens limit: 102400.\",\\\\n \"status\": \"INVALID_ARGUMENT\"\\\\n }\\\\n}\\\\n]\\', \\'provider_name\\': \\'Google\\', \\'is_byok\\': False}}, \\'user_id\\': \\'user_30nuE5pKQkVC9exp2zzOb40narW\\'}')"
+    },
+    "inspect_evals/persistbench_sycophancy": {
+      "result": "blocked",
+      "category": "model_incompatible",
+      "recommendation": "needs_investigation",
+      "diagnostic": "BadRequestError('Error code: 400 - {\\'error\\': {\\'message\\': \\'Provider returned error\\', \\'code\\': 400, \\'metadata\\': {\\'raw\\': \\'[{\\\\n \"error\": {\\\\n \"code\": 400,\\\\n \"message\": \"Requested maximum tokens of 131072 exceeds the maximum output tokens limit: 102400.\",\\\\n \"status\": \"INVALID_ARGUMENT\"\\\\n }\\\\n}\\\\n]\\', \\'provider_name\\': \\'Google\\', \\'is_byok\\': False}}, \\'user_id\\': \\'user_30nuE5pKQkVC9exp2zzOb40narW\\'}')"
+    },
+    "inspect_evals/personality_BFI": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/personality_TRAIT": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "datasets.exceptions.DatasetNotFoundError: Dataset 'mirlab/TRAIT' is a gated dataset on the Hub. Visit the dataset page at https://huggingface.co/datasets/mirlab/TRAIT to ask for access."
+    },
+    "inspect_evals/piqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/pre_flight": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/pubmedqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/race_h": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sad_facts_human_defaults": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sad_facts_llms": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sad_influence": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sad_stages_full": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sad_stages_oversight": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/scbench": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/scicode": {
+      "result": "blocked",
+      "category": "runtime_error",
+      "recommendation": "needs_investigation",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: [bold]ERROR[/bold]: Google Drive download requires optional dependencies. Install with:"
+    },
+    "inspect_evals/sciknoweval": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sec_qa_v1": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sec_qa_v1_5_shot": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sec_qa_v2": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sec_qa_v2_5_shot": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sevenllm_mcq_en": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sevenllm_mcq_zh": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/sevenllm_qa_en": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'rouge'"
+    },
+    "inspect_evals/sevenllm_qa_zh": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'rouge'"
+    },
+    "inspect_evals/simpleqa": {
+      "result": "blocked",
+      "category": "model_incompatible",
+      "recommendation": "needs_investigation",
+      "diagnostic": "BadRequestError(\"Error code: 400 - {'error': {'message': 'Thinking mode does not support this tool_choice', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_request_error'}}\")"
+    },
+    "inspect_evals/simpleqa_verified": {
+      "result": "blocked",
+      "category": "model_incompatible",
+      "recommendation": "needs_investigation",
+      "diagnostic": "BadRequestError(\"Error code: 400 - {'error': {'message': 'Thinking mode does not support this tool_choice', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_request_error'}}\")"
+    },
+    "inspect_evals/sosbench": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/squad": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/stereoset": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/strong_reject": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/swe_bench": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "AssertionError: To run SWE-bench, please install the optional SWE-bench dependency, by running `uv sync --extra swe_bench`"
+    },
+    "inspect_evals/swe_bench_verified_mini": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "AssertionError: To run SWE-bench, please install the optional SWE-bench dependency, by running `uv sync --extra swe_bench`"
+    },
+    "inspect_evals/swe_lancer": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/sycophancy": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/tac": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "huggingface_hub.errors.GatedRepoError: 403 Client Error. (Request ID omitted)"
+    },
+    "inspect_evals/tac_welfare": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "huggingface_hub.errors.GatedRepoError: 403 Client Error. (Request ID omitted)"
+    },
+    "inspect_evals/tau2_airline": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/tau2_banking": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/tau2_retail": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/tau2_telecom": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/theagentcompany": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ModuleNotFoundError: No module named 'inspect_cyber'"
+    },
+    "inspect_evals/threecb": {
+      "result": "blocked",
+      "category": "sandbox_unavailable",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "Docker sandbox could not start because the local Docker daemon was unavailable."
+    },
+    "inspect_evals/truthfulqa": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/uccb": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise OpenAI client"
+    },
+    "inspect_evals/usaco": {
+      "result": "blocked",
+      "category": "runtime_error",
+      "recommendation": "needs_investigation",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: [bold]ERROR[/bold]: Google Drive download requires optional dependencies. Install with:"
+    },
+    "inspect_evals/vimgolf_single_turn": {
+      "result": "blocked",
+      "category": "missing_dependency",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "ImportError: vimgolf library is not installed. Please install the vimgolf library to use this task via `uv sync --extra vimgolf`."
+    },
+    "inspect_evals/vqa_rad": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/vstar_bench_attribute_recognition": {
+      "result": "inconclusive",
+      "category": "timeout_or_too_heavy",
+      "recommendation": "manual_review",
+      "diagnostic": "Did not complete within the extended 10-minute smoke-test window."
+    },
+    "inspect_evals/vstar_bench_spatial_relationship_reasoning": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/winogrande": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "general_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/wmdp_bio": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/wmdp_chem": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/wmdp_cyber": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/worldsense": {
+      "result": "passed",
+      "category": "passed",
+      "recommendation": "specialized_candidate",
+      "diagnostic": "Inspect completed and wrote a successful one-sample log."
+    },
+    "inspect_evals/writingbench": {
+      "result": "blocked",
+      "category": "credential_or_aux_model",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "inspect_ai._util.error.PrerequisiteError: ERROR: Unable to initialise Anthropic client"
+    },
+    "inspect_evals/xstest": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "datasets.exceptions.DatasetNotFoundError: Dataset 'walledai/XSTest' is a gated dataset on the Hub. Visit the dataset page at https://huggingface.co/datasets/walledai/XSTest to ask for access."
+    },
+    "inspect_evals/zerobench": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "datasets.exceptions.DatasetNotFoundError: Dataset 'jonathan-roberts1/zerobench' is a gated dataset on the Hub. Visit the dataset page at https://huggingface.co/datasets/jonathan-roberts1/zerobench to ask for access."
+    },
+    "inspect_evals/zerobench_subquestions": {
+      "result": "blocked",
+      "category": "gated_access",
+      "recommendation": "conditional_after_setup",
+      "diagnostic": "datasets.exceptions.DatasetNotFoundError: Dataset 'jonathan-roberts1/zerobench' is a gated dataset on the Hub. Visit the dataset page at https://huggingface.co/datasets/jonathan-roberts1/zerobench to ask for access."
+    }
+  }
+}

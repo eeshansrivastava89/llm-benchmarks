@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>offgrid-ai-benchmark · Arena Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a14; --bg2:#0f0f1c; --panel:#14142a; --panel2:#1a1a32;
+    --border:rgba(255,255,255,0.09); --border2:rgba(255,255,255,0.14);
+    --text:#ececf6; --muted:#9696b4; --dim:#65658a;
+    --accent:#10a37f; --gold:#f5c451; --gold-d:rgba(245,196,81,0.14);
+    --good:#34d399; --warn:#f5a623; --bad:#ff6b7a; --blue:#5b9dff;
+    --omlx:#9f7aea; --llama:#d9903d; --llamamtp:#e0853d; --ollama:#8aa0b6; --cloud:#5b9dff; --pi:#34d399;
+    --font:'Space Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:radial-gradient(140% 90% at 50% -10%,#16162e 0%,var(--bg) 60%);color:var(--text);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  ::selection{background:rgba(245,196,81,0.3)}
+
+  .app{max-width:1320px;margin:0 auto;padding:0 20px 40px}
+
+  /* header */
+  .hdr{display:flex;align-items:center;gap:14px;padding:16px 0 14px;position:sticky;top:0;z-index:30;
+    background:linear-gradient(180deg,rgba(10,10,20,0.92),rgba(10,10,20,0));backdrop-filter:blur(10px)}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;white-space:nowrap}
+  .brand .mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--gold),#c9982e);
+    display:grid;place-items:center;color:#241a05;font-size:14px;font-weight:800;box-shadow:0 0 18px var(--gold-d)}
+  .brand small{display:block;font-size:8.5px;font-weight:600;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase}
+  .vs{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-d);
+    border:1px solid rgba(245,196,81,0.3);border-radius:999px;padding:4px 11px}
+  .spacer{flex:1}
+  .density{display:flex;gap:5px;border:1px solid var(--border);border-radius:9px;padding:3px;background:var(--panel)}
+  .density button{width:34px;height:26px;border:0;border-radius:6px;background:none;color:var(--muted);font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer}
+  .density button.on{background:var(--gold);color:#241a05}
+
+  /* prompt selector */
+  .promptbar{display:flex;align-items:center;gap:14px;padding:18px 0 22px;border-bottom:1px solid var(--border);margin-bottom:26px}
+  .promptbar .lab{font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+  .ptabs{display:flex;gap:8px;flex-wrap:wrap}
+  .ptab{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--border);
+    background:var(--panel);color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;transition:.18s}
+  .ptab .n{font-family:var(--mono);font-size:10px;color:var(--dim);background:rgba(255,255,255,0.05);padding:1px 6px;border-radius:5px}
+  .ptab:hover{color:var(--text);border-color:var(--border2)}
+  .ptab.on{background:linear-gradient(135deg,var(--gold),#d9a82e);color:#241a05;border-color:var(--gold);box-shadow:0 0 22px var(--gold-d)}
+  .ptab.on .n{background:rgba(36,26,5,0.25);color:#241a05}
+
+  /* stage */
+  .ring{display:grid;gap:18px;margin-bottom:24px}
+  .ring[data-n="2"]{grid-template-columns:1fr 1fr}
+  .ring[data-n="3"]{grid-template-columns:1fr 1fr 1fr}
+  .slot{position:relative;border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--panel);
+    transition:border-color .2s,transform .2s,box-shadow .2s}
+  .slot:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 18px 50px rgba(0,0,0,0.5)}
+  .slot.champ{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 40px var(--gold-d)}
+  .stage-media{position:relative;aspect-ratio:16/10;overflow:hidden;background:#000}
+  .stage-media img{width:100%;height:100%;object-fit:cover;transition:transform .5s,filter .3s}
+  .slot:hover .stage-media img{transform:scale(1.03);filter:brightness(0.92)}
+  .stage-media .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.45) 0%,transparent 30%,transparent 55%,rgba(10,10,20,0.92) 100%)}
+  .belt{position:absolute;top:13px;left:13px;display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;font-weight:700;
+    color:#fff;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.14);border-radius:999px;padding:5px 11px}
+  .belt .b{background:var(--gold);color:#241a05;padding:1px 6px;border-radius:5px;font-size:9px}
+  .crown{position:absolute;top:13px;right:13px;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),#c9982e);
+    color:#241a05;border-radius:999px;padding:5px 12px 5px 8px;font-size:11px;font-weight:800;letter-spacing:0.04em;box-shadow:0 0 26px var(--gold-d);transform:translateY(-4px);opacity:0;transition:.25s}
+  .slot.champ .crown{transform:translateY(0);opacity:1}
+  .crown .star{font-size:13px}
+  .fpsbig{position:absolute;bottom:13px;right:13px;text-align:right}
+  .fpsbig .v{font-family:var(--mono);font-size:30px;font-weight:700;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+  .fpsbig .u{font-size:9px;color:rgba(255,255,255,0.7);font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
+
+  /* slot body: identity + tale of the tape */
+  .slot-body{padding:16px 18px 18px}
+  .ident{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .ident .who h3{font-size:16px;font-weight:700;letter-spacing:-0.01em;line-height:1.15}
+  .ident .who .bench{font-size:11px;color:var(--muted);margin-top:3px}
+  .pills{display:flex;gap:6px;margin-top:8px}
+  .pill{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;font-size:9.5px;font-weight:700;border:1px solid;font-family:var(--mono)}
+  .pill[data-t="omlx"]{border-color:rgba(159,122,234,0.4);background:rgba(159,122,234,0.12);color:#c4a8ff}
+  .pill[data-t="llamacpp"]{border-color:rgba(217,144,61,0.4);background:rgba(217,144,61,0.12);color:#ffc183}
+  .pill[data-t="llamacpp-mtp"]{border-color:rgba(224,133,61,0.45);background:rgba(224,133,61,0.14);color:#ffb37a}
+  .pill[data-t="ollama"]{border-color:rgba(138,160,182,0.4);background:rgba(138,160,182,0.12);color:#bccfe0}
+  .pill[data-t="cloud"]{border-color:rgba(91,157,255,0.4);background:rgba(91,157,255,0.12);color:#a9caff}
+  .pill[data-t="pi"]{border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.12);color:#9ff0cf;border-style:dashed}
+  .verdict-tag{flex:0 0 auto;font-size:10px;font-weight:800;letter-spacing:0.04em;border-radius:8px;padding:6px 10px;border:1px solid}
+  .verdict-tag.champ{background:rgba(52,211,153,0.14);border-color:rgba(52,211,153,0.4);color:var(--good)}
+  .verdict-tag.good{background:rgba(16,163,127,0.12);border-color:rgba(16,163,127,0.35);color:#34d399}
+  .verdict-tag.slow{background:rgba(245,166,35,0.12);border-color:rgba(245,166,35,0.4);color:var(--warn)}
+  .verdict-tag.fail{background:rgba(255,107,122,0.12);border-color:rgba(255,107,122,0.4);color:var(--bad)}
+
+  /* tale of the tape (boxing scorecard) */
+  .tape-title{display:flex;align-items:center;gap:8px;font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:2px 0 10px}
+  .tape-title .ln{flex:1;height:1px;background:var(--border)}
+  .tape{display:grid;gap:0;border:1px solid var(--border);border-radius:11px;overflow:hidden}
+  .trow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px}
+  .trow:last-child{border-bottom:0}
+  .trow:nth-child(odd){background:rgba(255,255,255,0.015)}
+  .trow .k{font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim)}
+  .trow .v{font-family:var(--mono);font-size:14px;font-weight:700;text-align:center;min-width:54px}
+  .trow .ctx{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right}
+  .trow .ctx.l{text-align:left}
+  .trow .v.win{color:var(--gold);text-shadow:0 0 12px var(--gold-d)}
+  .trow .v.lo{color:var(--dim)}
+  .bar-mini{height:5px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:4px;width:70px;margin-left:auto}
+  .bar-mini.l{margin-left:0;margin-right:auto}
+  .bar-mini i{display:block;height:100%}
+
+  /* film strip scrubber */
+  .strip-wrap{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:14px}
+  .strip-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .strip-head .lab{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+  .strip-head .count{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .strip-head .hint{margin-left:auto;font-size:10px;color:var(--dim);font-family:var(--mono)}
+  .strip{display:flex;gap:10px;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}
+  .strip::-webkit-scrollbar{height:7px}.strip::-webkit-scrollbar-thumb{background:#2a2a44;border-radius:4px}
+  .thumb{flex:0 0 auto;width:120px;border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;background:#000;transition:.18s;position:relative}
+  .thumb:hover{border-color:var(--border2);transform:translateY(-2px)}
+  .thumb.inring{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+  .thumb .ph{aspect-ratio:16/10;background-size:cover;background-position:center}
+  .thumb .meta{padding:7px 9px}
+  .thumb .meta .m{font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .thumb .meta .s{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:2px;display:flex;justify-content:space-between}
+  .thumb .badge{position:absolute;top:6px;left:6px;font-family:var(--mono);font-size:9px;font-weight:700;border-radius:5px;padding:2px 5px}
+  .thumb .badge.champ{background:var(--gold);color:#241a05}
+  .thumb .badge.fail{background:rgba(255,107,122,0.85);color:#fff}
+  .thumb .badge.good{background:rgba(52,211,153,0.85);color:#06241b}
+
+  /* annotation */
+  .ann{position:fixed;right:16px;bottom:16px;z-index:30;max-width:320px;background:var(--panel);
+    border:1px solid var(--border2);border-radius:13px;padding:13px 14px;box-shadow:0 16px 44px rgba(0,0,0,0.6);font-size:11px;line-height:1.55;color:var(--muted);display:none}
+  .ann.show{display:block}
+  .ann b{color:var(--text);display:block;margin-bottom:5px;font-size:11.5px}
+  .ann .x{position:absolute;top:8px;right:10px;color:var(--dim);cursor:pointer;font-size:14px}
+  .ann code{font-family:var(--mono);color:var(--gold)}
+  .ann-toggle{position:fixed;right:16px;bottom:16px;z-index:31;display:flex;align-items:center;gap:7px;
+    background:var(--panel);border:1px solid var(--border2);border-radius:999px;padding:7px 13px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer}
+  .ann-toggle .led{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold-d)}
+
+  @media(max-width:880px){ .ring[data-n="3"]{grid-template-columns:1fr 1fr} }
+  @media(max-width:620px){ .ring[data-n="2"],.ring[data-n="3"]{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hdr">
+    <div class="brand"><span class="mark">▲</span><div>offgrid-ai-benchmark<small>Arena · mockup C</small></div></div>
+    <span class="vs">VS</span>
+    <div class="spacer"></div>
+    <div class="density" id="density">
+      <button data-n="2" class="on">2</button>
+      <button data-n="3">3</button>
+    </div>
+  </header>
+
+  <div class="promptbar">
+    <span class="lab">In the ring</span>
+    <div class="ptabs" id="ptabs"></div>
+  </div>
+
+  <div class="ring" id="ring" data-n="2"></div>
+
+  <div class="strip-wrap">
+    <div class="strip-head">
+      <span class="lab">Contenders</span><span class="count" id="stripCount"></span>
+      <span class="hint">click to swap into the ring · hover to quick-scrub</span>
+    </div>
+    <div class="strip" id="strip"></div>
+  </div>
+</div>
+
+<button class="ann-toggle" id="annToggle"><span class="led"></span> Design notes</button>
+<div class="ann" id="ann"><span class="x" id="annX">×</span>
+  <b>Mockup C — “Arena”</b>
+  A head-to-head <b>versus</b> theater: pick a prompt, send 2–3 models into the ring at once, and read each as a boxing-style “tale of the tape” — render FPS, tokens, speed, turns, wall-clock, and speculative-decode acceptance compared side by side. The smoothest render takes the <b>champion</b> crown (gold). The film-strip below scrubs the whole field for that prompt — click to swap a contender in, hover to quick-flip. This is the third angle: the benchmark’s whole purpose is comparison, so the stats become a competitive scorecard. Everything is real, from <code>runs/</code>.
+</div>
+
+<script src="_data.js"></script>
+<script>
+var U=window.BENCH_UTIL, RUNS=window.RUNS;
+var el=function(c){return document.createElement(c);};
+var curBench='sakura';
+var ringN=2;
+var ringSlots=[]; // run indices currently in the ring
+
+function contenders(bench){ return RUNS.filter(function(r){return r.bench===bench;}); }
+function ringChampion(){ // crown the winner of the CURRENT match (best FPS, tiebreak fewest turns)
+  if(ringSlots.length<2) return ringSlots[0]??-1;
+  var best=ringSlots[0];
+  ringSlots.forEach(function(i){ var r=RUNS[i],b=RUNS[best]; if(r.fps>b.fps||(r.fps===b.fps&&r.turns<b.turns)) best=i; });
+  return best;
+}
+
+function renderPtabs(){
+  var t=document.getElementById('ptabs'); t.innerHTML='';
+  window.BENCHMARKS.forEach(function(b){
+    var n=contenders(b.id).length; if(!n)return;
+    var p=el('button'); p.className='ptab'+(b.id===curBench?' on':'');
+    p.innerHTML=b.title+' <span class="n">'+n+'</span>';
+    p.onclick=function(){ curBench=b.id; initRing(); renderAll(); };
+    t.appendChild(p);
+  });
+}
+
+function initRing(){
+  var cs=contenders(curBench);
+  ringSlots=cs.slice(0,ringN).map(function(r){return RUNS.indexOf(r);});
+}
+
+function fpsColor(tone){return tone==='fail'?'#ff6b7a':tone==='slow'?'#f5a623':tone==='good'?'#34d399':'#10a37f';}
+
+function renderRing(){
+  var ring=document.getElementById('ring'); ring.dataset.n=String(ringN); ring.innerHTML='';
+  var champ=ringChampion();
+  ringSlots.forEach(function(idx,i){
+    var r=RUNS[idx]; if(!r)return;
+    var tone=U.fpsTone(r.fps,r.minFps); var col=fpsColor(tone);
+    var isChamp=idx===champ;
+    var slot=el('div'); slot.className='slot'+(isChamp?' champ':'');
+    slot.innerHTML=
+      '<div class="stage-media"><img src="'+r.img+'" onerror="this.style.opacity=.2"><div class="scrim"></div>'+
+        '<div class="belt"><span class="b">A'+(i+1)+'</span>'+(r.modelDisplay||r.model)+'</div>'+
+        (isChamp?'<div class="crown"><span class="star">♛</span>CHAMPION</div>':'')+
+        '<div class="fpsbig"><div class="v" style="color:'+col+'">'+U.fmtNum(r.fps,0)+'</div><div class="u">'+r.minFps+'fps min</div></div></div>'+
+      '<div class="slot-body"><div class="ident"><div class="who"><h3>'+(r.modelDisplay||r.model)+'</h3>'+
+        '<div class="bench">'+r.title+' · '+r.date+'</div>'+
+        '<div class="pills"><span class="pill" data-t="'+U.srcTone(r.src)+'">'+r.backend+'</span><span class="pill" data-t="'+U.harnessTone(r.harness)+'">'+r.harness+'</span></div></div>'+
+        '<span class="verdict-tag '+tone+'">'+(tone==='champ'?'SMOOTH':tone==='good'?'OK':tone==='slow'?'MARGINAL':'SLOW RENDER')+'</span></div>'+
+      tapeRowHTML(ringSlots.map(function(j){return RUNS[j];}), i)+
+      '</div>';
+    slot.onclick=function(){ /* could open detail */ };
+    ring.appendChild(slot);
+  });
+}
+
+// tale of the tape: rows compare metric across ring contenders, highlighting winner
+function tapeRowHTML(slots, myIdx){
+  var rows=[
+    {k:'Render FPS',get:function(r){return r.fps;},fmt:function(v){return U.fmtNum(v,0);},col:function(t){return fpsColor(t);},hi:1,ctx:function(r){return r.frames+' frames'}},
+    {k:'Tokens',get:function(r){return r.totalTok;},fmt:function(v){return U.fmtTok(v);},col:'#5b9dff',hi:0,ctx:function(r){return U.fmtTok(r.promptTok)+'p'}},
+    {k:'Gen tok/s',get:function(r){return r.gen;},fmt:function(v){return v!=null?U.fmtNum(v,1):'—';},col:'#34d399',hi:1,ctx:function(r){return r.prefill!=null?U.fmtNum(r.prefill,0)+' pre':'—'}},
+    {k:'TTFT',get:function(r){return r.ttft;},fmt:function(v){return v!=null?U.fmtNum(v,0)+'ms':'—';},col:'#5b9dff',hi:0,ctx:function(){return 'first token'}},
+    {k:'Turns',get:function(r){return r.turns;},fmt:function(v){return String(v);},col:'#f5a623',hi:0,ctx:function(r){return r.toolCalls+' tools'}},
+    {k:'Wall clock',get:function(r){return r.wallMs;},fmt:function(v){return U.fmtMs(v);},col:'#9696b4',hi:0,ctx:function(){return 'end-to-end'}}
+  ];
+  if(slots.some(function(r){return r.specAccept!=null;})) rows.splice(4,0,{k:'Spec accept',get:function(r){return r.specAccept;},fmt:function(v){return v!=null?U.fmtPct(v,0):'—';},col:'#9f7aea',hi:1,ctx:function(){return 'MTP'}});
+  // winner per row
+  rows.forEach(function(row){
+    var vals=slots.map(row.get);
+    var wi=0; if(row.hi){ vals.forEach(function(v,i){if(v!=null&&(vals[wi]==null||v>vals[wi]))wi=i;}); }
+    else { vals.forEach(function(v,i){if(v!=null&&(vals[wi]==null||v<vals[wi]))wi=i;}); }
+    row.winIdx=wi; row.max=vals[wi];
+  });
+  var html='<div class="tape-title">Tale of the tape <span class="ln"></span></div><div class="tape">';
+  rows.forEach(function(row){
+    var r=slots[myIdx]; var v=row.get(r); var isWin=row.winIdx===myIdx&&v!=null;
+    var pct=row.max?v/row.max*100:0; var barcol=typeof row.col==='function'?row.col(U.fpsTone(r.fps,r.minFps)):row.col;
+    html+='<div class="trow"><div class="ctx l">'+row.ctx(r)+'</div>'+
+      '<div class="v '+(isWin?'win':'')+(!isWin&&v==null?' lo':'')+'" style="color:'+(isWin?'':typeof row.col==='function'?row.col(U.fpsTone(r.fps,r.minFps)):row.col)+'">'+row.fmt(v)+'</div>'+
+      '<div class="k">'+row.k+(isWin?' <span style="color:var(--gold)">▲</span>':'')+'</div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderStrip(){
+  var strip=document.getElementById('strip'); strip.innerHTML='';
+  var cs=contenders(curBench);
+  document.getElementById('stripCount').textContent=cs.length+' contenders';
+  cs.forEach(function(r){
+    var idx=RUNS.indexOf(r); var inRing=ringSlots.indexOf(idx)>=0;
+    var tone=U.fpsTone(r.fps,r.minFps);
+    var badge=tone==='fail'?'fail':tone==='slow'?'':tone==='champ'||tone==='good'?'good':'';
+    var t=el('div'); t.className='thumb'+(inRing?' inring':'');
+    t.innerHTML='<div class="ph" style="background-image:url(\''+r.img+'\')"></div>'+
+      (tone==='fail'?'<span class="badge fail">'+U.fmtNum(r.fps,0)+'fps</span>':tone==='champ'||tone==='good'?'<span class="badge good">'+U.fmtNum(r.fps,0)+'fps</span>':'')+
+      '<div class="meta"><div class="m">'+(r.modelDisplay||r.model)+'</div>'+
+      '<div class="s"><span>'+r.backend+'</span><span>'+U.fmtTok(r.totalTok)+'</span></div></div>';
+    t.onclick=function(){ swapIn(idx); };
+    strip.appendChild(t);
+  });
+}
+
+function swapIn(idx){
+  if(ringSlots.indexOf(idx)>=0){ // remove if already in
+    if(ringSlots.length<=1)return;
+    ringSlots=ringSlots.filter(function(i){return i!==idx;});
+    while(ringSlots.length<ringN){ var pool=contenders(curBench).map(function(r){return RUNS.indexOf(r);}).filter(function(i){return ringSlots.indexOf(i)<0;}); if(!pool.length)break; ringSlots.push(pool[0]); }
+  } else {
+    ringSlots[ringSlots.length-1]=idx; // replace last slot
+  }
+  renderAll();
+}
+
+function renderAll(){ renderPtabs(); renderRing(); renderStrip(); }
+
+document.getElementById('density').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b)return; ringN=parseInt(b.dataset.n,10);
+  document.querySelectorAll('#density button').forEach(function(x){x.classList.toggle('on',x===b);});
+  if(ringSlots.length>ringN) ringSlots=ringSlots.slice(0,ringN);
+  else while(ringSlots.length<ringN){ var pool=contenders(curBench).map(function(r){return RUNS.indexOf(r);}).filter(function(i){return ringSlots.indexOf(i)<0;}); if(!pool.length)break; ringSlots.push(pool[0]); }
+  renderAll();
+});
+
+var ann=document.getElementById('ann');
+document.getElementById('annToggle').onclick=function(){ann.classList.toggle('show');};
+document.getElementById('annX').onclick=function(){ann.classList.remove('show');};
+
+initRing(); renderAll();
+</script>
+</body>
+</html>

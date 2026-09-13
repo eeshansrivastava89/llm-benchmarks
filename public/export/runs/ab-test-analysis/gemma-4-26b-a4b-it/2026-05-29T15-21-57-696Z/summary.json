@@ -1,0 +1,51 @@
+{
+  "status": "not_significant",
+  "recommended_variant": "A",
+  "decision": "Variant B has significantly lower completion rate (guardrail failure).",
+  "metrics": [
+    {
+      "label": "Completion Time",
+      "value": "8.93s",
+      "delta": "58.04%",
+      "delta_direction": "up",
+      "context": "Mean time for Variant B vs A"
+    },
+    {
+      "label": "Completion Rate",
+      "value": "70.81%",
+      "delta": "-20.65%",
+      "delta_direction": "down",
+      "context": "Ratio of completed to started puzzles"
+    },
+    {
+      "label": "Repeat Rate",
+      "value": "40.19%",
+      "delta": "-27.42%",
+      "delta_direction": "down",
+      "context": "Ratio of repeated to started puzzles"
+    },
+    {
+      "label": "Effect Size",
+      "value": "-0.41",
+      "context": "Cohen's d"
+    }
+  ],
+  "raw_stats": {
+    "p_value": 0.00035015413000521984,
+    "cohens_d": -0.4110692127643954,
+    "mean_a": 5.652090361445784,
+    "mean_b": 8.932675675675677,
+    "std_a": 7.620318517022515,
+    "std_b": 8.366568819561907,
+    "completion_rate_a": 0.8924731182795699,
+    "completion_rate_b": 0.7081339712918661,
+    "repeat_rate_a": 0.553763440860215,
+    "repeat_rate_b": 0.4019138755980861,
+    "srm_p_value": 0.21949155770198428
+  },
+  "warnings": [
+    "Guardrail failure: Variant B has significantly lower completion rate."
+  ],
+  "methodology": "Welch's t-test for completion time, Chi-squared for completion rate, Z-test for repeat rate, and Chi-squared for SRM.",
+  "generated_at": "2026-05-29T08:46:02.545215"
+}

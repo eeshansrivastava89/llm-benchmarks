@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-16T04-56-59-890Z",
+  "benchmark": {
+    "id": "snow-globe-village",
+    "title": "Snow Globe Village",
+    "description": "Magical snow globe with a cozy winter village, swirling snow, glass shine, and Santa sleigh loop.",
+    "prompt": "Create a complete, self-contained HTML file for the request below.\nWrite the file as `index.html` in the current working directory.\nDo not create any folders, do not infer a filesystem path, and do not print the HTML in chat.\n\nThe HTML must include all CSS and JavaScript inline and must not depend on external network assets.\nCreate a full-screen animated snow globe scene. The snow globe should sit centered on a warm wooden table and must fit comfortably inside the viewport, with the full glass dome, base, and reflections visible without cropping. Inside the globe, build a cozy alpine winter village with small houses, glowing windows, pine trees, snowy hills, and a simple clock tower or chapel silhouette. The village should feel detailed and charming, but use clean readable shapes rather than tiny clutter.\n\nAnimate thousands of snowflakes swirling inside the globe with layered depth: some flakes close to the glass, some around the village, and some fading into the background. The snow should move with believable globe-like physics: circular wind currents, varied speeds, gentle rotation, drifting arcs, and occasional soft gusts. Add a tiny Santa sleigh silhouette looping smoothly around the sky inside the globe; keep it simple and readable, like a dark cutout with a few reindeer shapes or a sleigh trail, so the animation does not depend on complex character anatomy.\n\nMake the glass dome visually convincing with curved highlights, soft reflections, subtle refraction, a frosted rim, and a bright specular shine that moves slightly as the scene animates. Add warm bokeh holiday lights outside the globe in the dark background, plus a polished base with a faint reflection on the table. The mood should be magical, cinematic, cozy, and festive without becoming visually cluttered.\n\nThe animation should loop naturally, run smoothly in real time, adapt to the browser viewport, and keep the globe as the clear centered subject. Use a full-page canvas or SVG and no external libraries.\n\nAfter generating the HTML, do a visual review of the animation using Playwright to ensure it meets the criteria above, and make any necessary adjustments until the animation is accurate and meets the desired quality & performance standards.\n\nOptimize for smooth playback: the scene should animate at 30+ fps at 1080p. Keep the snowflake count modest, use simple shapes or cached sprites for particles, and avoid expensive glass refraction or blur effects that would drop the frame rate."
+  },
+  "model": {
+    "id": "Qwen3.6-35B-A3B-UD-MLX-4bit",
+    "slug": "qwen3-6-35b-a3b-ud-mlx-4bit-42cea9e4cc",
+    "displayName": "Qwen 3.6 35B A3B 4bit › UD-MLX"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-16T04:56:59.890Z",
+  "updatedAt": "2026-06-16T05:15:06.525Z",
+  "preparedAt": "2026-06-16T04:56:59.890Z",
+  "completedAt": "2026-06-16T05:15:06.525Z",
+  "runDirectory": "export/runs/snow-globe-village/qwen3-6-35b-a3b-ud-mlx-4bit-42cea9e4cc/2026-06-16T04-56-59-890Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "omlx",
+    "intendedRunner": "Pi",
+    "backendLabel": "oMLX",
+    "model": "Qwen3.6-35B-A3B-UD-MLX-4bit",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 78902,
+      "completionTokens": 29667,
+      "totalTokens": 108569
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-16T05:15:06.525Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-16T05:15:06.525Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1600,
+        "frames": 192,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

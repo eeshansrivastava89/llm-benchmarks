@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-16T00-18-01-709Z",
+  "benchmark": {
+    "id": "sunset-ocean-study",
+    "title": "Sunset Ocean Study",
+    "description": "Golden-hour ocean scene with rolling waves, reflected sunlight, and atmospheric rays.",
+    "prompt": "Create a complete, self-contained HTML file for the request below.\nWrite the file as `index.html` in the current working directory.\nDo not create any folders, do not infer a filesystem path, and do not print the HTML in chat.\n\nThe HTML must include all CSS and JavaScript inline and must not depend on external network assets.\nCreate a full-screen animated ocean sunset viewed from low above the water, looking toward the horizon. The sun should be partially visible, with about one third of the disk above the horizon and two thirds below it, so the scene feels like late golden hour rather than midday. Use a warm palette of amber, peach, coral, rose, lavender, and deep blue shadows. The ocean should have broad rolling waves moving toward the viewer, with smaller ripples layered on top and bright reflected highlights forming a shimmering path from the sun to the foreground. Add soft volumetric-looking sun rays breaking through thin clouds, but keep them subtle and elegant. Clouds should be stretched horizontally near the horizon, with glowing edges and darker undersides. The water should show changing reflections, foam accents on a few wave crests, and gentle color shifts from warm near the sun to cooler blue-violet in the foreground. Keep the composition clean: one horizon line, one sun, a readable wave rhythm, and no cluttered objects. The animation should loop naturally, run smoothly, adapt to the browser viewport, and keep the horizon, sun, and wave composition visible without awkward cropping. Keep the implementation performant while maximizing creativity. Use no external libraries.\n\nAfter generating the HTML, do a visual review of the animation using Playwright to ensure it meets the criteria above, and make any necessary adjustments until the animation is accurate and meets the desired quality & performance standards."
+  },
+  "model": {
+    "id": "Qwopus3.6-35B-A3B-v1-Q5_K_M",
+    "slug": "qwopus3-6-35b-a3b-v1-q5-k-m-4346a287b3"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-16T00:18:01.709Z",
+  "updatedAt": "2026-06-16T01:25:34.575Z",
+  "preparedAt": "2026-06-16T00:18:01.709Z",
+  "completedAt": "2026-06-16T01:25:34.575Z",
+  "runDirectory": "export/runs/sunset-ocean-study/qwopus3-6-35b-a3b-v1-q5-k-m-4346a287b3/2026-06-16T00-18-01-709Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "llama-cpp",
+    "intendedRunner": "Pi",
+    "backendLabel": "llama.cpp",
+    "model": "Qwopus3.6-35B-A3B-v1-Q5_K_M",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 158769,
+      "completionTokens": 59683,
+      "totalTokens": 218452
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-16T01:25:34.575Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-16T01:25:34.575Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1600,
+        "frames": 192,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

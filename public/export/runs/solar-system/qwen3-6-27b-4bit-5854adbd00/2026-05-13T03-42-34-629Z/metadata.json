@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-05-13T03-42-34-629Z",
+  "benchmark": {
+    "id": "solar-system",
+    "title": "Solar System",
+    "description": "Realistic animated solar system with visible planets and orbital motion.",
+    "prompt": "Build an HTML animation of the solar system with the Sun at the center and all planets orbiting around it. Make the scene as realistic as practical while keeping all planets visible: the Sun should glow clearly but must not be so large that it hides or overwhelms Mercury, Venus, Earth, or Mars. Preserve the relative scale of orbital distances, use accurate orbital shapes, realistic planet colors, and visible rings where appropriate. Show the system from roughly a 30-degree viewing angle rather than directly overhead. Include as many realistic visual details as possible while keeping the animation smooth.\n\nMake sure the full solar system composition fits cleanly within the browser viewport without cropping important planets or orbital paths.\n\nBuild and edit the file in small chunks instead of writing a monolith in one go, so it's easier for you to modify and debug components if anything doesn't work as expected."
+  },
+  "model": {
+    "id": "Qwen3.6-27B-4bit",
+    "slug": "qwen3-6-27b-4bit-5854adbd00"
+  },
+  "status": "completed",
+  "createdAt": "2026-05-13T03:42:34.629Z",
+  "updatedAt": "2026-05-13T06:52:11.027Z",
+  "preparedAt": "2026-05-13T03:42:34.629Z",
+  "completedAt": "2026-05-13T06:52:11.027Z",
+  "runDirectory": "export/runs/solar-system/qwen3-6-27b-4bit-5854adbd00/2026-05-13T03-42-34-629Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "omlx",
+    "intendedRunner": "Pi",
+    "backendLabel": "oMLX",
+    "model": "Qwen3.6-27B-4bit",
+    "retries": 0
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-05-13T06:52:11.027Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-05-13T06:52:11.027Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1600,
+        "frames": 192,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

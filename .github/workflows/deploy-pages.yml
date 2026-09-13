@@ -1,0 +1,98 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install Python dependencies
+        run: uv sync --locked
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Check Bench and viewer
+        run: npm run check
+
+      - name: Run Bench and viewer tests
+        run: npm test
+
+      - name: Validate production analytics config
+        run: |
+          if [ "$PUBLIC_ENABLE_ANALYTICS" = "true" ]; then
+            if [ -z "$PUBLIC_POSTHOG_KEY" ]; then
+              echo "::error::PUBLIC_ENABLE_ANALYTICS is true but PUBLIC_POSTHOG_KEY secret is missing. Set it in Settings → Secrets and variables → Actions."
+              exit 1
+            fi
+            if [ -z "$PUBLIC_POSTHOG_HOST" ]; then
+              echo "::error::PUBLIC_ENABLE_ANALYTICS is true but PUBLIC_POSTHOG_HOST secret is missing. Set it in Settings → Secrets and variables → Actions."
+              exit 1
+            fi
+            if [ -z "$PUBLIC_ANALYTICS_ALLOWED_HOSTS" ]; then
+              echo "::error::PUBLIC_ENABLE_ANALYTICS is true but PUBLIC_ANALYTICS_ALLOWED_HOSTS variable is missing. Set it in Settings → Secrets and variables → Actions → Variables."
+              exit 1
+            fi
+          else
+            echo "Analytics disabled — skipping validation."
+          fi
+        env:
+          PUBLIC_ENABLE_ANALYTICS: ${{ vars.PUBLIC_ENABLE_ANALYTICS }}
+          PUBLIC_POSTHOG_KEY: ${{ secrets.PUBLIC_POSTHOG_KEY }}
+          PUBLIC_POSTHOG_HOST: ${{ secrets.PUBLIC_POSTHOG_HOST }}
+          PUBLIC_ANALYTICS_ALLOWED_HOSTS: ${{ vars.PUBLIC_ANALYTICS_ALLOWED_HOSTS }}
+
+      - name: Build static site
+        run: npm run build:static
+        env:
+          STATIC_USE_EXISTING_EXPORT: "true"
+          ASTRO_BASE: "/"
+          PUBLIC_ENABLE_ANALYTICS: ${{ vars.PUBLIC_ENABLE_ANALYTICS }}
+          PUBLIC_POSTHOG_KEY: ${{ secrets.PUBLIC_POSTHOG_KEY }}
+          PUBLIC_POSTHOG_HOST: ${{ secrets.PUBLIC_POSTHOG_HOST }}
+          PUBLIC_POSTHOG_UI_HOST: ${{ vars.PUBLIC_POSTHOG_UI_HOST || 'https://us.posthog.com' }}
+          PUBLIC_ANALYTICS_ALLOWED_HOSTS: ${{ vars.PUBLIC_ANALYTICS_ALLOWED_HOSTS }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-static
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

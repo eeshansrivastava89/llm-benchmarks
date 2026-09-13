@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-16T04-28-18-519Z",
+  "benchmark": {
+    "id": "macro-wildflower-meadow",
+    "title": "Macro Wildflower Meadow",
+    "description": "Close-up colorful meadow scene with detailed butterflies, bees, flowers, and wind motion.",
+    "prompt": "Create a complete, self-contained HTML file for the request below.\nWrite the file as `index.html` in the current working directory.\nDo not create any folders, do not infer a filesystem path, and do not print the HTML in chat.\n\nThe HTML must include all CSS and JavaScript inline and must not depend on external network assets.\nCreate a full-screen animated close-up meadow scene on a bright breezy day, viewed from just above flower height as if the camera is inside a small patch of wildflowers. Keep the composition intimate and readable: show foreground flowers with detailed petals, stems, leaves, and pollen centers. Around them, animate butterflies and bees moving through the scene. The insects should be large enough to see details: butterfly wing patterns, antennae, soft body shapes, bee stripes, tiny wings, and curved flight paths.\n\nUse a vivid imaginative color palette with saturated flower colors, fresh greens, warm sunlight, and playful accents. The model may choose the flower and butterfly colors freely, but the scene should feel joyful, lush, and eye-catching as a gallery thumbnail. Add wind motion: flower stems should sway gently, petals should flutter, leaves should tilt, and insects should adjust their flight as if riding small gusts. Include a softly blurred background with hints of more flowers and sky, but keep the foreground flowers and insects as the clear focus.\n\nKeep the implementation performant while maximizing creativity. The animation should loop naturally, run smoothly, adapt to the browser viewport, and keep the foreground flowers and insects visible without cropping. Use a full-page canvas or SVG and no external libraries.\n\nAfter generating the HTML, do a visual review of the animation using Playwright to ensure it meets the criteria above, and make any necessary adjustments until the animation is accurate and meets the desired quality & performance standards.\n\nOptimize for smooth playback: the scene should animate at 30+ fps at 1080p. Prefer lightweight rendering for insects and moving foliage, batch canvas operations, and avoid heavy per-frame effects that would drop the frame rate."
+  },
+  "model": {
+    "id": "Qwen3.6-35B-A3B-UD-MLX-4bit",
+    "slug": "qwen3-6-35b-a3b-ud-mlx-4bit-42cea9e4cc",
+    "displayName": "Qwen 3.6 35B A3B 4bit › UD-MLX"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-16T04:28:18.519Z",
+  "updatedAt": "2026-06-16T04:56:26.272Z",
+  "preparedAt": "2026-06-16T04:28:18.519Z",
+  "completedAt": "2026-06-16T04:56:26.272Z",
+  "runDirectory": "export/runs/macro-wildflower-meadow/qwen3-6-35b-a3b-ud-mlx-4bit-42cea9e4cc/2026-06-16T04-28-18-519Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "omlx",
+    "intendedRunner": "Pi",
+    "backendLabel": "oMLX",
+    "model": "Qwen3.6-35B-A3B-UD-MLX-4bit",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 81985,
+      "completionTokens": 28662,
+      "totalTokens": 110647
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-16T04:56:26.272Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-16T04:56:26.272Z",
+      "quality": {
+        "measuredFps": 4.8,
+        "minFps": 12,
+        "sampleMs": 1683,
+        "frames": 8,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-05-18T08-44-29-319Z",
+  "benchmark": {
+    "id": "solar-system",
+    "title": "Solar System",
+    "description": "Realistic animated solar system with visible planets and orbital motion.",
+    "prompt": "Build an HTML animation of the solar system with the Sun at the center and all planets orbiting around it. Make the scene as realistic as practical while keeping all planets visible: the Sun should glow clearly but must not be so large that it hides or overwhelms Mercury, Venus, Earth, or Mars. Preserve the relative scale of orbital distances, use accurate orbital shapes, realistic planet colors, and visible rings where appropriate. Show the system from roughly a 30-degree viewing angle rather than directly overhead. Include as many realistic visual details as possible while keeping the animation smooth.\n\nMake sure the full solar system composition fits cleanly within the browser viewport without cropping important planets or orbital paths.\n\nBuild and edit the file in small chunks instead of writing a monolith in one go, so it's easier for you to modify and debug components if anything doesn't work as expected."
+  },
+  "model": {
+    "id": "GLM 5.1",
+    "slug": "glm-5-1-86c2a86a7f"
+  },
+  "status": "completed",
+  "createdAt": "2026-05-18T08:44:29.319Z",
+  "updatedAt": "2026-05-18T08:54:14.734Z",
+  "preparedAt": "2026-05-18T08:44:29.319Z",
+  "completedAt": "2026-05-18T08:54:14.734Z",
+  "runDirectory": "export/runs/solar-system/glm-5-1-86c2a86a7f/2026-05-18T08-44-29-319Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "cloud",
+    "intendedRunner": "Pi",
+    "backendLabel": "Cloud",
+    "model": "GLM 5.1",
+    "retries": 0
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-05-18T08:54:14.734Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-05-18T08:54:14.734Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1600,
+        "frames": 192,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

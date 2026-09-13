@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-12T07-31-42-326Z",
+  "benchmark": {
+    "id": "macro-wildflower-meadow",
+    "title": "Macro Wildflower Meadow",
+    "description": "Close-up colorful meadow scene with detailed butterflies, bees, flowers, and wind motion.",
+    "prompt": "Create a full-screen animated close-up meadow scene on a bright breezy day, viewed from just above flower height as if the camera is inside a small patch of wildflowers. Keep the composition intimate and readable: show about five to seven large foreground flowers with detailed petals, stems, leaves, and pollen centers, rather than a huge field of tiny flowers. Around them, animate a few butterflies and bees moving through the scene. The insects should be large enough to see details: butterfly wing patterns, antennae, soft body shapes, bee stripes, tiny wings, and curved flight paths.\n\nUse a vivid imaginative color palette with saturated flower colors, fresh greens, warm sunlight, and playful accents. The model may choose the flower and butterfly colors freely, but the scene should feel joyful, lush, and eye-catching as a gallery thumbnail. Add wind motion: flower stems should sway gently, petals should flutter, leaves should tilt, and insects should adjust their flight as if riding small gusts. Include a softly blurred background with hints of more flowers and sky, but keep the foreground flowers and insects as the clear focus.\n\nKeep the implementation performant while maximizing creativity. The animation should loop naturally, run smoothly, adapt to the browser viewport, and keep the foreground flowers and insects visible without cropping. Use a full-page canvas or SVG and no external libraries.\n\nBuild and edit the file in small chunks instead of writing a monolith in one go, so it's easier for you to modify and debug components if anything doesn't work as expected."
+  },
+  "model": {
+    "id": "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL",
+    "slug": "gemma-4-26b-a4b-it-qat-ud-q4-k-xl-66aa09c38f"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-12T07:31:42.326Z",
+  "updatedAt": "2026-06-12T07:38:51.413Z",
+  "preparedAt": "2026-06-12T07:31:42.326Z",
+  "completedAt": "2026-06-12T07:38:51.413Z",
+  "runDirectory": "export/runs/macro-wildflower-meadow/gemma-4-26b-a4b-it-qat-ud-q4-k-xl-66aa09c38f/2026-06-12T07-31-42-326Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "llama-cpp-mtp",
+    "intendedRunner": "Pi",
+    "backendLabel": "llama.cpp MTP",
+    "model": "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL",
+    "retries": 0
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-12T07:38:51.413Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-12T07:38:51.413Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1600,
+        "frames": 192,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

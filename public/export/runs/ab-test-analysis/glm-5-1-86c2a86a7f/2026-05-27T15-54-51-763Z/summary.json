@@ -1,0 +1,49 @@
+{
+  "status": "significant",
+  "recommended_variant": "A",
+  "decision": "Variant A (4 pineapples) is recommended. It has significantly faster completion times (mean 5.73s vs 8.93s, p=0.0006), a significantly higher completion rate (89.0% vs 70.8%, p=0.0000), and a significantly higher repeat rate (53.6% vs 40.2%, p=0.0081). Variant B is worse on all metrics, likely because the extra pineapple increases difficulty. Ship Variant A.",
+  "metrics": [
+    {
+      "label": "Completion Time",
+      "value": "A: 5.73s, B: 8.93s",
+      "delta": "-3.20s (A faster)",
+      "delta_direction": "down",
+      "context": "Lower is better. Variant A completions are 35.9% faster. Welch t-test p=0.0006."
+    },
+    {
+      "label": "Completion Rate",
+      "value": "A: 89.0%, B: 70.8%",
+      "delta": "+18.1pp (A higher)",
+      "delta_direction": "up",
+      "context": "Higher is better. Chi-squared test p=0.0000."
+    },
+    {
+      "label": "Repeat Rate",
+      "value": "A: 53.6%, B: 40.2%",
+      "delta": "+13.4pp (A higher)",
+      "delta_direction": "up",
+      "context": "Higher is better. Z-test p=0.0081."
+    },
+    {
+      "label": "Effect Size",
+      "value": "Cohen's d = -0.40",
+      "context": "Small-to-medium negative effect. Variant B increases completion time by ~0.4 standard deviations."
+    }
+  ],
+  "raw_stats": {
+    "p_value": 0.000556,
+    "cohens_d": -0.3987,
+    "mean_a": 5.729,
+    "mean_b": 8.933,
+    "std_a": 7.715,
+    "std_b": 8.367,
+    "completion_rate_a": 0.8895,
+    "completion_rate_b": 0.7081,
+    "repeat_rate_a": 0.5359,
+    "repeat_rate_b": 0.4019,
+    "srm_p_value": 0.1562
+  },
+  "warnings": [],
+  "methodology": "Welch's t-test for completion time difference (unequal variances). Chi-squared test for completion rate. Two-proportion z-test for repeat rate. Sample Ratio Mismatch (SRM) check passed (p=0.16). Each puzzle_completed event treated as a separate observation. No CUPED or regression adjustment applied.",
+  "generated_at": "2026-05-27T18:43:00.584341+00:00"
+}

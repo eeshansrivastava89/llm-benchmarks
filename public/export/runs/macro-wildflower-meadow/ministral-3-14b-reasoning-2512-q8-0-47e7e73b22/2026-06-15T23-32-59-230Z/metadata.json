@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-15T23-32-59-230Z",
+  "benchmark": {
+    "id": "macro-wildflower-meadow",
+    "title": "Macro Wildflower Meadow",
+    "description": "Close-up colorful meadow scene with detailed butterflies, bees, flowers, and wind motion.",
+    "prompt": "Create a complete, self-contained HTML file for the request below.\nWrite the file as `index.html` in the current working directory.\nDo not create any folders, do not infer a filesystem path, and do not print the HTML in chat.\n\nThe HTML must include all CSS and JavaScript inline and must not depend on external network assets.\nCreate a full-screen animated close-up meadow scene on a bright breezy day, viewed from just above flower height as if the camera is inside a small patch of wildflowers. Keep the composition intimate and readable: show offoreground flowers with detailed petals, stems, leaves, and pollen centers. Around them, animate butterflies and bees moving through the scene. The insects should be large enough to see details: butterfly wing patterns, antennae, soft body shapes, bee stripes, tiny wings, and curved flight paths.\n\nUse a vivid imaginative color palette with saturated flower colors, fresh greens, warm sunlight, and playful accents. The model may choose the flower and butterfly colors freely, but the scene should feel joyful, lush, and eye-catching as a gallery thumbnail. Add wind motion: flower stems should sway gently, petals should flutter, leaves should tilt, and insects should adjust their flight as if riding small gusts. Include a softly blurred background with hints of more flowers and sky, but keep the foreground flowers and insects as the clear focus.\n\nKeep the implementation performant while maximizing creativity. The animation should loop naturally, run smoothly, adapt to the browser viewport, and keep the foreground flowers and insects visible without cropping. Use a full-page canvas or SVG and no external libraries.\n\nAfter generating the HTML, do a visual review of the animation using Playwright to ensure it meets the criteria above, and make any necessary adjustments until the animation is accurate and meets the desired quality & performance standards."
+  },
+  "model": {
+    "id": "Ministral-3-14B-Reasoning-2512-Q8_0",
+    "slug": "ministral-3-14b-reasoning-2512-q8-0-47e7e73b22"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-15T23:32:59.230Z",
+  "updatedAt": "2026-06-15T23:40:00.366Z",
+  "preparedAt": "2026-06-15T23:32:59.230Z",
+  "completedAt": "2026-06-15T23:40:00.366Z",
+  "runDirectory": "export/runs/macro-wildflower-meadow/ministral-3-14b-reasoning-2512-q8-0-47e7e73b22/2026-06-15T23-32-59-230Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "llama-cpp",
+    "intendedRunner": "Pi",
+    "backendLabel": "llama.cpp",
+    "model": "Ministral-3-14B-Reasoning-2512-Q8_0",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 10154,
+      "completionTokens": 3914,
+      "totalTokens": 14068
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-15T23:40:00.366Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-15T23:40:00.366Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1600,
+        "frames": 192,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

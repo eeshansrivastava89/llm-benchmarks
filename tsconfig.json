@@ -1,0 +1,8 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "types": ["vitest/globals", "node"]
+  },
+  "include": [".astro/types.d.ts", "src/**/*", "tests/**/*"]
+}

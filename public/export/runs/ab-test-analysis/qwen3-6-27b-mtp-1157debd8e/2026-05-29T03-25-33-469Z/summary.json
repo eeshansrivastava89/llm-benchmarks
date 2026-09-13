@@ -1,0 +1,52 @@
+{
+  "status": "significant",
+  "recommended_variant": "A",
+  "decision": "Recommend Variant A. It is significantly faster (mean 5.7s vs 8.9s, p=0.0006). Cohen's d = 0.40 (small) effect.",
+  "metrics": [
+    {
+      "label": "Completion Time",
+      "value": "Variant A: 5.7s | Variant B: 8.9s",
+      "delta": "3.20s",
+      "delta_direction": "down",
+      "context": "Variant A is 3.2s faster. Welch's t-test p=0.0006, 95% CI [-5.01, -1.40]"
+    },
+    {
+      "label": "Completion Rate",
+      "value": "Variant A: 95.6% | Variant B: 96.5%",
+      "delta": "+0.9%",
+      "delta_direction": "up",
+      "context": "Chi-squared test p=1.0000. Not significant difference."
+    },
+    {
+      "label": "Repeat Rate",
+      "value": "Variant A: 48.5% | Variant B: 52.6%",
+      "delta": "+4.1%",
+      "delta_direction": "up",
+      "context": "Z-test p=0.6478. Not significant difference."
+    },
+    {
+      "label": "Effect Size",
+      "value": "Cohen's d = 0.399",
+      "context": "Small effect. Positive d means Variant B is slower."
+    }
+  ],
+  "raw_stats": {
+    "p_value": 0.00055646,
+    "cohens_d": 0.39875,
+    "mean_a": 5.7292,
+    "mean_b": 8.9327,
+    "std_a": 7.7153,
+    "std_b": 8.3666,
+    "completion_rate_a": 0.9559,
+    "completion_rate_b": 0.9649,
+    "repeat_rate_a": 0.4853,
+    "repeat_rate_b": 0.5263,
+    "srm_p_value": 0.0
+  },
+  "warnings": [
+    "SRM test flagged potential imbalance in variant assignment over time.",
+    "High coefficient of variation in completion times \u2014 distribution may be skewed."
+  ],
+  "methodology": "Welch's t-test (unequal variance) for primary metric (completion time). Chi-squared test for completion rate guardrail. Two-proportion z-test for repeat rate guardrail. SRM check via chi-squared test of variant balance across first/second half of data. Each puzzle_completed event treated as an independent observation.",
+  "generated_at": "2026-05-29T03:50:52.000Z"
+}

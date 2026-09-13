@@ -1,0 +1,70 @@
+export const els = {
+  // Header / system
+  statsPill: document.querySelector("#statsPill"),
+  statsDot: document.querySelector("#statsDot"),
+  statsCompact: document.querySelector("#statsCompact"),
+  operationalControls: document.querySelectorAll(".operational-control"),
+  // Toggles
+  themeToggle: document.querySelector("#themeToggle"),
+  themeIcon: document.querySelector("#themeIcon"),
+  themeLabel: document.querySelector("#themeLabel"),
+  runToggle: document.querySelector("#runToggle"),
+  // Modals
+  detailBackdrop: document.querySelector("#detailBackdrop"),
+  closeDetail: document.querySelector("#closeDetail"),
+  prepBackdrop: document.querySelector("#prepBackdrop"),
+  closePrep: document.querySelector("#closePrep"),
+  deleteConfirmBackdrop: document.querySelector("#deleteConfirmBackdrop"),
+  closeDeleteConfirm: document.querySelector("#closeDeleteConfirm"),
+  cancelDeleteRun: document.querySelector("#cancelDeleteRun"),
+  confirmDeleteRun: document.querySelector("#confirmDeleteRun"),
+  deleteRunPath: document.querySelector("#deleteRunPath"),
+  // Kind tabs
+  kindTabs: document.querySelectorAll("[data-kind]"),
+  // Filters
+  modelFilter: document.querySelector("#modelFilter"),
+  benchmarkFilter: document.querySelector("#benchmarkFilter"),
+  harnessFilter: document.querySelector("#harnessFilter"),
+  runsSearch: document.querySelector("#runsSearch"),
+  filtersToggle: document.querySelector("#filtersToggle"),
+  filtersToggleCount: document.querySelector("#filtersToggleCount"),
+  toolbarFilterGroup: document.querySelector("#toolbarFilterGroup"),
+  // View tabs
+  viewTabs: document.querySelectorAll("[data-mode]"),
+  cloudModelsToggle: document.querySelector("#cloudModelsToggle"),
+  // Onboarding
+  onboardingPanel: document.querySelector("#onboardingPanel"),
+  dismissOnboarding: document.querySelector("#dismissOnboarding"),
+  helpTooltip: document.querySelector("#helpTooltip"),
+  // Workbench
+  viewTitle: document.querySelector("#viewTitle"),
+  viewSubtitle: document.querySelector("#viewSubtitle"),
+  runSummary: document.querySelector("#runSummary"),
+  runCount: document.querySelector("#runCount"),
+  clearWorkbenchState: document.querySelector("#clearWorkbenchState"),
+  clearWorkbenchStateLabel: document.querySelector("#clearWorkbenchStateLabel"),
+  runsSurface: document.querySelector("#runsSurface"),
+  refreshRuns: document.querySelector("#refreshRuns"),
+  // Detail
+  detailTitle: document.querySelector("#detailTitle"),
+  detailSubtitle: document.querySelector("#detailSubtitle"),
+  detailPreview: document.querySelector("#detailPreview"),
+  openHtml: document.querySelector("#openHtml"),
+  copyDetailPath: document.querySelector("#copyDetailPath"),
+  openRunFolder: document.querySelector("#openRunFolder"),
+  recaptureRun: document.querySelector("#recaptureRun"),
+  deleteRun: document.querySelector("#deleteRun"),
+  detailPrompt: document.querySelector("#detailPrompt"),
+  detailTextTitle: document.querySelector("#detailTextTitle"),
+  promptLength: document.querySelector("#promptLength"),
+  copyDetailPrompt: document.querySelector("#copyDetailPrompt"),
+  detailMeta: document.querySelector("#detailMeta"),
+  detailBody: document.querySelector(".detail-body"),
+  // Chart lightbox
+  chartLightbox: document.querySelector("#chartLightbox"),
+  chartLightboxImg: document.querySelector("#chartLightboxImg"),
+  chartLightboxLabel: document.querySelector("#chartLightboxLabel"),
+  closeChartLightbox: document.querySelector("#closeChartLightbox"),
+  chartLightboxPrev: document.querySelector("#chartLightboxPrev"),
+  chartLightboxNext: document.querySelector("#chartLightboxNext")
+};

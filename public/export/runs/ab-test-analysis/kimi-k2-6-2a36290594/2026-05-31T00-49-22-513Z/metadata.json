@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "kind": "data-science",
+  "runId": "2026-05-31T00-49-22-513Z",
+  "benchmark": {
+    "id": "ab-test-analysis",
+    "title": "A/B Test Production Analysis",
+    "description": "Run a full production A/B test analysis against live Supabase data, including statistical tests, guardrail checks, visualizations, and a grounded ship/don't-ship recommendation.",
+    "prompt": "## Context\n\nIf you need Python packages, create a virtual environment and install them there — do not assume packages are pre-installed.\n\nThe A/B Simulator is a Pineapple Finder memory game. Variant A has 4 pineapples, Variant B has 5. Data lives in a Supabase `posthog_events` table that records player interactions from live randomized traffic.\n\nEach row is one event. The important event types are `puzzle_started` and `puzzle_completed`. The `variant` column (A or B) is assigned per session. The `completion_time_seconds` column is only populated on `puzzle_completed` events. A single session can have multiple puzzle completions — treat each `puzzle_completed` event as a separate observation for the primary analysis, not one per session.\n\n## Data Access\n\nSupabase connection details are in `supabase.json` in this directory. Read it and query the API:\n\n```python\nimport json, requests\nwith open(\"supabase.json\") as f:\n    cfg = json.load(f)\nresp = requests.get(cfg[\"url\"], headers=cfg[\"headers\"])\ndata = resp.json()\n```\n\nUse `requests.get()` (or equivalent). Do not read environment variables.\n\n## Required Outputs\n\nWrite these files into the current working directory:\n\n1. **`analysis.ipynb`** — a Jupyter notebook with the full analysis\n2. **`summary.json`** — a machine-readable summary (schema below)\n3. **`chart-distribution.png`** — completion time distribution by variant\n4. **`chart-treatment-effect.png`** — treatment effect confidence interval\n5. **`chart-completion-rates.png`** — completion/repeat rate comparison\n\n## Required Notebook Sections\n\n1. **Setup & data pull** — imports, Supabase API query with provided URL and headers, DataFrames\n2. **Metric definitions & sanity checks** — primary KPI, guardrails, SRM test, data quality\n3. **Primary analysis** — Welch's t-test, CI, Cohen's d, interpretation\n4. **Guardrail analysis** — completion rate χ² test, repeat rate z-test\n5. **Visualizations** — the 3 charts listed above\n6. **Conclusion & recommendation** — executive summary and `summary.json`\n\n## Not Required\n\n- OLS regression, CUPED variance reduction, power analysis\n- Outlier detection detail, KDE, daily volume/trend charts\n- Extended educational commentary\n\n## summary.json Schema\n\n```json\n{\n  \"status\": \"significant | not_significant | inconclusive\",\n  \"recommended_variant\": \"A | B | null\",\n  \"decision\": \"string — optional human-readable recommendation\",\n  \"metrics\": [\n    { \"label\": \"Completion Time\", \"value\": \"string\", \"delta\": \"string\", \"delta_direction\": \"up|down\", \"context\": \"string\" },\n    { \"label\": \"Completion Rate\", \"value\": \"string\", \"delta\": \"string\", \"delta_direction\": \"up|down\", \"context\": \"string\" },\n    { \"label\": \"Repeat Rate\", \"value\": \"string\", \"delta\": \"string\", \"delta_direction\": \"up|down\", \"context\": \"string\" },\n    { \"label\": \"Effect Size\", \"value\": \"string\", \"context\": \"string\" }\n  ],\n  \"raw_stats\": {\n    \"p_value\": \"number\",\n    \"cohens_d\": \"number\",\n    \"mean_a\": \"number\",\n    \"mean_b\": \"number\",\n    \"std_a\": \"number\",\n    \"std_b\": \"number\",\n    \"completion_rate_a\": \"number\",\n    \"completion_rate_b\": \"number\",\n    \"repeat_rate_a\": \"number\",\n    \"repeat_rate_b\": \"number\",\n    \"srm_p_value\": \"number\"\n  },\n  \"warnings\": [\"string\"],\n  \"methodology\": \"string\",\n  \"generated_at\": \"ISO 8601 timestamp\"\n}\n```\n\n## Scoring\n\nYour output will be scored on:\n\n- **Data access**: Did you query real Supabase data via the API (using credentials from `supabase.json`)?\n- **Statistical correctness**: Correct SRM test, Welch's t-test, effect size, CI?\n- **Guardrails**: Did you check completion rate and repeat rate, not just the primary metric?\n- **Visualizations**: 3 clear, labeled, interpretable charts?\n- **Decision quality**: Does `recommended_variant` match the data? If Variant B is worse on guardrails, recommended_variant should be \"A\", not \"B\".\n- **Hallucination resistance**: All cited numbers come from queried data, not invented?"
+  },
+  "model": {
+    "id": "Kimi K2.6",
+    "slug": "kimi-k2-6-2a36290594"
+  },
+  "status": "completed",
+  "createdAt": "2026-05-31T00:49:22.513Z",
+  "updatedAt": "2026-05-31T01:06:24.910Z",
+  "preparedAt": "2026-05-31T00:49:22.513Z",
+  "completedAt": "2026-05-31T01:06:24.910Z",
+  "runDirectory": "export/runs/ab-test-analysis/kimi-k2-6-2a36290594/2026-05-31T00-49-22-513Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "ds": {
+      "summary": "summary.json",
+      "chartDistribution": "chart-distribution.png",
+      "chartTreatmentEffect": "chart-treatment-effect.png",
+      "chartCompletionRates": "chart-completion-rates.png"
+    }
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "cloud",
+    "intendedRunner": "Pi",
+    "backendLabel": "Cloud",
+    "model": "Kimi K2.6",
+    "retries": 0
+  },
+  "dsSummary": {
+    "status": "significant",
+    "recommended_variant": "A",
+    "decision": "Ship Variant A. It is significantly faster (mean 5.65s vs 8.94s, p=0.0003) with no guardrail degradation.",
+    "metrics": [
+      {
+        "label": "Completion Time",
+        "value": "A: 5.65s, B: 8.94s",
+        "delta": "3.29s",
+        "delta_direction": "up",
+        "context": "p=0.0003, Welch's t-test, 95% CI [1.52, 5.07]"
+      },
+      {
+        "label": "Completion Rate",
+        "value": "A: 95.8%, B: 96.7%",
+        "delta": "0.8%",
+        "delta_direction": "up",
+        "context": "p=1.0000, χ² test"
+      },
+      {
+        "label": "Repeat Rate",
+        "value": "A: 50.7%, B: 53.4%",
+        "delta": "2.7%",
+        "delta_direction": "up",
+        "context": "p=0.7596, two-proportion z-test"
+      },
+      {
+        "label": "Effect Size",
+        "value": "0.413",
+        "context": "Cohen's d = 0.413"
+      }
+    ],
+    "warnings": []
+  },
+  "dsScorecard": {
+    "total": 100,
+    "earned": 90,
+    "pct": 90,
+    "checks": {
+      "summary_valid": {
+        "label": "summary.json valid",
+        "max": 5,
+        "earned": 5,
+        "pass": true,
+        "detail": "parsed 1346 bytes, all required fields present"
+      },
+      "data_access": {
+        "label": "Data accessed from Supabase",
+        "max": 15,
+        "earned": 15,
+        "pass": true,
+        "detail": "API calls using supabase.json config"
+      },
+      "data_quality": {
+        "label": "Data quality checks in notebook",
+        "max": 5,
+        "earned": 5,
+        "pass": true,
+        "detail": "null handling, type conversion"
+      },
+      "srm_test": {
+        "label": "SRM test performed",
+        "max": 5,
+        "earned": 5,
+        "pass": true,
+        "detail": "SRM check found"
+      },
+      "hypothesis_tests": {
+        "label": "Hypothesis tests (t-test + chi²)",
+        "max": 10,
+        "earned": 10,
+        "pass": true,
+        "detail": "found: t-test, chi-square"
+      },
+      "p_value": {
+        "label": "p_value accuracy",
+        "max": 10,
+        "earned": 10,
+        "pass": true,
+        "detail": "got 0.000309, oracle 0.00063, tolerance ±0.05"
+      },
+      "cohens_d": {
+        "label": "Cohen's d accuracy",
+        "max": 10,
+        "earned": 10,
+        "pass": true,
+        "detail": "got 0.413043, oracle 0.3961, tolerance ±0.1"
+      },
+      "completion_rates": {
+        "label": "Completion rates match oracle",
+        "max": 10,
+        "earned": 0,
+        "pass": false,
+        "detail": "both rates off: A:0.958333 B:0.966667, oracle A:0.8889 B:0.7067"
+      },
+      "charts_exist": {
+        "label": "3 chart files exist",
+        "max": 10,
+        "earned": 10,
+        "pass": true,
+        "detail": "all 3 chart files present"
+      },
+      "charts_labeled": {
+        "label": "Charts have labels and titles",
+        "max": 5,
+        "earned": 5,
+        "pass": true,
+        "detail": "titles, x-labels, y-labels"
+      },
+      "recommended_variant": {
+        "label": "recommended_variant correct",
+        "max": 10,
+        "earned": 10,
+        "pass": true,
+        "detail": "got 'A', expected 'A'"
+      },
+      "decision_grounded": {
+        "label": "Decision cites specific data",
+        "max": 5,
+        "earned": 5,
+        "pass": true,
+        "detail": "p-value, statistical significance, conclusion section"
+      }
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "total": 100,
+  "earned": 95,
+  "pct": 95,
+  "checks": {
+    "summary_valid": {
+      "label": "summary.json valid",
+      "max": 5,
+      "earned": 5,
+      "pass": true,
+      "detail": "parsed 1452 bytes, all required fields present"
+    },
+    "data_access": {
+      "label": "Data accessed from Supabase",
+      "max": 15,
+      "earned": 15,
+      "pass": true,
+      "detail": "API calls using supabase.json config"
+    },
+    "data_quality": {
+      "label": "Data quality checks in notebook",
+      "max": 5,
+      "earned": 0,
+      "pass": false,
+      "detail": "only found null handling (need 2+)"
+    },
+    "srm_test": {
+      "label": "SRM test performed",
+      "max": 5,
+      "earned": 5,
+      "pass": true,
+      "detail": "SRM check found"
+    },
+    "hypothesis_tests": {
+      "label": "Hypothesis tests (t-test + chi²)",
+      "max": 10,
+      "earned": 10,
+      "pass": true,
+      "detail": "found: t-test, chi-square"
+    },
+    "p_value": {
+      "label": "p_value accuracy",
+      "max": 10,
+      "earned": 10,
+      "pass": true,
+      "detail": "got 0.000308984, oracle 0.00063, tolerance ±0.05"
+    },
+    "cohens_d": {
+      "label": "Cohen's d accuracy",
+      "max": 10,
+      "earned": 10,
+      "pass": true,
+      "detail": "got -0.413043, oracle 0.3961, tolerance ±0.1"
+    },
+    "completion_rates": {
+      "label": "Completion rates match oracle",
+      "max": 10,
+      "earned": 10,
+      "pass": true,
+      "detail": "A:0.8925 B:0.7109, oracle A:0.8889 B:0.7067"
+    },
+    "charts_exist": {
+      "label": "3 chart files exist",
+      "max": 10,
+      "earned": 10,
+      "pass": true,
+      "detail": "all 3 chart files present"
+    },
+    "charts_labeled": {
+      "label": "Charts have labels and titles",
+      "max": 5,
+      "earned": 5,
+      "pass": true,
+      "detail": "titles, x-labels, y-labels"
+    },
+    "recommended_variant": {
+      "label": "recommended_variant correct",
+      "max": 10,
+      "earned": 10,
+      "pass": true,
+      "detail": "got 'A', expected 'A'"
+    },
+    "decision_grounded": {
+      "label": "Decision cites specific data",
+      "max": 5,
+      "earned": 5,
+      "pass": true,
+      "detail": "p-value, statistical significance, conclusion section"
+    }
+  }
+}

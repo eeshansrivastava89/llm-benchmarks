@@ -1,0 +1,49 @@
+{
+  "status": "significant",
+  "recommended_variant": "A",
+  "decision": "Ship Variant A. It is significantly faster (mean 5.65s vs 8.94s, p=0.0003) with no guardrail degradation.",
+  "metrics": [
+    {
+      "label": "Completion Time",
+      "value": "A: 5.65s, B: 8.94s",
+      "delta": "3.29s",
+      "delta_direction": "up",
+      "context": "p=0.0003, Welch's t-test, 95% CI [1.52, 5.07]"
+    },
+    {
+      "label": "Completion Rate",
+      "value": "A: 95.8%, B: 96.7%",
+      "delta": "0.8%",
+      "delta_direction": "up",
+      "context": "p=1.0000, \u03c7\u00b2 test"
+    },
+    {
+      "label": "Repeat Rate",
+      "value": "A: 50.7%, B: 53.4%",
+      "delta": "2.7%",
+      "delta_direction": "up",
+      "context": "p=0.7596, two-proportion z-test"
+    },
+    {
+      "label": "Effect Size",
+      "value": "0.413",
+      "context": "Cohen's d = 0.413"
+    }
+  ],
+  "raw_stats": {
+    "p_value": 0.000309,
+    "cohens_d": 0.413043,
+    "mean_a": 5.65209,
+    "mean_b": 8.943707,
+    "std_a": 7.620319,
+    "std_b": 8.338486,
+    "completion_rate_a": 0.958333,
+    "completion_rate_b": 0.966667,
+    "repeat_rate_a": 0.507246,
+    "repeat_rate_b": 0.534483,
+    "srm_p_value": 0.29627
+  },
+  "warnings": [],
+  "methodology": "Welch's t-test for primary metric (completion time per puzzle), \u03c7\u00b2 test for completion rate, two-proportion z-test for repeat rate. SRM checked via chi-square goodness-of-fit on session counts. Each puzzle_completed event treated as independent observation.",
+  "generated_at": "2026-05-31T00:55:03.254912+00:00"
+}

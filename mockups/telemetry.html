@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>offgrid-ai-benchmark · Telemetry Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#070b10; --bg2:#0b1118; --panel:#0e1620; --panel2:#101a25; --row:#0c141d;
+    --border:#16242f; --border2:#1d2f3d; --line:#13202b;
+    --text:#e6edf3; --muted:#7d93a3; --dim:#51657a;
+    --accent:#10a37f; --cyan:#4dd0e1; --cyan-d:rgba(77,208,225,0.14);
+    --good:#34d399; --warn:#f5a623; --bad:#ff6b7a; --blue:#5b9dff;
+    --omlx:#9f7aea; --llama:#d9903d; --llamamtp:#e0853d; --ollama:#8aa0b6; --cloud:#5b9dff;
+    --font:'Space Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;min-height:100vh}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  ::selection{background:rgba(77,208,225,0.3)}
+  a{color:inherit}
+
+  .app{display:grid;grid-template-rows:auto 1fr;height:100vh;overflow:hidden}
+
+  /* command bar */
+  .cmd{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#0a1018,#080d13);position:sticky;top:0;z-index:20}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;white-space:nowrap}
+  .brand .mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,var(--accent),#0c7a5e);
+    display:grid;place-items:center;color:#06241b;font-size:12px;font-weight:800}
+  .brand small{display:block;font-size:8.5px;font-weight:600;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase}
+  .scope{display:flex;align-items:center;gap:7px;padding-left:14px;border-left:1px solid var(--border)}
+  .scope .lbl{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
+  select.sel{appearance:none;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;
+    padding:6px 26px 6px 10px;font-size:12px;font-family:var(--font);font-weight:600;cursor:pointer;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 14px) calc(50% - 2px),calc(100% - 10px) calc(50% - 2px);background-size:5px 5px;background-repeat:no-repeat}
+  select.sel:hover{border-color:var(--cyan)}
+  .search{flex:1 1 260px;max-width:340px;display:flex;align-items:center;gap:8px;background:var(--panel);
+    border:1px solid var(--border);border-radius:8px;padding:0 10px}
+  .search input{flex:1;background:none;border:0;outline:none;color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 0}
+  .search input::placeholder{color:var(--dim)}
+  .search .k{color:var(--dim);font-family:var(--mono);font-size:10px}
+  .spacer{flex:1}
+  .toggrp{display:flex;gap:6px}
+  .tog{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:8px;border:1px solid var(--border);
+    background:var(--panel);color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s}
+  .tog:hover{color:var(--text);border-color:var(--border2)}
+  .tog.on{color:var(--cyan);border-color:var(--cyan);background:var(--cyan-d)}
+  .tog .led{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+  /* layout */
+  .main{display:grid;grid-template-columns:1fr 300px;overflow:hidden}
+  .table-wrap{overflow:auto;scrollbar-width:thin}
+  .table-wrap::-webkit-scrollbar{width:9px;height:9px}
+  .table-wrap::-webkit-scrollbar-thumb{background:#1a2832;border-radius:5px}
+  .side{border-left:1px solid var(--border);background:var(--bg2);overflow-y:auto;scrollbar-width:thin}
+  .side::-webkit-scrollbar{width:8px}.side::-webkit-scrollbar-thumb{background:#1a2832;border-radius:4px}
+
+  /* leaderboard table */
+  table.lb{width:100%;border-collapse:collapse;font-size:12.5px}
+  .lb thead th{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#0b1219,#0a1018);
+    border-bottom:1px solid var(--border);padding:9px 10px;text-align:left;font-size:9px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);white-space:nowrap;cursor:pointer;user-select:none}
+  .lb thead th:hover{color:var(--cyan)}
+  .lb thead th.sorted{color:var(--cyan)} .lb thead th.sorted::after{content:" ▾";font-size:9px}
+  .lb tbody tr{border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s}
+  .lb tbody tr:hover{background:#0d1620}
+  .lb tbody tr.sel{background:rgba(77,208,225,0.06);box-shadow:inset 3px 0 0 var(--cyan)}
+  .lb td{padding:9px 10px;vertical-align:middle}
+  .rank{width:34px;color:var(--dim);font-family:var(--mono);font-size:11px;font-weight:600;text-align:center}
+  .tr-sel{width:26px;text-align:center}
+  .tr-sel input{accent-color:var(--cyan);width:13px;height:13px}
+  .thumb{width:62px;height:38px;border-radius:6px;background-size:cover;background-position:center;
+    border:1px solid var(--border2);flex:0 0 auto;object-fit:cover}
+  .who{min-width:160px}
+  .who .model{font-weight:600;font-size:13px;line-height:1.2;letter-spacing:-0.01em}
+  .who .bench{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .pills{display:flex;gap:5px;margin-top:5px}
+  .pill{display:inline-flex;align-items:center;height:17px;padding:0 7px;border-radius:999px;font-size:9.5px;font-weight:700;letter-spacing:0.01em;border:1px solid;font-family:var(--mono)}
+  .pill[data-t="omlx"]{border-color:rgba(159,122,234,0.4);background:rgba(159,122,234,0.12);color:#c4a8ff}
+  .pill[data-t="llamacpp"]{border-color:rgba(217,144,61,0.4);background:rgba(217,144,61,0.12);color:#ffc183}
+  .pill[data-t="llamacpp-mtp"]{border-color:rgba(224,133,61,0.45);background:rgba(224,133,61,0.14);color:#ffb37a}
+  .pill[data-t="ollama"]{border-color:rgba(138,160,182,0.4);background:rgba(138,160,182,0.12);color:#bccfe0}
+  .pill[data-t="cloud"]{border-color:rgba(91,157,255,0.4);background:rgba(91,157,255,0.12);color:#a9caff}
+  .pill[data-t="pi"]{border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.12);color:#9ff0cf;border-style:dashed}
+
+  /* mini fps gauge cell */
+  .fpsg{display:flex;align-items:center;gap:8px;min-width:90px}
+  .fpsg .ring{position:relative;width:34px;height:34px;flex:0 0 auto}
+  .fpsg .ring svg{transform:rotate(-90deg)}
+  .fpsg .ring .n{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:10px;font-weight:700}
+  .fpsg .meta{line-height:1.2}
+  .fpsg .meta .v{font-family:var(--mono);font-size:13px;font-weight:600}
+  .fpsg .meta .b{font-size:9px;color:var(--dim);font-family:var(--mono)}
+
+  /* mini token bar cell */
+  .tok{min-width:118px}
+  .tok .bar{height:16px;border-radius:5px;overflow:hidden;display:flex;border:1px solid var(--border2);background:#0a1118}
+  .tok .bar .p{background:linear-gradient(90deg,#5b9dff,#3b7be0)}
+  .tok .bar .c{background:linear-gradient(90deg,#10a37f,#0c7a5e)}
+  .tok .num{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap}
+
+  /* speed cell */
+  .spd{min-width:120px}
+  .spd .row{display:flex;align-items:baseline;gap:6px;font-family:var(--mono)}
+  .spd .row .v{font-size:13px;font-weight:600}
+  .spd .row .u{font-size:9px;color:var(--dim)}
+  .spd .row.prefill .v{color:var(--blue)}
+  .spd .row.gen .v{color:var(--good)}
+  .spd .ttft{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+  .spd .spec{display:inline-flex;margin-top:3px;font-family:var(--mono);font-size:9px;color:var(--cyan);background:var(--cyan-d);padding:1px 5px;border-radius:4px}
+
+  .num-cell{font-family:var(--mono);font-size:12.5px;font-weight:500;white-space:nowrap;text-align:right}
+  .num-cell.warn{color:var(--warn)} .num-cell.bad{color:var(--bad)} .num-cell.good{color:var(--good)}
+
+  /* expand row */
+  .exp td{padding:0;border-bottom:1px solid var(--border2);background:#0a1018}
+  .exp-inner{padding:16px 18px 18px;display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+  .exp h5{font-size:9px;font-weight:700;letter-spacing:0.13em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .exp h5 .tag{font-family:var(--mono);font-size:9px;letter-spacing:0;color:var(--cyan);background:var(--cyan-d);padding:2px 7px;border-radius:5px;text-transform:none;font-weight:600}
+  .tl{height:120px;background:#0a1118;border:1px solid var(--border2);border-radius:10px;overflow:hidden}
+  .tl svg{display:block;width:100%;height:100%}
+  .tl-leg{display:flex;gap:16px;margin-top:8px;font-size:10px;color:var(--muted)}
+  .spec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .spec-grid .cell{background:#0a1118;border:1px solid var(--border2);border-radius:9px;padding:9px 11px}
+  .spec-grid .cell .k{font-size:8.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+  .spec-grid .cell .v{font-family:var(--mono);font-size:14px;font-weight:600;margin-top:2px}
+  .spec-grid .cell .sub{font-size:9px;color:var(--dim);font-family:var(--mono)}
+  .verdict{margin-top:12px;border-radius:10px;padding:11px 13px;font-size:11.5px;line-height:1.5;border:1px solid;font-family:var(--font)}
+  .verdict.bad{border-color:rgba(255,107,122,0.3);background:rgba(255,107,122,0.07);color:#f3a8b1}
+  .verdict.warn{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.07);color:#e8c98a}
+  .verdict.good{border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.07);color:#9fe9c8}
+
+  /* sidebar leaderboards */
+  .side h6{font-size:9px;font-weight:700;letter-spacing:0.13em;text-transform:uppercase;color:var(--dim);
+    padding:14px 14px 8px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg2)}
+  .side h6:first-child{padding-top:16px}
+  .lb-list{padding:8px 10px 12px;border-bottom:1px solid var(--line)}
+  .lb-row{display:grid;grid-template-columns:18px 1fr auto;gap:9px;align-items:center;padding:6px 5px;border-radius:7px;cursor:pointer;transition:background .12s}
+  .lb-row:hover{background:#0e1620}
+  .lb-row .r{font-family:var(--mono);font-size:10px;color:var(--dim);font-weight:600;text-align:center}
+  .lb-row .who{min-width:0}
+  .lb-row .who .m{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lb-row .who .b{font-size:9px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lb-row .val{font-family:var(--mono);font-size:13px;font-weight:700}
+  .lb-row .bar{grid-column:1/-1;height:3px;border-radius:2px;background:#0a1118;overflow:hidden;margin-top:4px}
+  .lb-row .bar i{display:block;height:100%;border-radius:2px}
+  .lb-list .best{box-shadow:inset 2px 0 0 var(--cyan)}
+
+  .stat-strip{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-top:1px solid var(--line)}
+  .stat-strip .s{background:var(--bg2);padding:11px 12px}
+  .stat-strip .s .k{font-size:8.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+  .stat-strip .s .v{font-family:var(--mono);font-size:17px;font-weight:700;margin-top:3px}
+  .stat-strip .s .sub{font-size:9.5px;color:var(--muted);font-family:var(--mono);margin-top:1px}
+
+  /* annotation */
+  .ann{position:fixed;left:16px;bottom:16px;z-index:30;max-width:330px;background:var(--panel);
+    border:1px solid var(--border2);border-radius:13px;padding:13px 14px;box-shadow:0 16px 44px rgba(0,0,0,0.6);font-size:11px;line-height:1.55;color:var(--muted);display:none}
+  .ann.show{display:block}
+  .ann b{color:var(--text);display:block;margin-bottom:5px;font-size:11.5px}
+  .ann .x{position:absolute;top:8px;right:10px;color:var(--dim);cursor:pointer;font-size:14px}
+  .ann code{font-family:var(--mono);color:var(--cyan)}
+  .ann-toggle{position:fixed;left:16px;bottom:16px;z-index:31;display:flex;align-items:center;gap:7px;
+    background:var(--panel);border:1px solid var(--border2);border-radius:999px;padding:7px 13px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer}
+  .ann-toggle .led{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(77,208,225,0.6)}
+
+  @media(max-width:1100px){ .main{grid-template-columns:1fr} .side{display:none} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="cmd">
+    <div class="brand"><span class="mark">▲</span><div>offgrid-ai-benchmark<small>Telemetry · mockup B</small></div></div>
+    <div class="scope">
+      <span class="lbl">prompt</span>
+      <select class="sel" id="fBench"></select>
+    </div>
+    <div class="scope">
+      <span class="lbl">backend</span>
+      <select class="sel" id="fSrc"></select>
+    </div>
+    <div class="scope">
+      <span class="lbl">harness</span>
+      <select class="sel" id="fHarness"></select>
+    </div>
+    <div class="search"><input id="search" placeholder="filter model / benchmark / metric…"><span class="k">/</span></div>
+    <div class="spacer"></div>
+    <div class="toggrp">
+      <button class="tog on" id="togLocal"><span class="led"></span>Local-only</button>
+      <button class="tog" id="togCloud"><span class="led"></span>+Cloud</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="table-wrap" id="wrap">
+      <table class="lb" id="lb">
+        <thead><tr id="head"></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <aside class="side" id="side"></aside>
+  </div>
+</div>
+
+<button class="ann-toggle" id="annToggle"><span class="led"></span> Design notes</button>
+<div class="ann" id="ann"><span class="x" id="annX">×</span>
+  <b>Mockup B — “Telemetry”</b>
+  A mission-control / Bloomberg-terminal take: every run is a dense row with an embedded FPS gauge, a stacked prompt/completion token bar, speed chips (prefill vs generation tok/s), TTFT, turns, wall-clock, and speculative-decode acceptance. Click a row to expand the per-turn activity timeline + full spec sheet. The right rail ranks the field by each metric. Everything here is real — pulled from <code>runs/</code> metadata.json (tokens, <code>speedMetrics</code>, <code>results</code>, <code>capture.quality</code>). This is the “I have lots of metrics now, show me everything” surface.
+</div>
+
+<script src="_data.js"></script>
+<script>
+var U=window.BENCH_UTIL, RUNS=window.RUNS;
+var el=function(c){return document.createElement(c);};
+var COLS=[
+  {k:'rank',l:'#',s:null},
+  {k:'sel',l:'',s:null},
+  {k:'who',l:'Run',s:'who'},
+  {k:'fps',l:'Render',s:'fps'},
+  {k:'tok',l:'Tokens',s:'tok'},
+  {k:'spd',l:'Speed',s:'gen'},
+  {k:'turns',l:'Turns',s:'turns'},
+  {k:'wall',l:'Wall',s:'wallMs'},
+  {k:'date',l:'Date',s:null}
+];
+var sortKey='wallMs', sortDir=-1;
+var filters={bench:'all',src:'all',harness:'all',q:'',cloud:false};
+
+function fpsColor(tone){return tone==='fail'?'#ff6b7a':tone==='slow'?'#f5a623':tone==='good'?'#34d399':'#10a37f';}
+function miniGauge(fps,min){
+  var tone=U.fpsTone(fps,min); var col=fpsColor(tone);
+  var pct=Math.min(100,(fps/min)*33);
+  var dash=2*Math.PI*15;
+  return '<div class="fpsg"><div class="ring"><svg width="34" height="34">'+
+    '<circle cx="17" cy="17" r="15" fill="none" stroke="#13202b" stroke-width="3.5"/>'+
+    '<circle cx="17" cy="17" r="15" fill="none" stroke="'+col+'" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="'+(dash*pct/100)+' '+dash+'"/></svg>'+
+    '<span class="n" style="color:'+col+'">'+U.fmtNum(fps,0)+'</span></div>'+
+    '<div class="meta"><div class="v" style="color:'+col+'">'+U.fmtNum(fps,0)+'</div><div class="b">'+min+'fps min</div></div></div>';
+}
+function tokBar(r){
+  var sp=U.tokSplit(r);
+  return '<div class="tok"><div class="bar"><div class="p" style="width:'+sp.prompt.toFixed(1)+'%"></div><div class="c" style="width:'+sp.comp.toFixed(1)+'%"></div></div>'+
+    '<div class="num">'+U.fmtTok(r.totalTok)+' · '+U.fmtTok(r.promptTok)+'p / '+U.fmtTok(r.compTok)+'c</div></div>';
+}
+function spdCell(r){
+  var pre=r.prefill!=null?'<div class="row prefill"><span class="v">'+U.fmtNum(r.prefill,0)+'</span><span class="u">prefill tok/s</span></div>':'<div class="row prefill"><span class="v" style="color:var(--dim)">—</span><span class="u">prefill</span></div>';
+  var gen=r.gen!=null?'<div class="row gen"><span class="v">'+U.fmtNum(r.gen,1)+'</span><span class="u">gen tok/s</span></div>':'<div class="row gen"><span class="v" style="color:var(--dim)">—</span><span class="u">gen</span></div>';
+  var ttft=r.ttft!=null?'<div class="ttft">ttft '+U.fmtNum(r.ttft,0)+'ms</div>':'';
+  var spec=r.specAccept!=null?'<div class="spec">MTP accept '+U.fmtPct(r.specAccept,0)+'</div>':'';
+  return '<div class="spd">'+pre+gen+ttft+spec+'</div>';
+}
+
+function visible(){
+  return RUNS.filter(function(r){
+    if(filters.bench!=='all'&&r.bench!==filters.bench) return false;
+    if(filters.src!=='all'&&r.src!==filters.src) return false;
+    if(filters.harness!=='all'&&r.harness!==filters.harness) return false;
+    if(!filters.cloud&&r.src==='cloud') return false;
+    if(filters.q){ var t=(r.model+' '+r.title+' '+r.bench+' '+r.backend+' '+r.harness+' '+U.fmtTok(r.totalTok)+' '+U.fmtNum(r.gen,1)).toLowerCase(); if(t.indexOf(filters.q)<0) return false; }
+    return true;
+  }).sort(function(a,b){
+    var g=function(r){ return sortKey==='fps'?r.fps: sortKey==='tok'?r.totalTok: sortKey==='gen'?(r.gen||-1): sortKey==='turns'?r.turns: sortKey==='who'?r.model: r.wallMs; };
+    return (g(a)-g(b))*sortDir;
+  });
+}
+
+function renderHead(){
+  var h=document.getElementById('head'); h.innerHTML='';
+  COLS.forEach(function(c){
+    var th=el('th'); th.textContent=c.l; th.dataset.k=c.k; if(c.s===sortKey) th.classList.add('sorted');
+    if(c.s){ th.onclick=function(){ sortKey=c.s; sortDir*=-1; renderAll(); }; }
+    h.appendChild(th);
+  });
+}
+
+var expanded=null;
+function renderRows(){
+  var tb=document.getElementById('rows'); tb.innerHTML='';
+  var runs=visible();
+  runs.forEach(function(r,i){
+    var tone=U.fpsTone(r.fps,r.minFps);
+    var tr=el('tr'); tr.dataset.i=i;
+    tr.innerHTML=
+      '<td class="rank">'+(i+1)+'</td>'+
+      '<td class="tr-sel"><input type="checkbox"></td>'+
+      '<td><div style="display:flex;gap:10px;align-items:center">'+
+        '<img class="thumb" src="'+r.img+'" onerror="this.style.opacity=0.2">'+
+        '<div class="who"><div class="model">'+(r.modelDisplay||r.model)+'</div><div class="bench">'+r.title+' · '+r.date+'</div>'+
+        '<div class="pills"><span class="pill" data-t="'+U.srcTone(r.src)+'">'+r.backend+'</span><span class="pill" data-t="'+U.harnessTone(r.harness)+'">'+r.harness+'</span></div></div></div></td>'+
+      '<td>'+miniGauge(r.fps,r.minFps)+'</td>'+
+      '<td>'+tokBar(r)+'</td>'+
+      '<td>'+spdCell(r)+'</td>'+
+      '<td class="num-cell">'+r.turns+'<div style="font-size:9px;color:var(--dim)">'+r.toolCalls+' calls</div></td>'+
+      '<td class="num-cell">'+U.fmtMs(r.wallMs)+'</td>'+
+      '<td class="num-cell" style="color:var(--dim);font-size:10px">'+r.date.slice(5)+'</td>';
+    tr.onclick=function(e){ if(e.target.tagName==='INPUT') return; toggleExpand(i,tr); };
+    tb.appendChild(tr);
+    if(expanded===i){ var ex=expandRow(r); tr.classList.add('sel'); tr.after(ex); }
+  });
+}
+
+function expandRow(r){
+  var tr=el('tr'); tr.className='exp'; var td=el('td'); td.colSpan=COLS.length;
+  var prof=U.perTurnProfile(r); var w=560,h=120,maxIn=0,maxOut=0;
+  prof.forEach(function(p){maxIn=Math.max(maxIn,p.inp);maxOut=Math.max(maxOut,p.out);});
+  var step=w/(prof.length-1||1);
+  var inArea=prof.map(function(p,i){return (i?'L':'M')+(i*step).toFixed(1)+','+(h-10-(p.inp/maxIn)*(h-24));}).join(' ')+' L'+w+','+(h-10)+' L0,'+(h-10)+' Z';
+  var outLine=prof.map(function(p,i){return (i?'L':'M')+(i*step).toFixed(1)+','+(h-10-(p.out/maxOut)*(h-24));}).join(' ');
+  var tone=U.fpsTone(r.fps,r.minFps);
+  td.innerHTML='<div class="exp-inner">'+
+    '<div><h5>Per-turn activity <span class="tag">'+r.turns+' turns · '+r.toolCalls+' tool calls · '+U.fmtMs(r.wallMs)+'</span></h5>'+
+      '<div class="tl"><svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">'+
+        '<path d="'+inArea+'" fill="rgba(91,157,255,0.16)"/>'+
+        '<path d="'+outLine+'" fill="none" stroke="#10a37f" stroke-width="1.8"/>'+
+        '<line x1="0" y1="'+(h-10)+'" x2="'+w+'" y2="'+(h-10)+'" stroke="#13202b" stroke-width="1"/>'+
+        (r.specAccept!=null?'<text x="6" y="14" fill="#4dd0e1" font-family="JetBrains Mono" font-size="9">MTP '+U.fmtPct(r.specAccept,0)+' accept</text>':'')+
+      '</svg></div>'+
+      '<div class="tl-leg"><span style="color:#5b9dff">▆ input tokens (context grows turn-over-turn)</span><span style="color:#10a37f">— completion bursts</span></div>'+
+      '<div class="verdict '+(tone==='fail'?'bad':tone==='slow'?'warn':'good')+'">'+(tone==='fail'?('Render '+U.fmtNum(r.fps,1)+'fps — '+r.frames+' frames sampled. Animation is far below the '+r.minFps+'fps budget; effectively a slideshow.'):tone==='slow'?('Marginal render at '+U.fmtNum(r.fps,1)+'fps vs '+r.minFps+'fps budget — drops frames under load.'):('Smooth '+U.fmtNum(r.fps,0)+'fps, comfortably above the '+r.minFps+'fps budget.'))+(r.specAccept!=null?' Speculative decoding accepted '+U.fmtPct(r.specAccept,0)+' of draft tokens.':'')+'</div></div>'+
+    '<div><h5>Spec sheet</h5><div class="spec-grid">'+
+      sc('Total tokens',U.fmtTok(r.totalTok),'prompt '+U.fmtTok(r.promptTok)).outerHTML+
+      sc('Completion',U.fmtTok(r.compTok),sp(r.compTok,r.totalTok)+' of total').outerHTML+
+      sc('Prefill speed',r.prefill!=null?U.fmtNum(r.prefill,1)+' tok/s':'—','context ingest').outerHTML+
+      sc('Gen speed',r.gen!=null?U.fmtNum(r.gen,1)+' tok/s':'—','decode rate').outerHTML+
+      sc('TTFT',r.ttft!=null?U.fmtNum(r.ttft,0)+'ms':'—','time to first token').outerHTML+
+      sc('Render FPS',U.fmtNum(r.fps,1),r.frames+' frames @ '+r.vp.w+'×'+r.vp.h).outerHTML+
+      sc('Agent turns',String(r.turns),r.toolCalls+' tool calls').outerHTML+
+      sc('Wall clock',U.fmtMs(r.wallMs),'end-to-end').outerHTML+
+    '</div></div>'+
+  '</div>';
+  tr.appendChild(td); return tr;
+}
+function sc(k,v,sub){var d=el('div');d.className='cell';d.innerHTML='<div class="k">'+k+'</div><div class="v">'+v+'</div><div class="sub">'+sub+'</div>';return d;}
+function sp(n,t){return (n/t*100).toFixed(0)+'%';}
+
+function toggleExpand(i,tr){
+  if(expanded===i){ expanded=null; renderAll(); }
+  else { expanded=i; renderAll(); }
+}
+
+function renderSide(){
+  var s=document.getElementById('side'); s.innerHTML='';
+  var runs=visible();
+
+  // top aggregate strip
+  var strip=el('div'); strip.className='stat-strip';
+  var withGen=runs.filter(function(r){return r.gen!=null;});
+  var avgGen=withGen.length?withGen.reduce(function(a,r){return a+r.gen;},0)/withGen.length:0;
+  var bestFps=runs.reduce(function(a,r){return Math.max(a,r.fps||0);},0);
+  var totTok=runs.reduce(function(a,r){return a+(r.totalTok||0);},0);
+  var failN=runs.filter(function(r){return U.fpsTone(r.fps,r.minFps)==='fail';}).length;
+  strip.innerHTML=
+    '<div class="s"><div class="k">Field</div><div class="v">'+runs.length+'</div><div class="sub">runs shown</div></div>'+
+    '<div class="s"><div class="k">Avg gen</div><div class="v" style="color:var(--good)">'+U.fmtNum(avgGen,0)+'</div><div class="sub">tok/s</div></div>'+
+    '<div class="s"><div class="k">Best FPS</div><div class="v" style="color:var(--cyan)">'+U.fmtNum(bestFps,0)+'</div><div class="sub">render peak</div></div>'+
+    '<div class="s"><div class="k">Fail renders</div><div class="v" style="color:'+(failN?'var(--bad)':'var(--muted)')+'">'+failN+'</div><div class="sub">below ½ budget</div></div>';
+  s.appendChild(strip);
+
+  // leaderboards
+  function board(title,key,fmt,col,higher){
+    var g=function(r){return typeof key==='function'?key(r):r[key];};
+    var h6=el('h6'); h6.innerHTML='<span class="led" style="width:6px;height:6px;border-radius:50%;background:'+col+'"></span>'+title; s.appendChild(h6);
+    var list=el('div'); list.className='lb-list';
+    var ranked=runs.slice().sort(function(a,b){
+      var av=g(a),bv=g(b); if(av==null)return 1; if(bv==null)return -1; return higher?bv-av:av-bv;
+    }).filter(function(r){return g(r)!=null;}).slice(0,5);
+    var max=ranked.length?g(ranked[0]):1;
+    ranked.forEach(function(r,i){
+      var v=g(r); var row=el('div'); row.className='lb-row'+(i===0?' best':'');
+      row.innerHTML='<div class="r">'+(i+1)+'</div><div class="who"><div class="m">'+(r.modelDisplay||r.model)+'</div><div class="b">'+r.title+'</div></div>'+
+        '<div class="val" style="color:'+col+'">'+fmt(v)+'</div>'+
+        '<div class="bar"><i style="width:'+(v/max*100).toFixed(0)+'%;background:'+col+'"></i></div>';
+      row.onclick=function(){ var idx=visible().indexOf(r); if(idx>=0){ expanded=idx; renderAll(); var tr=document.querySelectorAll('#rows tr')[idx*2]; if(tr)tr.scrollIntoView({block:'center'}); } };
+      list.appendChild(row);
+    });
+    if(!ranked.length) list.innerHTML='<div style="padding:8px 5px;color:var(--dim);font-size:11px">No data in current filter.</div>';
+    s.appendChild(list);
+  }
+  board('Fastest generation','gen',function(v){return U.fmtNum(v,0);},'#34d399',true);
+  board('Smoothest render','fps',function(v){return U.fmtNum(v,0);},'#4dd0e1',true);
+  board('Lowest TTFT','ttft',function(v){return U.fmtNum(v,0)+'ms';},'#5b9dff',false);
+  board('Best spec-decode accept','specAccept',function(v){return U.fmtPct(v,0);},'#9f7aea',true);
+  board('Fewest turns','turns',function(v){return String(v);},'#f5a623',false);
+}
+
+function renderAll(){ renderHead(); renderRows(); renderSide(); }
+
+// populate filter selects
+function opts(sel,arr,all){ sel.innerHTML=''; var a=el('option');a.value='all';a.textContent=all;sel.appendChild(a);
+  arr.forEach(function(v){var o=el('option');o.value=v;o.textContent=v;sel.appendChild(o);}); }
+opts(document.getElementById('fBench'),['all'].concat(window.BENCHMARKS.map(function(b){return b.id;})).slice(1).map(function(id){return id;}),'All prompts');
+opts(document.getElementById('fSrc'),['omlx','llama-cpp','llama-cpp-mtp','ollama','cloud'],'All backends');
+opts(document.getElementById('fHarness'),['Pi'],'All harnesses');
+document.getElementById('fBench').onchange=function(e){filters.bench=e.target.value;renderAll();};
+document.getElementById('fSrc').onchange=function(e){filters.src=e.target.value;renderAll();};
+document.getElementById('fHarness').onchange=function(e){filters.harness=e.target.value;renderAll();};
+document.getElementById('search').oninput=function(e){filters.q=e.target.value.trim().toLowerCase();renderAll();};
+document.addEventListener('keydown',function(e){ if(e.key==='/'&&document.activeElement.id!=='search'){e.preventDefault();document.getElementById('search').focus();} });
+var tl=document.getElementById('togLocal'),tc=document.getElementById('togCloud');
+tl.onclick=function(){filters.cloud=false;tl.classList.add('on');tc.classList.remove('on');renderAll();};
+tc.onclick=function(){filters.cloud=true;tc.classList.add('on');tl.classList.remove('on');renderAll();};
+
+var ann=document.getElementById('ann');
+document.getElementById('annToggle').onclick=function(){ann.classList.toggle('show');};
+document.getElementById('annX').onclick=function(){ann.classList.remove('show');};
+
+renderAll();
+</script>
+</body>
+</html>

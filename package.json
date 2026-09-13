@@ -1,0 +1,58 @@
+{
+  "name": "llm-benchmarks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "bench": "./bin/bench.mjs"
+  },
+  "scripts": {
+    "bench": "node ./bin/bench.mjs",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "export:static": "node src/lib/export.ts",
+    "build:static": "node scripts/build-static.mjs",
+    "publish": "node scripts/publish.mjs",
+    "check:bench": "node --check ./bin/bench.mjs && node --check ./src/catalog.mjs && node --check ./src/errors.mjs && node --check ./src/local-lifecycle.mjs && node --check ./src/preferences.mjs && node --check ./src/providers.mjs && node --check ./src/run-plan.mjs && node --check ./src/ui/bench-ui.mjs && node --check ./src/ui/presentation.mjs && node --check ./test/bench.test.mjs && uv run python -m compileall -q ./src/bench_inspect",
+    "check:visual": "astro check && tsc --noEmit",
+    "check": "npm run check:bench && npm run check:visual",
+    "test:bench": "node --test ./test/bench.test.mjs",
+    "test:visual": "vitest run",
+    "test": "npm run test:bench && npm run test:visual",
+    "test:e2e": "playwright test"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@astrojs/node": "^10.1.1",
+    "@earendil-works/pi-coding-agent": "0.85.1",
+    "@earendil-works/pi-tui": "0.85.1",
+    "@tailwindcss/vite": "4.3.0",
+    "astro": "^6.3.3",
+    "smol-toml": "1.8.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.8.0",
+    "lucide-static": "^1.16.0",
+    "serve": "^14.2.6",
+    "vitest": "^4.1.6"
+  },
+  "overrides": {
+    "yaml": "^2.8.4",
+    "js-yaml": "^4.2.0",
+    "esbuild": "^0.28.1",
+    "vite": "^7.3.6"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "sharp@0.34.5": true,
+    "fsevents@2.3.3": true,
+    "fsevents@2.3.2": true
+  }
+}

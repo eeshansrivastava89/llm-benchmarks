@@ -1,0 +1,51 @@
+{
+  "status": "significant",
+  "recommended_variant": "A",
+  "decision": "Variant A is significantly faster (mean 5.7s vs 8.9s, p=0.0003). Recommendation: Keep Variant A.",
+  "metrics": [
+    {
+      "label": "Completion Time",
+      "value": "8.94s vs 5.65s",
+      "delta": "-3.29s",
+      "delta_direction": "up",
+      "context": "Welch's t-test p=0.0003, Cohen's d=-0.413"
+    },
+    {
+      "label": "Completion Rate",
+      "value": "71.1% vs 89.2%",
+      "delta": "-18.2%",
+      "delta_direction": "up",
+      "context": "Z-test p=0.0000"
+    },
+    {
+      "label": "Repeat Rate",
+      "value": "51.7% vs 48.6%",
+      "delta": "+3.1%",
+      "delta_direction": "down",
+      "context": "Z-test p=0.7266"
+    },
+    {
+      "label": "Effect Size",
+      "value": "Cohen's d = 0.413",
+      "context": "Interpretation: medium effect"
+    }
+  ],
+  "raw_stats": {
+    "p_value": 0.0003089841461851392,
+    "cohens_d": -0.4130433780689774,
+    "mean_a": 5.652090361445784,
+    "mean_b": 8.943706666666667,
+    "std_a": 7.620318517022515,
+    "std_b": 8.33848636220669,
+    "completion_rate_a": 0.8924731182795699,
+    "completion_rate_b": 0.7109004739336493,
+    "repeat_rate_a": 0.4861111111111111,
+    "repeat_rate_b": 0.5166666666666667,
+    "srm_p_value": 0.20958258963435955
+  },
+  "warnings": [
+    "None"
+  ],
+  "methodology": "Welch's two-sample t-test (unequal variance) on completion times per completion event. Completion rate tested via proportion z-test. Repeat rate tested via proportion z-test. SRM checked via chi-squared test on variant assignment proportions. Significance threshold \u03b1=0.05.",
+  "generated_at": "2026-06-19T17:28:32.781812+00:00"
+}

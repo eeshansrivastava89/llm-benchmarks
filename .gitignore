@@ -1,0 +1,57 @@
+# Secrets and private access files
+.env
+.env.*
+!.env.example
+!.env.sample
+supabase.json
+
+# Dependency environments
+node_modules/
+.venv/
+venv/
+env/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Bench state and private result data
+/.bench-state.json
+/.bench-runtime/
+/.bench-migration/
+/bench-configs/
+/logs/
+/runs/
+/comparison-exports/
+/scans/
+/sweep-artifacts/
+
+# Generated application and test output
+/.astro/
+/dist/
+/dist-static/
+/test-results/
+/playwright-report/
+*.log
+.tmp-qa/
+tmp/
+
+# Local runner/tool state
+.local-llm/
+.superpowers/
+
+# Local recording scratch
+app/**/.frames-*/
+app/**/*.mov
+app/**/*.webm
+
+# Local agent context
+.claude/
+.codex/
+.pi/
+
+# OS files
+.DS_Store

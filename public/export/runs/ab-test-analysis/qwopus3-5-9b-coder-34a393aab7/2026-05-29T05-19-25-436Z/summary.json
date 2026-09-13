@@ -1,0 +1,51 @@
+{
+  "status": "significant",
+  "recommended_variant": "A",
+  "decision": "Continue with Variant A: B shows a significant slowdown of 3.20s (slower), making A the clear choice",
+  "metrics": [
+    {
+      "label": "Completion Time",
+      "value": "A=5.7s vs B=8.9s",
+      "delta": "-3.2s",
+      "delta_direction": "down",
+      "context": "p=0.000556, d=3.49, 95% CI [-5.0, -1.4]"
+    },
+    {
+      "label": "Completion Rate",
+      "value": "A=100.0% vs B=100.0%",
+      "delta": "+0.0%",
+      "delta_direction": "down",
+      "context": "\u03c7\u00b2=0.00, p=1"
+    },
+    {
+      "label": "Repeat Rate",
+      "value": "A=50.8% vs B=54.5%",
+      "delta": "+3.78%",
+      "delta_direction": "up",
+      "context": "z=0.00, p=1"
+    },
+    {
+      "label": "Effect Size",
+      "value": "d=3.49",
+      "context": "small=0.2, medium=0.5, large=0.8"
+    }
+  ],
+  "raw_stats": {
+    "p_value": 0.0005564632317720067,
+    "cohens_d": -3.489655976588718,
+    "mean_a": 5.729217391304347,
+    "mean_b": 8.932675675675677,
+    "std_a": 7.715348312532342,
+    "std_b": 8.366568819561907,
+    "completion_rate_a": 1.0,
+    "completion_rate_b": 1.0,
+    "repeat_rate_a": 0.5076923076923077,
+    "repeat_rate_b": 0.5454545454545454,
+    "srm_p_value": 0.0005564632317720067
+  },
+  "warnings": [
+    "Extreme effect size (Cohen's d=3.49) suggests data may contain extreme outliers or the effect is very large"
+  ],
+  "methodology": "Welch's t-test for primary metric (completion time per puzzle completion event). Completion rate tested with chi-square, repeat rate with z-test for proportions.",
+  "generated_at": "2026-05-29T05:45:18.188429Z"
+}

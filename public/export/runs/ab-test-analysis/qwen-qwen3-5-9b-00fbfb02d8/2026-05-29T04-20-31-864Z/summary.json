@@ -1,0 +1,49 @@
+{
+  "status": "significant",
+  "recommended_variant": "A",
+  "decision": "Variant A shows significantly faster completion times with acceptable guardrail performance",
+  "metrics": [
+    {
+      "label": "Completion Time",
+      "value": "5.7s vs 8.9s",
+      "delta": "+3.2s",
+      "delta_direction": "up",
+      "context": "95% CI: [1.4s, 5.0s], p=0.0006"
+    },
+    {
+      "label": "Completion Rate",
+      "value": "95.7% vs 96.6% (n=70 vs 58)",
+      "delta": "+0.8%",
+      "delta_direction": "up",
+      "context": "Chi-square p=1.0000"
+    },
+    {
+      "label": "Repeat Rate",
+      "value": "50.7% vs 55.4%",
+      "delta": "+0.0%",
+      "delta_direction": "up",
+      "context": "Z-test p=0.8077"
+    },
+    {
+      "label": "Effect Size",
+      "value": "Cohen's d = 0.40",
+      "context": "Small effect"
+    }
+  ],
+  "raw_stats": {
+    "p_value": 0.0005564632317720067,
+    "cohens_d": 0.3987451333686957,
+    "mean_a": 5.729217391304347,
+    "mean_b": 8.932675675675677,
+    "std_a": 7.715348312532342,
+    "std_b": 8.366568819561907,
+    "completion_rate_a": 0.9571428571428572,
+    "completion_rate_b": 0.9655172413793104,
+    "repeat_rate_a": 0.5074626865671642,
+    "repeat_rate_b": 0.5535714285714286,
+    "srm_p_value": 1.0
+  },
+  "warnings": [],
+  "methodology": "Welch's t-test for primary metric, chi-square for completion rate, z-test for repeat rate",
+  "generated_at": "2026-05-29T04:36:37.013386Z"
+}

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-24T21-04-56-163Z",
+  "benchmark": {
+    "id": "macro-wildflower-meadow",
+    "title": "Macro Wildflower Meadow",
+    "description": "Close-up colorful meadow scene with detailed butterflies, bees, flowers, and wind motion.",
+    "prompt": "Create a complete, self-contained HTML file for the request below. Write the file as `index.html` in the current working directory. Do not create any folders, do not infer a filesystem path, and do not print the HTML in chat. The HTML must include all CSS and JavaScript inline and must not depend on external network assets.\n\nCreate a full-screen animated close-up meadow scene on a bright breezy day, viewed from just above flower height as if the camera is inside a small patch of wildflowers. Keep the composition intimate and readable: show foreground flowers with detailed petals, stems, leaves, and pollen centers. Around them, animate butterflies and bees moving through the scene. The insects should be large enough to see details: butterfly wing patterns, antennae, soft body shapes, bee stripes, tiny wings, and curved flight paths.\n\nUse a vivid imaginative color palette with saturated flower colors, fresh greens, warm sunlight, and playful accents. The model may choose the flower and butterfly colors freely, but the scene should feel joyful, lush, and eye-catching as a gallery thumbnail. Add wind motion: flower stems should sway gently, petals should flutter, leaves should tilt, and insects should adjust their flight as if riding small gusts. Include a softly blurred background with hints of more flowers and sky, but keep the foreground flowers and insects as the clear focus.\n\nKeep the implementation performant while maximizing creativity. The animation should loop naturally, run smoothly, adapt to the browser viewport, and keep the foreground flowers and insects visible without cropping. Use a full-page canvas or SVG and no external libraries.\n\nOptimize for smooth playback. Prefer lightweight rendering for insects and moving foliage, batch canvas operations, and avoid heavy per-frame effects that would drop the frame rate.\n\nAfter generating the HTML, review it with Playwright. First confirm it opens and runs with no JavaScript syntax or console errors — if it's broken, fix the root cause before anything else. Then check the visual criteria with one or two screenshots; if they're already met and there are no errors, stop and make no changes. When something is genuinely wrong, identify the root cause and fix it with one decisive change rather than many small cosmetic tweaks. Keep it to a few steps — do not over-engineer or refine indefinitely, and stop once the animation meets the stated criteria and runs at the target frame rate."
+  },
+  "model": {
+    "id": "Qwen3.6-35B-A3B-OptiQ-4bit",
+    "slug": "qwen3-6-35b-a3b-optiq-4bit-df902d2bed",
+    "displayName": "Qwen 3.6 35B A3B OptiQ 4bit"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-24T21:04:56.163Z",
+  "updatedAt": "2026-06-24T21:39:03.555Z",
+  "preparedAt": "2026-06-24T21:04:56.163Z",
+  "completedAt": "2026-06-24T21:39:03.555Z",
+  "runDirectory": "export/runs/macro-wildflower-meadow/qwen3-6-35b-a3b-optiq-4bit-df902d2bed/2026-06-24T21-04-56-163Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "omlx",
+    "intendedRunner": "Pi",
+    "backendLabel": "oMLX",
+    "model": "Qwen3.6-35B-A3B-OptiQ-4bit",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 112462,
+      "completionTokens": 40923,
+      "totalTokens": 153385
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-24T21:39:03.555Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-24T21:39:03.555Z",
+      "quality": {
+        "measuredFps": 120,
+        "minFps": 12,
+        "sampleMs": 1608,
+        "frames": 193,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

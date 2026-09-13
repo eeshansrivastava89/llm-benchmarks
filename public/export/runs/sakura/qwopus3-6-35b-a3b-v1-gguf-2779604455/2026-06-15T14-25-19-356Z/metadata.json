@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-15T14-25-19-356Z",
+  "benchmark": {
+    "id": "sakura",
+    "title": "Sakura Tree",
+    "description": "Dreamy Japanese cherry blossom tree animation with falling petals.",
+    "prompt": "Create a complete, self-contained HTML file for the request below.\nWrite the file as `index.html` in the current working directory.\nDo not create any folders, do not infer a filesystem path, and do not print the HTML in chat.\n\nThe HTML must include all CSS and JavaScript inline and must not depend on external network assets.\nAnimate a dreamy Japanese cherry blossom tree in full bloom during a gentle petal storm. The complete tree must fit comfortably inside the viewport. Compose the tree as a centered full-body subject, not a cropped close-up. Keep the trunk base near the lower part of the canvas, but do not let it extend below the viewport. The crown should use no more than about 80% of the canvas width and 70% of the canvas height, so no branches or blossoms are clipped. Use dark, elegant lines for the trunk and branches, with pink-white blossoms throughout. Thousands of delicate pink and white petals should fall continuously with realistic physics: subtle rotation, wind-curved paths, varied speeds, and occasional small gusts. Add a soft pastel sky gradient from light pink to lavender, distant misty mountains, a few petals accumulating on the ground, and subtle sunlight from the top right. The scene should feel poetic and serene, loop naturally, and run in real time. Use a full-page canvas and no external libraries.\n\nAfter generating the HTML, do a visual review of the animation using Playwright to ensure it meets the criteria above, and make any necessary adjustments until the animation is accurate and meets the desired quality & performance standards."
+  },
+  "model": {
+    "id": "Qwopus3.6-35B-A3B-v1-GGUF",
+    "slug": "qwopus3-6-35b-a3b-v1-gguf-2779604455"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-15T14:25:19.356Z",
+  "updatedAt": "2026-06-15T14:43:01.106Z",
+  "preparedAt": "2026-06-15T14:25:19.356Z",
+  "completedAt": "2026-06-15T14:43:01.106Z",
+  "runDirectory": "export/runs/sakura/qwopus3-6-35b-a3b-v1-gguf-2779604455/2026-06-15T14-25-19-356Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "llama-cpp",
+    "intendedRunner": "Pi",
+    "backendLabel": "llama.cpp",
+    "model": "Qwopus3.6-35B-A3B-v1-GGUF",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 39424,
+      "completionTokens": 24745,
+      "totalTokens": 64169
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-15T14:43:01.106Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-15T14:43:01.106Z",
+      "quality": {
+        "measuredFps": 91.9,
+        "minFps": 12,
+        "sampleMs": 1600,
+        "frames": 147,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}

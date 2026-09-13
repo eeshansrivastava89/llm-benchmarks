@@ -1,0 +1,49 @@
+{
+  "status": "not_significant",
+  "recommended_variant": "A",
+  "decision": "Variant B shows a statistically significant improvement in completion time (\u0394 = +1.25s, p = 4.1960e-01). Effect size (Cohen's d = -0.14) is small. Guardrails are concerning. Recommendation: Continue with Variant A.",
+  "metrics": [
+    {
+      "label": "Completion Time",
+      "value": "9.6s vs 8.4s",
+      "delta": "+1.25s",
+      "delta_direction": "slower",
+      "context": "Cohen's d = -0.14 (95% CI: [-4.3, 1.8])"
+    },
+    {
+      "label": "Completion Rate",
+      "value": "186.0% vs 443.8%",
+      "delta": "-257.7%",
+      "delta_direction": "down",
+      "context": "\u03c7\u00b2 = 0.0, p = 0.0000"
+    },
+    {
+      "label": "Outlier Rate",
+      "value": "26.6% vs 29.4%",
+      "delta": "-2.8%",
+      "delta_direction": "down",
+      "context": "z = -0.38, p = 0.7034"
+    },
+    {
+      "label": "Effect Size",
+      "value": "Cohen's d = -0.14",
+      "context": "Small effect"
+    }
+  ],
+  "raw_stats": {
+    "p_value": 0.4195975477517042,
+    "cohens_d": -0.1360250029769939,
+    "mean_a": 8.357014705882351,
+    "mean_b": 9.604772151898734,
+    "std_a": 9.79934676697799,
+    "std_b": 8.723191325205336,
+    "completion_rate_a": 4.4375,
+    "completion_rate_b": 1.8604651162790697,
+    "repeat_rate_a": -3.4375,
+    "repeat_rate_b": -0.8604651162790697,
+    "srm_p_value": 0.4195975477517042
+  },
+  "warnings": [],
+  "methodology": "Welch's t-test (unequal variance) for completion times; Fisher's Exact for sequence check; \u03c7\u00b2 test for completion rate; z-test for outlier rate; Cohen's d for effect size. Guardrail thresholds: completion rate \u0394 < 0 or outlier rate \u0394 > 0 would be concerning.",
+  "generated_at": "2026-05-28T15:47:07.952014Z"
+}
