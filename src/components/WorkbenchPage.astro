@@ -1,11 +1,20 @@
 ---
 import PostHog from "./PostHog.astro";
+import { resolveInspectResultsUrl } from "../viewer-config.mjs";
 import "../styles/global.css";
 
 const title = "Local AI Benchmarks";
 const basePath = import.meta.env.BASE_URL;
 const subtitle = "a side quest by eeshans.com";
 const isStaticBuild = process.env.ASTRO_OUTPUT === "static";
+const inspectResultsUrl = resolveInspectResultsUrl({
+  staticBuild: isStaticBuild,
+  environment: {
+    BENCH_INSPECT_VIEWER_PORT: process.env.BENCH_INSPECT_VIEWER_PORT,
+    BENCH_VISUAL_VIEWER_PORT: process.env.BENCH_VISUAL_VIEWER_PORT,
+    PUBLIC_INSPECT_VIEWER_URL: import.meta.env.PUBLIC_INSPECT_VIEWER_URL,
+  },
+});
 const iconStyle = (name: string) => `--icon: url('${basePath}assets/icons/${name}.svg')`;
 ---
 
@@ -40,6 +49,12 @@ const iconStyle = (name: string) => `--icon: url('${basePath}assets/icons/${name
           </div>
 
           <div class="header-actions flex shrink-0 items-center gap-2">
+            {inspectResultsUrl && (
+              <a class="btn-sm-outline inspect-results-link" href={inspectResultsUrl} target="_blank" rel="noopener noreferrer" title="Open Inspect results in a new tab">
+                <span class="ui-icon" aria-hidden="true" style={iconStyle("chart-bar")}></span>
+                <span>Inspect results</span>
+              </a>
+            )}
             <a class="btn-sm-outline source-pill" href="https://github.com/eeshansrivastava89/local-llm-visual-benchmark" target="_blank" rel="noopener noreferrer" aria-label="View source on GitHub">
               <span class="ui-icon" aria-hidden="true" style={iconStyle("github")}></span>
               <span>Source</span>

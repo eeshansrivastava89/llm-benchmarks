@@ -159,6 +159,8 @@ select.input:hover { border-color: color-mix(in srgb, var(--primary), var(--app-
 .btn-sm-danger:hover { background: color-mix(in srgb, var(--red), var(--card) 75%); }
 .icon-only-btn { width: 1.95rem; padding: 0; }
 .source-pill { white-space: nowrap; font-weight: 650; }
+.inspect-results-link { min-height: 2.25rem; white-space: nowrap; font-weight: 650; color: var(--primary); border-color: color-mix(in srgb, var(--primary), var(--app-border) 55%); }
+.inspect-results-link:hover, .inspect-results-link:focus-visible { border-color: var(--primary); background: color-mix(in srgb, var(--primary), var(--card) 92%); }
 .paired-pill { white-space: nowrap; font-weight: 650; color: var(--warning); border-color: color-mix(in srgb, var(--warning), var(--app-border) 45%); }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
@@ -636,6 +638,7 @@ html[data-theme="dark"] .sync-target-logo { filter: brightness(1.1); }
   .app-header > div, .app-shell main { width: calc(100% - 2rem) !important; max-width: none; margin-inline: auto !important; }
   .app-header > div { height: auto; min-height: 4rem; flex-wrap: wrap; padding-block: 0.55rem; }
   .app-header .shrink-0 { flex: 1 1 100%; min-width: 0; flex-wrap: wrap; justify-content: flex-start; }
+  .inspect-results-link { flex: 1 1 auto; }
   .machine-pill { max-width: 100%; }
 
   .toolbar { align-items: stretch; flex-direction: column; }
@@ -662,6 +665,7 @@ html[data-theme="dark"] .sync-target-logo { filter: brightness(1.1); }
   .html-detect-toast { right: 0.5rem; bottom: 0.5rem; left: 0.5rem; max-width: none; }
 }
 @media (max-width: 560px) {
+  .inspect-results-link { flex-basis: 100%; }
   .run-grid { grid-template-columns: 1fr; }
   .onboarding-steps { grid-template-columns: 1fr; }
   .gallery-summary { align-items: flex-start; flex-direction: column; }

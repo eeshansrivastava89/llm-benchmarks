@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
+import { resolveInspectResultsUrl } from "../src/viewer-config.mjs";
 import {
   createViewerDescriptors,
   createViewerManager,
@@ -94,6 +95,26 @@ test("viewer ports are configurable but cannot collide", () => {
     repositoryRoot: "/project",
     environment: { BENCH_INSPECT_VIEWER_PORT: "free" },
   }), /integer from 1 to 65535/);
+});
+
+test("Inspect result links use local viewer configuration and require an explicit static URL", () => {
+  assert.equal(resolveInspectResultsUrl({ environment: {} }), "http://127.0.0.1:7575");
+  assert.equal(resolveInspectResultsUrl({
+    environment: { BENCH_INSPECT_VIEWER_PORT: "17575" },
+  }), "http://127.0.0.1:17575");
+  assert.equal(resolveInspectResultsUrl({ staticBuild: true, environment: {} }), undefined);
+  assert.equal(resolveInspectResultsUrl({
+    staticBuild: true,
+    environment: { PUBLIC_INSPECT_VIEWER_URL: "https://inspect.example/results" },
+  }), "https://inspect.example/results");
+  assert.throws(() => resolveInspectResultsUrl({
+    staticBuild: true,
+    environment: { PUBLIC_INSPECT_VIEWER_URL: "javascript:alert(1)" },
+  }), /HTTP\(S\) URL/);
+  assert.throws(() => resolveInspectResultsUrl({
+    staticBuild: true,
+    environment: { PUBLIC_INSPECT_VIEWER_URL: "http://localhost:7575" },
+  }), /must not target localhost/);
 });
 
 test("starting records ownership, reuses the healthy process, and opens its URL", async (t) => {

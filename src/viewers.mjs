@@ -5,15 +5,13 @@ import { join, resolve } from "node:path";
 
 import { BenchError } from "./errors.mjs";
 import { probeTcp } from "./providers.mjs";
+import { resolveViewerEndpoints } from "./viewer-config.mjs";
 
 export const VIEWER_IDS = Object.freeze({
   inspect: "inspect",
   visual: "visual",
 });
 
-const HOST = "127.0.0.1";
-const DEFAULT_INSPECT_PORT = 7575;
-const DEFAULT_VISUAL_PORT = 4321;
 const STATE_SCHEMA_VERSION = 1;
 const DEFAULT_POLL_INTERVAL_MS = 150;
 const DEFAULT_STOP_TIMEOUT_MS = 5_000;
@@ -22,11 +20,7 @@ export function createViewerDescriptors(options = {}) {
   const repositoryRoot = resolve(options.repositoryRoot ?? process.cwd());
   const environment = options.environment ?? process.env;
   const runtimeRoot = resolve(options.runtimeRoot ?? join(repositoryRoot, ".bench-runtime"));
-  const inspectPort = viewerPort(environment.BENCH_INSPECT_VIEWER_PORT, DEFAULT_INSPECT_PORT, "BENCH_INSPECT_VIEWER_PORT");
-  const visualPort = viewerPort(environment.BENCH_VISUAL_VIEWER_PORT, DEFAULT_VISUAL_PORT, "BENCH_VISUAL_VIEWER_PORT");
-  if (inspectPort === visualPort) {
-    throw new BenchError("Inspect and Visual viewers must use different ports");
-  }
+  const endpoints = resolveViewerEndpoints(environment);
 
   return {
     repositoryRoot,
@@ -36,9 +30,9 @@ export function createViewerDescriptors(options = {}) {
       inspect: {
         id: VIEWER_IDS.inspect,
         label: "Inspect results",
-        host: HOST,
-        port: inspectPort,
-        url: `http://${HOST}:${inspectPort}`,
+        host: endpoints.inspect.host,
+        port: endpoints.inspect.port,
+        url: endpoints.inspect.url,
         healthPath: "/api/app-config",
         command: "uv",
         args: [
@@ -49,15 +43,15 @@ export function createViewerDescriptors(options = {}) {
           "view",
           "start",
           "--host",
-          HOST,
+          endpoints.inspect.host,
           "--port",
-          String(inspectPort),
+          String(endpoints.inspect.port),
           "--log-dir",
           join(repositoryRoot, "logs"),
         ],
         cwd: runtimeRoot,
         commandId: "inspect-viewer-v1",
-        processMarkers: ["uv", "inspect", "view", "start", String(inspectPort)],
+        processMarkers: ["uv", "inspect", "view", "start", String(endpoints.inspect.port)],
         startupTimeoutMs: 20_000,
         logPath: join(runtimeRoot, "inspect-viewer.log"),
         signature: (value) => typeof value?.inspect_version === "string",
@@ -65,15 +59,15 @@ export function createViewerDescriptors(options = {}) {
       visual: {
         id: VIEWER_IDS.visual,
         label: "Visual results",
-        host: HOST,
-        port: visualPort,
-        url: `http://${HOST}:${visualPort}`,
+        host: endpoints.visual.host,
+        port: endpoints.visual.port,
+        url: endpoints.visual.url,
         healthPath: "/api/benchmarks",
         command: "npm",
-        args: ["run", "dev", "--", "--host", HOST, "--port", String(visualPort)],
+        args: ["run", "dev", "--", "--host", endpoints.visual.host, "--port", String(endpoints.visual.port)],
         cwd: repositoryRoot,
         commandId: "visual-viewer-v1",
-        processMarkers: ["npm", "run", "dev", String(visualPort)],
+        processMarkers: ["npm", "run", "dev", String(endpoints.visual.port)],
         startupTimeoutMs: 30_000,
         logPath: join(runtimeRoot, "visual-viewer.log"),
         signature: (value) => Array.isArray(value?.benchmarks),
@@ -427,15 +421,6 @@ function viewerDescriptor(descriptorSet, id) {
   const descriptor = descriptorSet.viewers[id];
   if (!descriptor) throw new BenchError(`Unknown viewer: ${id}`);
   return descriptor;
-}
-
-function viewerPort(value, fallback, name) {
-  if (value === undefined || value === "") return fallback;
-  const port = Number(value);
-  if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
-    throw new BenchError(`${name} must be an integer from 1 to 65535`);
-  }
-  return port;
 }
 
 function optionsPollInterval(dependencies) {

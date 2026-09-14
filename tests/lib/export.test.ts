@@ -416,7 +416,8 @@ describe("static build script", () => {
         STATIC_BENCHMARK_DIR: benchmarkDirectory,
         STATIC_RUNS_ROOT: runsRoot,
         STATIC_EXPORT_DIR: publicExportDirectory,
-        STATIC_OUTPUT_DIR: staticOutputDirectory
+        STATIC_OUTPUT_DIR: staticOutputDirectory,
+        PUBLIC_INSPECT_VIEWER_URL: ""
       }
     });
 
@@ -434,6 +435,12 @@ describe("static build script", () => {
     await expect(
       readFile(join(staticOutputDirectory, "index.html"), "utf8")
     ).resolves.toContain('data-static-build="true"');
+    await expect(
+      readFile(join(staticOutputDirectory, "index.html"), "utf8")
+    ).resolves.not.toContain("Inspect results");
+    await expect(
+      readFile(join(staticOutputDirectory, "index.html"), "utf8")
+    ).resolves.not.toContain("http://127.0.0.1:7575");
     await expect(
       readFile(join(staticOutputDirectory, "index.html"), "utf8")
     ).resolves.not.toContain("Daily-driver stack evidence");
@@ -462,7 +469,8 @@ describe("static build script", () => {
         STATIC_BENCHMARK_DIR: join(root, "missing-benchmarks"),
         STATIC_RUNS_ROOT: join(root, "missing-runs"),
         STATIC_EXPORT_DIR: publicExportDirectory,
-        STATIC_OUTPUT_DIR: staticOutputDirectory
+        STATIC_OUTPUT_DIR: staticOutputDirectory,
+        PUBLIC_INSPECT_VIEWER_URL: "https://inspect.example/results"
       }
     });
 
@@ -472,5 +480,9 @@ describe("static build script", () => {
     await expect(
       readFile(join(staticOutputDirectory, "export", "manifest.json"), "utf8")
     ).resolves.toContain("2026-05-06T19-12-00-000Z");
+    const pageHtml = await readFile(join(staticOutputDirectory, "index.html"), "utf8");
+    expect(pageHtml).toContain('href="https://inspect.example/results"');
+    expect(pageHtml).toContain('target="_blank" rel="noopener noreferrer"');
+    expect(pageHtml).toContain("Inspect results");
   });
 });

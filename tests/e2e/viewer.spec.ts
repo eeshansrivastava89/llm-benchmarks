@@ -150,6 +150,26 @@ const sampleUnsupportedRun = {
   }
 };
 
+test("links the local visual viewer to Inspect accessibly", async ({ page }) => {
+  await mockApi(page, { runs: [] });
+  await page.setViewportSize({ width: 390, height: 900 });
+
+  await page.goto("/");
+  const inspectResults = page.getByRole("link", { name: "Inspect results" });
+  await expect(inspectResults).toBeVisible();
+  await expect(inspectResults).toHaveAttribute("href", "http://127.0.0.1:7575");
+  await expect(inspectResults).toHaveAttribute("target", "_blank");
+  await expect(inspectResults).toHaveAttribute("rel", "noopener noreferrer");
+  await inspectResults.focus();
+  await expect(inspectResults).toBeFocused();
+  await expect(inspectResults).toHaveCSS("outline-style", "solid");
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+  );
+  expect(overflow).toBe(false);
+});
+
 test("renders the visual workbench with prompt/model/table modes", async ({ page }) => {
   await mockApi(page, {});
 

@@ -1,6 +1,6 @@
 # Unified Benchmark Suite Plan
 
-**Status:** Phase 5 complete; Phase 6 not started
+**Status:** Phase 6 complete; Phase 7 is next
 **Primary command:** `bench`  
 **Scope:** Repository consolidation, Inspect/visual/data-science execution, and local viewer orchestration
 
@@ -365,7 +365,8 @@ Local behavior:
 
 Static public behavior:
 
-- Hide the local Inspect link unless an explicit public Inspect URL is configured at build time.
+- Hide the local Inspect link unless `PUBLIC_INSPECT_VIEWER_URL` provides an explicit public Inspect URL at build time.
+- Accept only credential-free HTTP(S) public URLs and reject localhost or loopback targets.
 - Never emit a localhost link into the public GitHub Pages build.
 
 The Inspect viewer does not need a reciprocal link because it is upstream software and should not be forked for navigation chrome.
@@ -519,12 +520,12 @@ Exit criteria:
 
 ### Phase 6: Cross-link the viewers
 
-- [ ] Add an `Inspect results` header action to the local visual viewer.
-- [ ] Open Inspect in a new tab with `noopener noreferrer`.
-- [ ] Pass or derive the configured Inspect URL without hardcoding it into public output.
-- [ ] Hide the link from static builds unless a public Inspect URL is explicitly configured.
-- [ ] Add responsive and keyboard-accessible styles for the new action.
-- [ ] Add a viewer test for link visibility, target, and static-build behavior.
+- [x] Add an `Inspect results` header action to the local visual viewer.
+- [x] Open Inspect in a new tab with `noopener noreferrer`.
+- [x] Pass or derive the configured Inspect URL without hardcoding it into public output.
+- [x] Hide the link from static builds unless a public Inspect URL is explicitly configured.
+- [x] Add responsive and keyboard-accessible styles for the new action.
+- [x] Add a viewer test for link visibility, target, and static-build behavior.
 
 Exit criteria:
 
