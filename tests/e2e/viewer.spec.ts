@@ -177,7 +177,17 @@ test("renders the visual workbench with prompt, model, and compare modes", async
   await page.waitForSelector("[data-run-id]", { timeout: 5000 });
 
   await expect(page.getByRole("heading", { name: "Local AI Benchmarks" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Prepare run" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View source on GitHub" })).toHaveAttribute(
+    "href",
+    "https://github.com/eeshansrivastava89/llm-benchmarks"
+  );
+  await expect(page.getByText("Pairs with offgrid-ai")).toHaveCount(0);
+  await page.getByRole("button", { name: "Prepare run" }).click();
+  const prepareDialog = page.getByRole("dialog", { name: "How to prepare a run" });
+  await expect(prepareDialog).toContainText("bench view visual");
+  await expect(prepareDialog).toContainText("Bench opens Pi inside a new run directory");
+  await expect(prepareDialog).not.toContainText("offgrid-ai");
+  await prepareDialog.getByRole("button", { name: "Close" }).click();
   await expect(page.getByRole("button", { name: "Setup" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Use dark theme" })).toBeVisible();
   const attribution = page.getByRole("link", { name: "eeshans.com" });

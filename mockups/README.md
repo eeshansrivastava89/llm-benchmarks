@@ -1,13 +1,8 @@
-# offgrid-ai-benchmark viewer — redesign mockups
+# Historical viewer redesign mockups
 
-Three radically different redesign directions for the benchmark viewer, plus a full front-end
-analysis. **Nothing here changes existing code** — these are standalone HTML mockups in `mockups/`,
-built on real data and real preview images.
+> These mockups predate the unified `bench` workflow. Their old product labels and runner references are preserved as design evidence, not current setup instructions. See the repository `README.md` for supported commands.
 
-> Part of the **offgrid-ai family**: `offgrid-ai` (control center) · `offgrid-ai-benchmark`
-> (this repo — visual + data-science benchmarks) · `offgrid-ai-sidequests` (dashboard) ·
-> `offgrid-ai-howiprompt` (prompt analyzer). See
-> [`../offgrid-ai` ecosystem vision](https://github.com/eeshansrivastava89/offgrid-ai).
+Three redesign directions for the benchmark viewer, plus a full front-end analysis. Nothing here changes application code: these are standalone HTML mockups built on real data and preview images.
 
 ## Two jobs these redesigns serve
 
@@ -47,7 +42,7 @@ The dataset deliberately spans the dramatic contrasts in the real data:
 ## View them
 
 ```bash
-cd /Users/eeshans/dev/local-llm-visual-benchmark
+cd /path/to/llm-benchmarks
 npx serve .   # open  /mockups/reels.html  /mockups/telemetry.html  /mockups/arena.html
 ```
 

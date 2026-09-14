@@ -1276,7 +1276,7 @@ wheels = [
 ]
 
 [[package]]
-name = "local-llm-inspect-benchmarks"
+name = "llm-benchmarks"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

@@ -8,9 +8,9 @@ Project-specific instructions for coding agents working on the unified benchmark
 
 Do not restore the old offgrid/minimal-ai runner or create duplicate provider, prompt, run-path, metadata, or asset logic.
 
-## Migration safety
+## Data and archive safety
 
-`/Users/eeshans/dev/local-llm-visual-benchmark` is an untouched, read-only migration source until the unified repository is fully built and validated. Reading and copying from it is allowed. Do not commit, stash, clean, reformat, regenerate, or delete anything there.
+This repository is authoritative. It must not depend on the archived `/Users/eeshans/dev/local-llm-visual-benchmark` checkout for running, viewing, capturing, scoring, testing, or publishing. Treat that checkout as read-only historical evidence; do not commit, stash, clean, reformat, regenerate, or delete anything there.
 
 Historical `runs/` and `comparison-exports/` are ignored local data but must be preserved. `public/export/` is the tracked publish-safe gallery snapshot.
 
@@ -43,7 +43,7 @@ npm test
 uv lock --check
 ```
 
-Use `npm run build:static` when changing the viewer, export pipeline, or deployment. Avoid `npm run publish` unless the public export should be regenerated and committed.
+Use `npm run build:static` when changing the viewer, export pipeline, or deployment; it builds from the tracked export without refreshing it. Avoid `npm run publish` unless the public export should be regenerated and committed.
 
 ## Publishing
 
@@ -51,4 +51,4 @@ Use `npm run build:static` when changing the viewer, export pipeline, or deploym
 
 ## Keep changes focused
 
-Follow `internal-docs/unified-benchmark-suite-plan.md` phase by phase. Preserve the native Inspect and visual result formats, avoid broad reorganization during consolidation, and prefer shared domain modules over parallel implementations.
+Preserve the native Inspect and visual result formats. Prefer shared domain modules over parallel implementations, and do not add compatibility paths for the retired multi-repository workflow.

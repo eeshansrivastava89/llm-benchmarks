@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eeshansrivastava89/llm-benchmarks.git"
+  },
+  "homepage": "https://localai.eeshans.com/",
+  "bugs": {
+    "url": "https://github.com/eeshansrivastava89/llm-benchmarks/issues"
+  },
   "bin": {
     "bench": "./bin/bench.mjs"
   },

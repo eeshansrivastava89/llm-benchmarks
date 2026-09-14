@@ -1,6 +1,8 @@
-# Front-end analysis — offgrid-ai-benchmark viewer
+# Historical front-end analysis — pre-unification viewer
 
-> A full audit of the current benchmark viewer from every user surface and angle, the metrics
+> This snapshot predates the unified `bench` workflow. Old repository names, product labels, and runner references are retained only to explain the mockups; they are not current instructions.
+
+> A full audit of the benchmark viewer from every user surface and angle, the metrics
 > inventory, where the gaps are, and how the three mockups (`reels`, `telemetry`, `arena`)
 > respond to them. Everything below is grounded in the actual codebase (`src/`, `public/js/`,
 > `src/styles/global.css`) and real run data (`runs/**/metadata.json`).
@@ -166,6 +168,6 @@ Open any of the three directly in a browser (they load `../runs/` and `../public
 relative to the repo), or serve the repo root and visit `/mockups/<name>.html`:
 
 ```bash
-cd /Users/eeshans/dev/local-llm-visual-benchmark
+cd /path/to/llm-benchmarks
 npx serve .          # then open /mockups/reels.html  /mockups/telemetry.html  /mockups/arena.html
 ```

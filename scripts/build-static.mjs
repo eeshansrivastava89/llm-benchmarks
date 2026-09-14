@@ -16,8 +16,8 @@ const staticOutputDirectory =
   process.env.STATIC_OUTPUT_DIR ?? join(repoRoot, "dist-static");
 const clientBuildDirectory =
   process.env.STATIC_CLIENT_BUILD_DIR ?? join(repoRoot, "dist", "client");
-const astroBase = process.env.ASTRO_BASE ?? "/local-llm-visual-benchmark/";
-const useExistingExport = process.env.STATIC_USE_EXISTING_EXPORT === "true";
+const astroBase = process.env.ASTRO_BASE ?? "/";
+const useExistingExport = process.env.STATIC_USE_EXISTING_EXPORT !== "false";
 
 const manifest = useExistingExport
   ? await readExistingExport(publicExportDirectory)

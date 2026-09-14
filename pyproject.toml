@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "local-llm-inspect-benchmarks"
+name = "llm-benchmarks"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
@@ -14,8 +14,13 @@ dependencies = [
     "openai>=3.13.0",
 ]
 
+[project.urls]
+Homepage = "https://localai.eeshans.com/"
+Repository = "https://github.com/eeshansrivastava89/llm-benchmarks"
+Issues = "https://github.com/eeshansrivastava89/llm-benchmarks/issues"
+
 [project.entry-points.inspect_ai]
-local_llm_inspect_benchmarks = "bench_inspect._registry"
+llm_benchmarks = "bench_inspect._registry"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/bench_inspect"]

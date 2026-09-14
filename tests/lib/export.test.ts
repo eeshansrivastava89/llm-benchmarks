@@ -447,6 +447,7 @@ describe("static build script", () => {
         STATIC_RUNS_ROOT: runsRoot,
         STATIC_EXPORT_DIR: publicExportDirectory,
         STATIC_OUTPUT_DIR: staticOutputDirectory,
+        STATIC_USE_EXISTING_EXPORT: "false",
         PUBLIC_INSPECT_VIEWER_URL: ""
       }
     });

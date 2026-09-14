@@ -1,6 +1,6 @@
 # Unified Benchmark Suite Plan
 
-**Status:** Phase 7 complete; Phase 8 is next
+**Status:** Phase 8 local cutover complete; commit and GitHub Pages activation pending
 **Primary command:** `bench`  
 **Scope:** Repository consolidation, Inspect/visual/data-science execution, and local viewer orchestration
 
@@ -558,15 +558,15 @@ Automated results and the remaining human checks are recorded in `internal-docs/
 
 ### Phase 8: Cut over to one maintained repository
 
-- [ ] Retain the existing Inspect logs and task configs in the unified ignored directories.
-- [ ] Verify that every historical visual/data-science run and comparison export was copied into the unified repository and remains unchanged in the original visual repository.
-- [ ] Update README setup, run, viewer, publish, and troubleshooting instructions.
+- [x] Retain the existing Inspect logs and task configs in the unified ignored directories.
+- [x] Verify that every historical visual/data-science run and comparison export was copied into the unified repository and remains unchanged in the original visual repository.
+- [x] Update README setup, run, viewer, publish, and troubleshooting instructions.
 - [ ] Update internal context files after the implementation is complete.
-- [ ] Install/link the unified `bench` executable from the canonical repository.
-- [ ] Confirm `bench`, `bench view both`, `npm run publish`, and GitHub Pages deployment from a clean checkout.
-- [ ] Create or rename the GitHub repository to `llm-benchmarks`, then update its remote, source links, package metadata, CNAME/base-path assumptions, and badges.
-- [ ] Archive the old Inspect directory only after retained local data and the Kimi adapter are verified in the unified checkout.
-- [ ] Remove documentation that instructs users to coordinate a second repository or external benchmark runner.
+- [x] Install/link the unified `bench` executable from the canonical repository.
+- [ ] Confirm `bench`, `bench view both`, `npm run publish`, and GitHub Pages deployment from a clean checkout. Local and clean-worktree checks pass; deployed Pages verification remains.
+- [x] Create the GitHub repository `llm-benchmarks`, then update its remote, source links, package metadata, and CNAME/base-path assumptions. The approved custom domain remains unchanged.
+- [x] Archive the old Inspect directory only after retained local data and the Kimi adapter are verified in the unified checkout. The pre-rename path no longer exists, and the Kimi adapter passes its integration test.
+- [x] Remove documentation that instructs users to coordinate a second repository or external benchmark runner.
 
 Exit criteria:
 
