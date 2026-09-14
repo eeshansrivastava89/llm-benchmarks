@@ -7,7 +7,7 @@
     "inspectEvalsVersion": "0.17.0",
     "sampleLimit": 1,
     "sampleShuffle": 42,
-    "report": "internal-docs/benchmark-sweep-deepseek-flash-2026-09-12.md"
+    "report": "internal-docs/reference/benchmark-sweep-deepseek-flash-2026-09-12.md"
   },
   "tasks": {
     "inspect_evals/abstention_bench": {
@@ -302,25 +302,25 @@
       "result": "blocked",
       "category": "sandbox_unavailable",
       "recommendation": "conditional_after_setup",
-      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
+      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f <installed inspect_evals>/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
     },
     "inspect_evals/cti_realm_25_minimal": {
       "result": "blocked",
       "category": "sandbox_unavailable",
       "recommendation": "conditional_after_setup",
-      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
+      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f <installed inspect_evals>/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
     },
     "inspect_evals/cti_realm_25_seeded": {
       "result": "blocked",
       "category": "sandbox_unavailable",
       "recommendation": "conditional_after_setup",
-      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
+      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f <installed inspect_evals>/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
     },
     "inspect_evals/cti_realm_50": {
       "result": "blocked",
       "category": "sandbox_unavailable",
       "recommendation": "conditional_after_setup",
-      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
+      "diagnostic": "RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f <installed inspect_evals>/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init"
     },
     "inspect_evals/cve_bench": {
       "result": "blocked",

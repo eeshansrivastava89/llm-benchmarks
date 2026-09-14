@@ -1,8 +1,12 @@
 # DeepSeek Flash Inspect Evals compatibility sweep
 
-**Date:** 2026-09-12  
-**Environment:** macOS arm64; Python 3.12.12; Inspect AI 0.3.263; Inspect Evals 0.17.0  
-**Model:** `deepseek/deepseek-flash` through Pi (`openai-completions`)  
+**Date:** 2026-09-12
+
+**Environment:** macOS arm64; Python 3.12.12; Inspect AI 0.3.263; Inspect Evals 0.17.0
+
+**Model:** `deepseek/deepseek-flash` through Pi (`openai-completions`)
+
+The CSV and machine-readable data were rechecked during the documentation consolidation: they contain 247 unique tasks with the same 100 passed, 137 blocked, and 10 inconclusive totals. The installed package versions still match the versions above.
 
 ## Executive result
 
@@ -24,7 +28,9 @@ The run used about **957,641 DeepSeek input tokens** and **432,260 DeepSeek outp
 - Runs used official task defaults. Some defaults multiply work through epochs or invoke auxiliary judge models.
 - `passed` means one sample completed and Inspect wrote `status: success`; it does not establish benchmark quality or statistical validity.
 
-## Blocker breakdown
+## Non-passing result breakdown
+
+The table includes all 147 non-passing tasks: 137 blocked tasks plus the 10 inconclusive timeouts.
 
 | Category | Tasks | Primary owner |
 |---|---:|---|
@@ -123,7 +129,7 @@ The GDM self-proliferation family repeatedly requested a versioned `secrets.zip`
 
 ## Complete task matrix
 
-The CSV beside this report is easier to filter: `internal-docs/benchmark-sweep-deepseek-flash-2026-09-12.csv`.
+The CSV beside this report is easier to filter: `internal-docs/reference/benchmark-sweep-deepseek-flash-2026-09-12.csv`.
 
 | Task | Group | Result | Category | Recommendation | Diagnostic |
 |---|---|---|---|---|---|
@@ -175,10 +181,10 @@ The CSV beside this report is easier to filter: `internal-docs/benchmark-sweep-d
 | `commonsense_qa` | Knowledge | passed | `passed` | `general_candidate` | Inspect completed and wrote a successful one-sample log. |
 | `compute_eval` | Coding | blocked | `sandbox_unavailable` | `conditional_after_setup` | Docker sandbox could not start because the local Docker daemon was unavailable. |
 | `core_bench` | Coding | inconclusive | `timeout_or_too_heavy` | `manual_review` | Did not complete within the extended 10-minute smoke-test window. |
-| `cti_realm_25` | Cybersecurity | blocked | `sandbox_unavailable` | `conditional_after_setup` | RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init |
-| `cti_realm_25_minimal` | Cybersecurity | blocked | `sandbox_unavailable` | `conditional_after_setup` | RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init |
-| `cti_realm_25_seeded` | Cybersecurity | blocked | `sandbox_unavailable` | `conditional_after_setup` | RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init |
-| `cti_realm_50` | Cybersecurity | blocked | `sandbox_unavailable` | `conditional_after_setup` | RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f /Users/eeshans/dev/local-llm-inspect-benchmarks/.venv/lib/python3.12/site-packages/inspect_evals/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init |
+| `cti_realm_25` | Cybersecurity | blocked | `sandbox_unavailable` | `conditional_after_setup` | RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f <installed inspect_evals>/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init |
+| `cti_realm_25_minimal` | Cybersecurity | blocked | `sandbox_unavailable` | `conditional_after_setup` | RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f <installed inspect_evals>/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init |
+| `cti_realm_25_seeded` | Cybersecurity | blocked | `sandbox_unavailable` | `conditional_after_setup` | RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f <installed inspect_evals>/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init |
+| `cti_realm_50` | Cybersecurity | blocked | `sandbox_unavailable` | `conditional_after_setup` | RuntimeError: Command failed: docker compose -p inspect-cti-realm-shared -f <installed inspect_evals>/cti_realm/docker/shared_services.yaml up -d --build kusto-emulator kusto-init |
 | `cve_bench` | Cybersecurity | blocked | `missing_dependency` | `conditional_after_setup` | AssertionError: To use CVEBench, please install the optional dependency by running `pip install https://github.com/Scott-Simmons/cve-bench.git` if you installed inspect_evals via pip or `uv sync --group cve_bench` if you are working inside the inspect_evals repo. |
 | `cybench` | Cybersecurity | blocked | `missing_dependency` | `conditional_after_setup` | ModuleNotFoundError: No module named 'inspect_cyber' |
 | `cybergym` | Cybersecurity | blocked | `missing_dependency` | `conditional_after_setup` | ModuleNotFoundError: No module named 'inspect_cyber' |
