@@ -1,8 +1,8 @@
 # Phase 8 repository cutover
 
-**Branch:** `feat/unified-benchmark-suite`
+**Branch:** `main`
 
-**Status:** Local cutover complete; commit, push, and GitHub Pages activation await approval
+**Status:** Complete
 
 ## Retained local data
 
@@ -72,11 +72,15 @@ A temporary clean worktree, with no dependency environments or ignored run data 
 
 The clean-worktree publish generated an empty gallery because clean checkouts intentionally contain no ignored private runs. It proved that publication no longer depends on the old visual repository; it did not change this checkout's tracked export.
 
-## Remaining cutover actions
+## GitHub and deployment cutover
 
-1. Approve and create the Phase 8 commit.
-2. Push the canonical history and establish `main` in the new GitHub repository.
-3. Enable GitHub Pages with GitHub Actions and attach `localai.eeshans.com` to the new repository.
-4. Verify the deployed workflow and live custom domain.
-5. Update project-local context files after the final deployed state is known.
-6. Leave the old visual repository in place until the user separately chooses to archive it.
+- Phase 8 implementation commit: `813e188 chore: complete benchmark suite cutover`
+- CI timeout follow-up: `a078155 test: allow static builds in CI`
+- Canonical branch: `main`, tracking `origin/main`
+- Pages build type: GitHub Actions
+- Custom domain: `localai.eeshans.com`, transferred from the old repository
+- Successful deployment: GitHub Actions run `34824124101`
+
+The first Pages run exposed Vitest's five-second default on two integration tests that launch complete Astro builds. Both tests already passed locally; assigning a 30-second process-level timeout made the CI run pass without weakening assertions.
+
+The deployed custom domain returned HTTP 200, contained the new source URL and `bench` onboarding, and contained neither the old source URL nor external-runner copy. The old visual repository remains unarchived and unchanged, but it no longer owns the custom domain or participates in the supported workflow.

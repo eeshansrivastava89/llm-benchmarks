@@ -1,6 +1,6 @@
 # Unified Benchmark Suite Plan
 
-**Status:** Phase 8 local cutover complete; commit and GitHub Pages activation pending
+**Status:** Phase 8 complete
 **Primary command:** `bench`  
 **Scope:** Repository consolidation, Inspect/visual/data-science execution, and local viewer orchestration
 
@@ -561,9 +561,9 @@ Automated results and the remaining human checks are recorded in `internal-docs/
 - [x] Retain the existing Inspect logs and task configs in the unified ignored directories.
 - [x] Verify that every historical visual/data-science run and comparison export was copied into the unified repository and remains unchanged in the original visual repository.
 - [x] Update README setup, run, viewer, publish, and troubleshooting instructions.
-- [ ] Update internal context files after the implementation is complete.
+- [x] Update internal context files after the implementation is complete.
 - [x] Install/link the unified `bench` executable from the canonical repository.
-- [ ] Confirm `bench`, `bench view both`, `npm run publish`, and GitHub Pages deployment from a clean checkout. Local and clean-worktree checks pass; deployed Pages verification remains.
+- [x] Confirm `bench`, `bench view both`, `npm run publish`, and GitHub Pages deployment from a clean checkout.
 - [x] Create the GitHub repository `llm-benchmarks`, then update its remote, source links, package metadata, and CNAME/base-path assumptions. The approved custom domain remains unchanged.
 - [x] Archive the old Inspect directory only after retained local data and the Kimi adapter are verified in the unified checkout. The pre-rename path no longer exists, and the Kimi adapter passes its integration test.
 - [x] Remove documentation that instructs users to coordinate a second repository or external benchmark runner.
@@ -576,18 +576,18 @@ Exit criteria:
 
 ## 14. Acceptance criteria
 
-- [ ] A user can run Inspect, Visual, or Data Science from one `bench` flow.
-- [ ] The provider and model are selected once per run.
-- [ ] Visual prompts and run metadata have one implementation shared with the viewer.
-- [ ] Interactive Pi starts in the prepared run folder with the prompt submitted.
-- [ ] Supported local models unload when the Pi session ends.
-- [ ] Inspect continues writing native `.eval` logs and uses the native Inspect viewer.
-- [ ] Visual and Data Science continue using their existing run folders and Astro viewer.
-- [ ] `bench view both` starts or reuses both viewers in the background.
-- [ ] The visual viewer links to Inspect in a new tab locally.
-- [ ] Public builds contain no localhost Inspect link unless explicitly configured.
-- [ ] Viewer process state contains no credentials and never authorizes killing unrelated processes.
-- [ ] A fresh checkout can install, test, run, view, and publish without another repository.
+- [x] A user can run Inspect, Visual, or Data Science from one `bench` flow.
+- [x] The provider and model are selected once per run.
+- [x] Visual prompts and run metadata have one implementation shared with the viewer.
+- [x] Interactive Pi starts in the prepared run folder with the prompt submitted.
+- [x] Supported local models unload when the Pi session ends.
+- [x] Inspect continues writing native `.eval` logs and uses the native Inspect viewer.
+- [x] Visual and Data Science continue using their existing run folders and Astro viewer.
+- [x] `bench view both` starts or reuses both viewers in the background.
+- [x] The visual viewer links to Inspect in a new tab locally.
+- [x] Public builds contain no localhost Inspect link unless explicitly configured.
+- [x] Viewer process state contains no credentials and never authorizes killing unrelated processes.
+- [x] A fresh checkout can install, test, run, view, and publish without another repository.
 
 ## 15. Non-goals
 
