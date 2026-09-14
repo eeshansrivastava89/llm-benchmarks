@@ -89,6 +89,13 @@ function localModelAdapter(model, translated, fetchImpl) {
   return null;
 }
 
+export function describeInteractiveCleanup(model) {
+  if (model.backend?.location !== "local") return "No local model process to unload.";
+  if (model.provider === "ollama") return "Unload the selected Ollama model after Pi exits.";
+  if (model.provider === "omlx") return "Unload the selected oMLX model after Pi exits.";
+  return `This local backend has no automatic unload adapter; Bench will leave ${model.provider}/${model.id} running.`;
+}
+
 export async function prepareLocalModelLifecycle(model, translated, options = {}) {
   if (model.backend.location !== "local") return null;
   const adapter = localModelAdapter(model, translated, options.fetchImpl ?? fetch);

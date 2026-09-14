@@ -221,7 +221,7 @@ test("recent selections are stored without copying provider or task catalogs", a
     task: "benchmarks/smoke.py@smoke",
   });
   assert.deepEqual(await loadBenchPreferences(directory), {
-    schemaVersion: 1,
+    schemaVersion: 2,
     provider: "ollama",
     model: "qwen3.5",
     source: "local",

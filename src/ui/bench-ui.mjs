@@ -461,7 +461,7 @@ class BenchmarkBrowserScreen extends VStack {
     this.setDetails(tasks[selectedIndex]);
 
     this.clear();
-    this.addChild(new WorkflowHeader(this.options.step ?? "3 Benchmark"));
+    this.addChild(new WorkflowHeader(this.options.step ?? "4 Benchmark"));
     if (this.options.context) this.addChild(new Text(style.muted(this.options.context), 1, 0));
     this.addChild(new Text(`\n${sourceTabs(this.sources, this.sourceIndex)}`, 1, 0));
     const sourceDescription = this.source.detail

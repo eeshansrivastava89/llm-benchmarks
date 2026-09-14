@@ -13,9 +13,10 @@ export async function loadBenchPreferences(cwd) {
 }
 
 export async function saveBenchPreferences(cwd, preferences) {
+  const { schemaVersion: _previousSchemaVersion, ...state } = preferences;
   await writeFile(
     resolve(cwd, FILE_NAME),
-    `${JSON.stringify({ schemaVersion: 1, ...preferences }, null, 2)}\n`,
+    `${JSON.stringify({ schemaVersion: 2, ...state }, null, 2)}\n`,
     "utf8",
   );
 }

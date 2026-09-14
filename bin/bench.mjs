@@ -15,6 +15,10 @@ import {
   sweepWarningLines,
 } from "../src/catalog.mjs";
 import { BenchError, SelectionCancelled } from "../src/errors.mjs";
+import {
+  loadInteractiveBenchmarkSuites,
+  loadProjectDataScienceAccess,
+} from "../src/benchmark-suites.mjs";
 import { prepareLocalModelLifecycle } from "../src/local-lifecycle.mjs";
 import { loadBenchPreferences, saveBenchPreferences } from "../src/preferences.mjs";
 import {
@@ -36,6 +40,14 @@ import {
 } from "../src/run-plan.mjs";
 import { BACK, CANCEL, BenchUI, benchUiStyle } from "../src/ui/bench-ui.mjs";
 import { taskWarning, terminalLink } from "../src/ui/presentation.mjs";
+import {
+  BENCHMARK_SUITE_IDS,
+  buildInteractiveReview,
+  buildSuiteChoices,
+  interactiveBenchmarkDetails,
+  suitePassthroughError,
+  updateSuitePreferences,
+} from "../src/suite-workflow.mjs";
 
 function selectedOrCancel(result) {
   if (result === CANCEL) throw new SelectionCancelled();
@@ -540,7 +552,7 @@ async function waitForTaskConfigEdit(cwd, task, path, ui) {
         detail: `The file stays at ${displayPath}`,
       },
     ], {
-      step: "4 Configure",
+      step: "5 Configure",
       context: `${task.displayName}  ·  ${displayPath}`,
       title: "Edit task configuration",
       message: validationError
@@ -665,7 +677,7 @@ async function selectTaskConfiguration(cwd, config, task, inspectPassthrough, ui
     }
 
     const selected = selectedOrCancel(await ui.select(items, {
-      step: "4 Configure",
+      step: "5 Configure",
       context: task.displayName,
       title: "Task options",
       message: savedValidationError
@@ -725,7 +737,7 @@ async function selectTaskConfiguration(cwd, config, task, inspectPassthrough, ui
         selectedOrCancel(await ui.select([
           { action: "back", label: "Back to task options" },
         ], {
-          step: "4 Configure",
+          step: "5 Configure",
           context: task.displayName,
           title: "Official documentation",
           message: "Click a link in supported terminals, or copy it into a browser.",
@@ -761,7 +773,7 @@ async function confirmSweepWarning(task, ui) {
       { action: "continue", label: "Continue anyway", detail: "Configure and run this benchmark" },
     ],
     {
-      step: "3 Benchmark",
+      step: "4 Benchmark",
       context: task.displayName,
       title: "Compatibility warning",
       message: lines[0],
@@ -776,7 +788,7 @@ async function confirmSweepWarning(task, ui) {
   return selected !== BACK && selected.action === "continue";
 }
 
-async function askPositiveInteger(ui, label, maximum = null, context = "", step = "5 Samples", initialValue = null) {
+async function askPositiveInteger(ui, label, maximum = null, context = "", step = "6 Samples", initialValue = null) {
   const range = Number.isInteger(maximum) ? `1–${formatSampleCount(maximum)}` : "a positive whole number";
   const result = selectedOrCancel(await ui.input({
     step,
@@ -818,7 +830,7 @@ async function selectSamples(task, inspectPassthrough, taskConfiguration = { pat
   const choices = sampleChoices(task.sampleCount);
   const presetLimits = new Set(choices.filter(({ action }) => action === "limit").map(({ limit }) => limit));
   const selected = selectedOrCancel(await ui.select(choices, {
-    step: "5 Samples",
+    step: "6 Samples",
     context: task.displayName,
     title: "Sample budget",
     message: Number.isInteger(task.sampleCount)
@@ -850,7 +862,7 @@ async function selectSamples(task, inspectPassthrough, taskConfiguration = { pat
   if (selected === BACK) return BACK;
 
   const limit = selected.action === "custom"
-    ? await askPositiveInteger(ui, "Sample count", task.sampleCount, task.displayName, "5 Samples", previous?.limit ?? null)
+    ? await askPositiveInteger(ui, "Sample count", task.sampleCount, task.displayName, "6 Samples", previous?.limit ?? null)
     : selected.limit;
   if (limit === BACK) return BACK;
   if (limit === null) {
@@ -900,7 +912,7 @@ async function selectConcurrency(model, inspectPassthrough, ui, previous = null)
   }
 
   const selected = selectedOrCancel(await ui.select(localConcurrencyChoices(), {
-    step: "6 Concurrency",
+    step: "7 Concurrency",
     context: `${model.provider}/${model.id}  ·  local model`,
     title: "Request concurrency",
     message: "More parallel requests can finish sooner, but they use more memory. Choose Safe if unsure.",
@@ -927,7 +939,7 @@ async function selectConcurrency(model, inspectPassthrough, ui, previous = null)
     return { args: [], connections: null, summary: "Inspect decides · advanced" };
   }
   const connections = selected.action === "custom"
-    ? await askPositiveInteger(ui, "Maximum requests at once", null, `${model.provider}/${model.id}`, "6 Concurrency", previous?.connections ?? null)
+    ? await askPositiveInteger(ui, "Maximum requests at once", null, `${model.provider}/${model.id}`, "7 Concurrency", previous?.connections ?? null)
     : selected.connections;
   if (connections === BACK) return BACK;
   const intent = selected.action === "custom" ? "Custom" : selected.label.split(" · ")[0];
@@ -1019,13 +1031,22 @@ function modelCompatibility(modelRuntime, model) {
   return { ready: true, short: "ready", reason: "Ready for Inspect" };
 }
 
+function modelPiReady(model) {
+  return model.backend?.location !== "local" || model.backend.status !== "offline";
+}
+
 function modelDetails(choice) {
-  const { model, compatibility } = choice;
+  const { model, compatibility, piReady = true } = choice;
   const lines = [
     model.name || model.id,
-    compatibility.ready
-      ? benchUiStyle.success("✓ Ready for Inspect")
-      : benchUiStyle.error(`× ${compatibility.reason}`),
+    !piReady
+      ? benchUiStyle.error("× Local server is offline")
+      : compatibility.ready
+        ? benchUiStyle.success("✓ Pi + Inspect")
+        : benchUiStyle.success("✓ Available through Pi"),
+    ...(!compatibility.ready && piReady
+      ? [benchUiStyle.warning(`Inspect: ${compatibility.reason}`)]
+      : []),
     "",
     detailHeading("CAPABILITIES"),
     `Input: ${model.input.includes("image") ? "Text and images" : "Text"}`,
@@ -1233,7 +1254,7 @@ async function confirmRun(
       { action: "command", label: "View redacted command", detail: "For advanced troubleshooting" },
     ];
     const selected = selectedOrCancel(await ui.select(actions, {
-      step: "7 Review",
+      step: "8 Review",
       context: `${model.provider}/${model.id}  →  ${task.displayName}`,
       title: cautions.length > 0 ? "Review cautions before running" : "Ready to run",
       message: cautions.length > 0
@@ -1250,7 +1271,7 @@ async function confirmRun(
     selectedOrCancel(await ui.select([
       { action: "back", label: "Back to review", detail: "Return to the run plan" },
     ], {
-      step: "7 Review",
+      step: "8 Review",
       context: task.displayName,
       title: "Redacted Inspect command",
       message: "Authentication values are omitted.",
@@ -1259,6 +1280,70 @@ async function confirmRun(
       allowBack: true,
     }));
   }
+}
+
+async function selectInteractiveBenchmark(suite, model, preferredBenchmarkId, ui) {
+  const result = selectedOrCancel(await ui.select(suite.benchmarks, {
+    step: "4 Benchmark",
+    context: `${suite.label}  ·  ${model.provider}/${model.id}`,
+    title: `Choose a ${suite.label} benchmark`,
+    message: "The benchmark prompt and output contract come from the shared catalog.",
+    listTitle: "Benchmarks",
+    detailTitle: "Benchmark contract",
+    label: (benchmark) => benchmark.title,
+    summary: (benchmark) => benchmark.description,
+    details: interactiveBenchmarkDetails,
+    searchText: (benchmark) => `${benchmark.id} ${benchmark.title} ${benchmark.description}`,
+    searchPlaceholder: "benchmark name or description",
+    searchable: true,
+    isInitial: (benchmark) => benchmark.id === preferredBenchmarkId,
+    allowBack: true,
+  }));
+  return result;
+}
+
+async function confirmInteractiveReview(repositoryRoot, suite, benchmark, model, ui) {
+  const review = buildInteractiveReview({ repositoryRoot, suite, benchmark, model });
+  const receipt = [
+    detailHeading("MODEL"),
+    `${review.model}  ·  ${model.backend.location}`,
+    "",
+    detailHeading("SUITE"),
+    review.suite,
+    "",
+    detailHeading("BENCHMARK"),
+    `${review.benchmark}  ·  ${review.benchmarkId}`,
+    "",
+    detailHeading("EXPECTED OUTPUTS"),
+    ...review.expectedAssets.map((asset) => `• ${asset}`),
+    "",
+    detailHeading("RUN ROOT"),
+    review.runRoot,
+    "",
+    detailHeading("PI HANDOFF"),
+    ...review.launch.map((line) => `• ${line}`),
+    "",
+    detailHeading("AFTER PI EXITS"),
+    review.cleanup,
+    "",
+    benchUiStyle.warning("PHASE 3 PREVIEW"),
+    benchUiStyle.warning("Finishing this review will not create a run. Interactive launch is added in Phase 4."),
+  ];
+  const selected = selectedOrCancel(await ui.select([
+    { action: "back", label: "Go back", detail: "Choose a different benchmark" },
+    { action: "finish", label: "Finish review", detail: "Exit without creating a run" },
+  ], {
+    step: "8 Review",
+    context: `${model.provider}/${model.id}  →  ${benchmark.title}`,
+    title: "Interactive run plan",
+    message: "Review the output contract, Pi handoff, and cleanup policy.",
+    label: (item) => item.label,
+    summary: (item) => item.detail,
+    details: () => receipt,
+    compact: true,
+    allowBack: true,
+  }));
+  return selected !== BACK && selected.action === "finish";
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -1279,21 +1364,21 @@ async function main(argv = process.argv.slice(2)) {
 
   ui.start();
   try {
-    let config;
+    let config = null;
     let modelRuntime;
     let providers;
     let diagnostics;
-    let benchmarkSources;
-    while (!benchmarkSources) {
-      ui.showLoading("Finding Pi models and Inspect benchmarks…");
+    let benchmarkSources = null;
+    let interactiveSuites;
+    while (!interactiveSuites) {
+      ui.showLoading("Finding Pi models and benchmark suites…");
       try {
-        config = await loadConfig(cwd);
-        const [modelDiscovery, discoveredSources] = await Promise.all([
+        const [modelDiscovery, discoveredSuites] = await Promise.all([
           discoverModels(cwd),
-          discoverBenchmarks(cwd, config.customTaskRoots),
+          loadInteractiveBenchmarkSuites({ repositoryRoot: cwd }),
         ]);
         ({ modelRuntime, providers, diagnostics } = modelDiscovery);
-        benchmarkSources = discoveredSources;
+        interactiveSuites = discoveredSuites;
       } catch (error) {
         const recovery = selectedOrCancel(await ui.select([
           { action: "retry", label: "Retry", detail: "Run the setup checks again" },
@@ -1322,10 +1407,13 @@ async function main(argv = process.argv.slice(2)) {
     const preferences = await loadBenchPreferences(cwd);
     let selectedProvider = null;
     let selectedModel = null;
+    let selectedSuite = null;
     let selectedTask = null;
+    let selectedInteractiveBenchmark = null;
     let preferredModelId = preferences.model ?? null;
     let preferredTaskSpec = preferences.task ?? null;
     let selectedSourceId = preferences.source ?? "inspect_evals_recommended";
+    let preferredSuiteId = preferences.suite ?? BENCHMARK_SUITE_IDS.inspect;
     let translated = null;
     let taskConfiguration = null;
     let samples = null;
@@ -1395,21 +1483,22 @@ async function main(argv = process.argv.slice(2)) {
       if (stage === "model") {
         const modelChoices = selectedProvider.models.map((model) => ({
           model,
+          piReady: modelPiReady(model),
           compatibility: modelCompatibility(modelRuntime, model),
         }));
         const result = selectedOrCancel(await ui.select(modelChoices, {
           step: "2 Model",
           context: selectedProvider.provider,
           title: "Choose a model",
-          message: "Choose by capability. Technical API details are kept in the Advanced section.",
+          message: "Pi can use every available model. Inspect compatibility is shown before you choose a suite.",
           listTitle: "Models",
           detailTitle: "What this model can do",
-          label: ({ model, compatibility }) => compatibility.ready
-            ? model.id
-            : benchUiStyle.error(`× ${model.id}`),
-          summary: ({ model, compatibility }) => compatibility.ready
-            ? `${model.input.includes("image") ? "text + images" : "text"}  ·  ${formatTokens(model.contextWindow)} max input`
-            : `Unavailable · ${compatibility.short}`,
+          label: ({ model, piReady }) => piReady ? model.id : benchUiStyle.error(`× ${model.id}`),
+          summary: ({ model, compatibility, piReady }) => !piReady
+            ? "Unavailable · local server offline"
+            : compatibility.ready
+              ? `Pi + Inspect  ·  ${model.input.includes("image") ? "text + images" : "text"}  ·  ${formatTokens(model.contextWindow)} max input`
+              : `Pi only  ·  Inspect: ${compatibility.short}`,
           details: modelDetails,
           searchText: ({ model }) => `${model.id} ${model.name ?? ""} ${model.input.join(" ")} ${model.api}`,
           searchPlaceholder: "model name, capability, or API format",
@@ -1421,14 +1510,14 @@ async function main(argv = process.argv.slice(2)) {
           stage = "provider";
           continue;
         }
-        if (!result.compatibility.ready) {
+        if (!result.piReady) {
           selectedOrCancel(await ui.select([
             { action: "back", label: "Choose another model", detail: "Return to the model browser" },
           ], {
             step: "2 Model",
             context: result.model.id,
-            title: "This model is not ready for Inspect",
-            message: result.compatibility.reason,
+            title: "This local model is unavailable",
+            message: "Start its local server before using it with Pi or Inspect.",
             details: () => modelDetails(result),
             compact: true,
             tone: "error",
@@ -1438,44 +1527,210 @@ async function main(argv = process.argv.slice(2)) {
         }
         selectedModel = result.model;
         preferredModelId = selectedModel.id;
+        translated = null;
+        lifecycle = null;
+        stage = "suite";
+        continue;
+      }
+
+      if (stage === "suite") {
+        const compatibility = modelCompatibility(modelRuntime, selectedModel);
+        const suiteChoices = buildSuiteChoices(interactiveSuites, compatibility);
+        const result = selectedOrCancel(await ui.select(suiteChoices, {
+          step: "3 Suite",
+          context: `${selectedModel.provider}/${selectedModel.id}`,
+          title: "Choose a benchmark suite",
+          message: "Inspect runs scored eval tasks. Visual and Data Science hand an isolated run folder to Pi.",
+          listTitle: "Suites",
+          detailTitle: "How this suite runs",
+          label: (suite) => suite.label,
+          summary: (suite) => suite.detail,
+          details: (suite) => [suite.description, "", suite.detail],
+          searchText: (suite) => `${suite.id} ${suite.label} ${suite.description}`,
+          searchable: true,
+          isInitial: (suite) => suite.id === selectedSuite?.id || suite.id === preferredSuiteId,
+          allowBack: true,
+        }));
+        if (result === BACK) {
+          stage = "model";
+          continue;
+        }
+
+        const passthroughError = suitePassthroughError(result.id, inspectPassthrough);
+        if (passthroughError) {
+          const recovery = selectedOrCancel(await ui.select([
+            { action: "back", label: "Choose another suite", detail: "Return to the suite browser" },
+            { action: "inspect", label: "Use Inspect evals", detail: "Keep the command-line options" },
+          ], {
+            step: "3 Suite",
+            context: result.label,
+            title: "Inspect-only command-line options",
+            message: passthroughError,
+            details: () => [
+              detailHeading("OPTIONS RECEIVED"),
+              inspectPassthrough.join(" "),
+              "",
+              "Remove the arguments after -- to use an interactive Pi suite.",
+            ],
+            compact: true,
+            tone: "error",
+            allowBack: true,
+          }));
+          if (recovery !== BACK && recovery.action === "inspect") {
+            preferredSuiteId = BENCHMARK_SUITE_IDS.inspect;
+          }
+          continue;
+        }
+
+        if (result.id === BENCHMARK_SUITE_IDS.inspect && !compatibility.ready) {
+          const recovery = selectedOrCancel(await ui.select([
+            { action: "suite", label: "Choose another suite", detail: "Use this model through interactive Pi" },
+            { action: "model", label: "Choose another model", detail: "Find a Pi + Inspect model" },
+          ], {
+            step: "3 Suite",
+            context: `${selectedModel.provider}/${selectedModel.id}`,
+            title: "This model cannot run Inspect evals",
+            message: compatibility.reason,
+            details: () => modelDetails({ model: selectedModel, compatibility, piReady: true }),
+            compact: true,
+            tone: "error",
+            allowBack: true,
+          }));
+          stage = recovery === BACK || recovery.action === "suite" ? "suite" : "model";
+          continue;
+        }
+
+        selectedSuite = result.suite ?? { id: result.id, label: result.label };
+        preferredSuiteId = result.id;
+        if (result.id !== BENCHMARK_SUITE_IDS.inspect) {
+          stage = "interactive-benchmark";
+          continue;
+        }
+
         let resolutionAction = "retry";
         while (resolutionAction === "retry") {
-          ui.showLoading("Checking authentication and model settings…", `${selectedProvider.provider}/${selectedModel.id}`);
+          ui.showLoading("Checking Inspect authentication and model settings…", `${selectedProvider.provider}/${selectedModel.id}`);
           try {
             translated = await resolveInspectModel(modelRuntime, selectedModel);
             resolutionAction = "continue";
           } catch (error) {
             const recovery = selectedOrCancel(await ui.select([
-              { action: "another", label: "Choose another model", detail: "Return to the model browser" },
+              { action: "suite", label: "Choose another suite", detail: "Use this model through interactive Pi" },
+              { action: "model", label: "Choose another model", detail: "Return to the model browser" },
               { action: "retry", label: "Retry", detail: "Check the same model again" },
             ], {
-              step: "2 Model",
+              step: "3 Suite",
               context: `${selectedProvider.provider}/${selectedModel.id}`,
-              title: "Could not prepare this model",
+              title: "Could not prepare this model for Inspect",
               message: "Bench could not translate its current Pi authentication into an Inspect connection.",
               details: () => ["TECHNICAL DETAILS", errorMessage(error)],
               compact: true,
               tone: "error",
               allowBack: true,
             }));
-            resolutionAction = recovery === BACK ? "another" : recovery.action;
+            resolutionAction = recovery === BACK ? "suite" : recovery.action;
           }
         }
-        if (resolutionAction === "another") continue;
-        selectedTask = null;
+        if (resolutionAction !== "continue") {
+          stage = resolutionAction;
+          continue;
+        }
+
+        while (!benchmarkSources) {
+          ui.showLoading("Finding Inspect benchmarks…");
+          try {
+            config = await loadConfig(cwd);
+            benchmarkSources = await discoverBenchmarks(cwd, config.customTaskRoots);
+          } catch (error) {
+            const recovery = selectedOrCancel(await ui.select([
+              { action: "suite", label: "Choose another suite", detail: "Return to suite selection" },
+              { action: "retry", label: "Retry", detail: "Run Inspect discovery again" },
+            ], {
+              step: "3 Suite",
+              context: "Inspect evals",
+              title: "Could not load Inspect benchmarks",
+              message: "Interactive Pi suites remain available.",
+              details: () => [
+                detailHeading("WHAT TO DO"),
+                setupAdvice(error),
+                "",
+                detailHeading("TECHNICAL DETAILS"),
+                errorMessage(error),
+              ],
+              compact: true,
+              tone: "error",
+              allowBack: true,
+            }));
+            if (recovery === BACK || recovery.action === "suite") {
+              stage = "suite";
+              break;
+            }
+          }
+        }
+        if (stage === "suite") continue;
         stage = "benchmark";
+        continue;
+      }
+
+      if (stage === "interactive-benchmark") {
+        const preferredBenchmarkId = selectedInteractiveBenchmark?.kind === selectedSuite.id
+          ? selectedInteractiveBenchmark.id
+          : preferences.benchmarks?.[selectedSuite.id] ?? null;
+        const result = await selectInteractiveBenchmark(
+          selectedSuite,
+          selectedModel,
+          preferredBenchmarkId,
+          ui,
+        );
+        if (result === BACK) {
+          stage = "suite";
+          continue;
+        }
+        selectedInteractiveBenchmark = result;
+
+        if (selectedSuite.id === BENCHMARK_SUITE_IDS.dataScience) {
+          let accessAction = "retry";
+          while (accessAction === "retry") {
+            ui.showLoading("Checking Data Science project access…", "SUPABASE_URL + SUPABASE_ANON_KEY");
+            try {
+              await loadProjectDataScienceAccess({ repositoryRoot: cwd });
+              accessAction = "continue";
+            } catch (error) {
+              const recovery = selectedOrCancel(await ui.select([
+                { action: "benchmark", label: "Choose another benchmark", detail: "Return to the benchmark browser" },
+                { action: "suite", label: "Choose another suite", detail: "Return to suite selection" },
+                { action: "retry", label: "Retry", detail: "Read the project configuration again" },
+              ], {
+                step: "4 Benchmark",
+                context: selectedInteractiveBenchmark.title,
+                title: "Data Science access is not configured",
+                message: "Add SUPABASE_URL and SUPABASE_ANON_KEY to the shell or project .env before continuing.",
+                details: () => [detailHeading("TECHNICAL DETAILS"), errorMessage(error)],
+                compact: true,
+                tone: "error",
+                allowBack: true,
+              }));
+              accessAction = recovery === BACK ? "benchmark" : recovery.action;
+            }
+          }
+          if (accessAction !== "continue") {
+            stage = accessAction === "benchmark" ? "interactive-benchmark" : "suite";
+            continue;
+          }
+        }
+        stage = "interactive-review";
         continue;
       }
 
       if (stage === "benchmark") {
         const result = selectedOrCancel(await ui.browseBenchmarks(benchmarkSources, {
-          step: "3 Benchmark",
+          step: "4 Benchmark",
           context: `${selectedModel.provider}/${selectedModel.id}`,
           initialSource: selectedSourceId,
           initialTaskSpec: selectedTask?.spec ?? preferredTaskSpec,
         }));
         if (result === BACK) {
-          stage = "model";
+          stage = "suite";
           continue;
         }
         selectedSourceId = result.source;
@@ -1586,17 +1841,37 @@ async function main(argv = process.argv.slice(2)) {
           continue;
         }
         stage = "launch";
+        continue;
+      }
+
+      if (stage === "interactive-review") {
+        const confirmed = await confirmInteractiveReview(
+          cwd,
+          selectedSuite,
+          selectedInteractiveBenchmark,
+          selectedModel,
+          ui,
+        );
+        stage = confirmed ? "launch" : "interactive-benchmark";
       }
     }
 
-    await saveBenchPreferences(cwd, {
+    await saveBenchPreferences(cwd, updateSuitePreferences(preferences, {
       provider: selectedProvider.provider,
       model: selectedModel.id,
-      source: selectedSourceId,
-      task: selectedTask.spec,
-    }).catch(() => {});
+      suite: selectedSuite.id,
+      inspectSource: selectedTask ? selectedSourceId : undefined,
+      inspectTask: selectedTask?.spec,
+      benchmark: selectedInteractiveBenchmark,
+    })).catch(() => {});
 
     ui.stop({ preserveScreen: true });
+    if (selectedSuite.id !== BENCHMARK_SUITE_IDS.inspect) {
+      console.log(`\nReviewed ${selectedInteractiveBenchmark.title} with ${selectedModel.provider}/${selectedModel.id}.`);
+      console.log("No run was created. Interactive Pi execution will be enabled in Phase 4.");
+      return;
+    }
+
     console.log(`\nStarting ${selectedTask.displayName} with ${selectedModel.provider}/${selectedModel.id}.`);
     console.log(`Inspect will save results under ${config.logDir}.`);
     if (process.env.BENCH_VERBOSE === "1") {

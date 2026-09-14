@@ -7,6 +7,7 @@ import type {
   ModelSourceId,
   PreparedRun,
   RunnerMode,
+  RunAssets,
   RunKind,
   RunMetadata,
 } from "./types.ts";
@@ -53,7 +54,6 @@ export async function prepareRun(input: PrepareRunInput): Promise<PreparedRun> {
   const backendLabel = modelSource
     ? modelSourceLabel(modelSource, input.backendLabel)
     : undefined;
-  const isDs = kind === "data-science";
   const run: RunMetadata = {
     schemaVersion: 1,
     kind,
@@ -68,27 +68,7 @@ export async function prepareRun(input: PrepareRunInput): Promise<PreparedRun> {
     updatedAt: timestamp,
     preparedAt: timestamp,
     runDirectory: paths.runDirectory,
-    assets: isDs
-      ? {
-          metadata: "metadata.json",
-          prompt: "prompt.md",
-          rawResponse: "response.raw.txt",
-          ds: {
-            notebook: "analysis.ipynb",
-            summary: "summary.json",
-            chartDistribution: "chart-distribution.png",
-            chartTreatmentEffect: "chart-treatment-effect.png",
-            chartCompletionRates: "chart-completion-rates.png",
-          },
-        }
-      : {
-          metadata: "metadata.json",
-          prompt: "prompt.md",
-          html: "index.html",
-          preview: "preview.png",
-          video: "preview.webm",
-          rawResponse: "response.raw.txt",
-        },
+    assets: buildRunAssets(kind),
     runner: {
       mode: runnerModeFor(runner),
       ...(modelSource ? { modelSource } : {}),
@@ -128,6 +108,41 @@ export async function prepareRun(input: PrepareRunInput): Promise<PreparedRun> {
       supabaseConfigPath: paths.supabaseConfigPath,
     },
   };
+}
+
+export function buildRunAssets(kind: RunKind): RunAssets {
+  if (kind === "data-science") {
+    return {
+      metadata: "metadata.json",
+      prompt: "prompt.md",
+      rawResponse: "response.raw.txt",
+      ds: {
+        notebook: "analysis.ipynb",
+        summary: "summary.json",
+        chartDistribution: "chart-distribution.png",
+        chartTreatmentEffect: "chart-treatment-effect.png",
+        chartCompletionRates: "chart-completion-rates.png",
+      },
+    };
+  }
+  return {
+    metadata: "metadata.json",
+    prompt: "prompt.md",
+    html: "index.html",
+    preview: "preview.png",
+    video: "preview.webm",
+    rawResponse: "response.raw.txt",
+  };
+}
+
+export function expectedRunOutputAssets(kind: RunKind): string[] {
+  const assets = buildRunAssets(kind);
+  if (kind === "data-science") {
+    return Object.values(assets.ds ?? {}).filter((asset): asset is string => Boolean(asset));
+  }
+  return [assets.html, assets.preview, assets.video].filter(
+    (asset): asset is string => Boolean(asset),
+  );
 }
 
 export function buildToolPrompt(input: {

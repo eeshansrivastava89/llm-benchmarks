@@ -150,9 +150,9 @@ export class WorkflowHeader {
     const match = /^(\d+)\s+(.+)$/.exec(this.step);
     if (!match) return [`${style.accent(style.strong("Bench"))}  ${style.muted(this.step)}`];
     const current = Number(match[1]);
-    const names = ["Provider", "Model", "Benchmark", "Configure", "Samples", "Concurrency", "Review"];
+    const names = ["Provider", "Model", "Suite", "Benchmark", "Configure", "Samples", "Concurrency", "Review"];
     if (width < 140) {
-      return [`${style.accent(style.strong("Bench"))}  ${style.muted(`${current}/7`)}  ${style.strong(match[2])}`];
+      return [`${style.accent(style.strong("Bench"))}  ${style.muted(`${current}/8`)}  ${style.strong(match[2])}`];
     }
     const progress = names.map((name, index) => {
       const label = `${index + 1} ${name}`;

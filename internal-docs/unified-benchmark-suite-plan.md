@@ -1,6 +1,6 @@
 # Unified Benchmark Suite Plan
 
-**Status:** Phase 2 complete; Phase 3 not started
+**Status:** Phase 3 complete; Phase 4 not started
 **Primary command:** `bench`  
 **Scope:** Repository consolidation, Inspect/visual/data-science execution, and local viewer orchestration
 
@@ -461,15 +461,15 @@ Exit criteria:
 
 ### Phase 3: Add the unified suite flow to the TUI
 
-- [ ] Add the Suite screen after Provider and Model.
-- [ ] Keep Inspect's Recommended, All, and Local task navigation intact.
-- [ ] Add Visual and Data Science benchmark browsers using the shared catalog.
-- [ ] Move Inspect compatibility enforcement and auth translation into the Inspect branch.
-- [ ] Label models as `Pi + Inspect` or `Pi only` without blocking Pi-capable visual runs.
-- [ ] Reject Inspect passthrough arguments explicitly when a non-Inspect suite is selected.
-- [ ] Add a dedicated Visual/Data Science review screen with expected assets, run root, Pi launch behavior, and cleanup policy.
-- [ ] Extend saved preferences by suite without overwriting the last Inspect task when a visual task is selected.
-- [ ] Preserve complete Back and Cancel navigation across both branches.
+- [x] Add the Suite screen after Provider and Model.
+- [x] Keep Inspect's Recommended, All, and Local task navigation intact.
+- [x] Add Visual and Data Science benchmark browsers using the shared catalog.
+- [x] Move Inspect compatibility enforcement and auth translation into the Inspect branch.
+- [x] Label models as `Pi + Inspect` or `Pi only` without blocking Pi-capable visual runs.
+- [x] Reject Inspect passthrough arguments explicitly when a non-Inspect suite is selected.
+- [x] Add a dedicated Visual/Data Science review screen with expected assets, run root, Pi launch behavior, and cleanup policy.
+- [x] Extend saved preferences by suite without overwriting the last Inspect task when a visual task is selected.
+- [x] Preserve complete Back and Cancel navigation across both branches.
 
 Exit criteria:
 
