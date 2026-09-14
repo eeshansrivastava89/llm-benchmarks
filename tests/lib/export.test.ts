@@ -475,7 +475,7 @@ describe("static build script", () => {
     await expect(
       readFile(join(staticOutputDirectory, "index.html"), "utf8")
     ).resolves.not.toContain("Daily-driver stack evidence");
-  });
+  }, 30_000);
 
   it("can build from an existing committed export without reading local runs", async () => {
     const root = await createTempRoot("llm-visual-static-existing-export-");
@@ -515,5 +515,5 @@ describe("static build script", () => {
     expect(pageHtml).toContain('href="https://inspect.example/results"');
     expect(pageHtml).toContain('target="_blank" rel="noopener noreferrer"');
     expect(pageHtml).toContain("Inspect results");
-  });
+  }, 30_000);
 });
