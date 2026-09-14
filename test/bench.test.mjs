@@ -22,6 +22,7 @@ import {
   loadSweepData,
   localConcurrencyChoices,
   modelCompatibility,
+  parseViewCommand,
   passthroughArgs,
   prepareLocalModelLifecycle,
   probeTcp,
@@ -76,6 +77,19 @@ async function executable(t, source) {
   await chmod(path, 0o755);
   return path;
 }
+
+test("viewer commands are parsed before Inspect passthrough options", () => {
+  assert.equal(parseViewCommand([]), null);
+  assert.deepEqual(parseViewCommand(["view"]), { action: "select" });
+  assert.deepEqual(parseViewCommand(["view", "inspect"]), { action: "start", target: "inspect" });
+  assert.deepEqual(parseViewCommand(["view", "visual"]), { action: "start", target: "visual" });
+  assert.deepEqual(parseViewCommand(["view", "both"]), { action: "start", target: "both" });
+  assert.deepEqual(parseViewCommand(["view", "status"]), { action: "status", target: "both" });
+  assert.deepEqual(parseViewCommand(["view", "stop"]), { action: "stop", target: "both" });
+  assert.deepEqual(parseViewCommand(["view", "stop", "visual"]), { action: "stop", target: "visual" });
+  assert.throws(() => parseViewCommand(["view", "unknown"]), /Usage: bench view/);
+  assert.throws(() => parseViewCommand(["view", "status", "extra"]), /Usage: bench view/);
+});
 
 test("passthrough arguments require and preserve the separator", () => {
   assert.deepEqual(passthroughArgs([]), []);

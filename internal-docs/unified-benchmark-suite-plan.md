@@ -1,6 +1,6 @@
 # Unified Benchmark Suite Plan
 
-**Status:** Phase 4 complete; Phase 5 not started
+**Status:** Phase 5 complete; Phase 6 not started
 **Primary command:** `bench`  
 **Scope:** Repository consolidation, Inspect/visual/data-science execution, and local viewer orchestration
 
@@ -498,18 +498,18 @@ Exit criteria:
 
 ### Phase 5: Add the background viewer manager
 
-- [ ] Add `src/viewers.mjs` with explicit Inspect and Visual descriptors.
-- [ ] Add loopback host and fixed-port configuration with documented defaults.
-- [ ] Add endpoint signature checks for both viewers.
-- [ ] Refuse occupied ports owned by unknown applications.
-- [ ] Spawn detached process groups with stdout/stderr redirected to `.bench-runtime/` logs.
-- [ ] Persist only non-secret viewer ownership metadata.
-- [ ] Wait for viewer health before reporting success or opening a browser.
-- [ ] Add `bench view inspect`, `visual`, `both`, `status`, and `stop` commands.
-- [ ] Add the equivalent TUI viewer selector.
-- [ ] Add the optional post-run `No`, `Relevant viewer`, or `Both viewers` choice.
-- [ ] Reuse healthy viewers instead of spawning duplicates.
-- [ ] Stop only validated Bench-owned process groups.
+- [x] Add `src/viewers.mjs` with explicit Inspect and Visual descriptors.
+- [x] Add loopback host and fixed-port configuration with documented defaults.
+- [x] Add endpoint signature checks for both viewers.
+- [x] Refuse occupied ports owned by unknown applications.
+- [x] Spawn detached process groups with stdout/stderr redirected to `.bench-runtime/` logs.
+- [x] Persist only non-secret viewer ownership metadata.
+- [x] Wait for viewer health before reporting success or opening a browser.
+- [x] Add `bench view inspect`, `visual`, `both`, `status`, and `stop` commands.
+- [x] Add the equivalent TUI viewer selector.
+- [x] Add the optional post-run `No`, `Relevant viewer`, or `Both viewers` choice.
+- [x] Reuse healthy viewers instead of spawning duplicates.
+- [x] Stop only validated Bench-owned process groups.
 
 Exit criteria:
 
