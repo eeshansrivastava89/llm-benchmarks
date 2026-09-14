@@ -1,7 +1,7 @@
 import { join, resolve } from "node:path";
 
 import { expectedRunOutputAssets } from "./lib/prompt-prep.ts";
-import { describeInteractiveCleanup } from "./local-lifecycle.mjs";
+import { interactiveCleanupSupport } from "./local-lifecycle.mjs";
 
 export const BENCHMARK_SUITE_IDS = Object.freeze({
   inspect: "inspect",
@@ -56,6 +56,7 @@ export function buildInteractiveReview({ repositoryRoot, suite, benchmark, model
     throw new Error(`Suite "${suite.id}" does not match benchmark kind "${benchmark.kind}".`);
   }
 
+  const cleanup = interactiveCleanupSupport(model);
   return {
     suite: suite.label,
     benchmark: benchmark.title,
@@ -68,7 +69,8 @@ export function buildInteractiveReview({ repositoryRoot, suite, benchmark, model
       "Open interactive Pi inside that isolated run directory.",
       "Submit @prompt.md, then return to Bench when Pi exits.",
     ],
-    cleanup: describeInteractiveCleanup(model),
+    cleanup: cleanup.summary,
+    cleanupSupported: cleanup.supported,
   };
 }
 

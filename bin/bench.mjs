@@ -4,7 +4,6 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { realpathSync } from "node:fs";
 import { access, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
-import { constants as osConstants } from "node:os";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,6 +18,7 @@ import {
   loadInteractiveBenchmarkSuites,
   loadProjectDataScienceAccess,
 } from "../src/benchmark-suites.mjs";
+import { executeInteractiveBenchmark, runForeground } from "../src/interactive-runner.mjs";
 import { prepareLocalModelLifecycle } from "../src/local-lifecycle.mjs";
 import { loadBenchPreferences, saveBenchPreferences } from "../src/preferences.mjs";
 import {
@@ -1167,29 +1167,9 @@ async function resolveInspectModel(modelRuntime, model) {
   return { inspectModel, baseUrl, modelArgs, extraHeaders, childEnv, apiKeyEnv, adapter };
 }
 
-function runInherited(command, args, options) {
-  return new Promise((resolvePromise, reject) => {
-    const child = spawn(command, args, {
-      cwd: options.cwd,
-      env: options.env,
-      stdio: "inherit",
-    });
-    child.on("error", (error) => {
-      if (error.code === "ENOENT") {
-        reject(new BenchError(`Required command not found: ${command}`));
-        return;
-      }
-      reject(new BenchError(`Could not start ${command}: ${errorMessage(error)}`));
-    });
-    child.on("close", (code, signal) => {
-      activeCapturedChildren.delete(child);
-      if (signal) {
-        resolvePromise(128 + (osConstants.signals[signal] ?? 0));
-        return;
-      }
-      resolvePromise(code ?? 1);
-    });
-  });
+async function runInherited(command, args, options) {
+  const result = await runForeground(command, args, options);
+  return result.status;
 }
 
 async function confirmRun(
@@ -1325,25 +1305,30 @@ async function confirmInteractiveReview(repositoryRoot, suite, benchmark, model,
     "",
     detailHeading("AFTER PI EXITS"),
     review.cleanup,
-    "",
-    benchUiStyle.warning("PHASE 3 PREVIEW"),
-    benchUiStyle.warning("Finishing this review will not create a run. Interactive launch is added in Phase 4."),
+    ...(!review.cleanupSupported
+      ? ["", benchUiStyle.warning("CAUTION"), benchUiStyle.warning("This local model will remain loaded after Pi exits.")]
+      : []),
   ];
+  const safeToLaunch = review.cleanupSupported;
   const selected = selectedOrCancel(await ui.select([
+    ...(safeToLaunch ? [{ action: "launch", label: "Launch Pi", detail: "Create the run slot and start Pi" }] : []),
     { action: "back", label: "Go back", detail: "Choose a different benchmark" },
-    { action: "finish", label: "Finish review", detail: "Exit without creating a run" },
+    ...(!safeToLaunch ? [{ action: "launch", label: "Launch anyway", detail: "Leave the local model running afterward" }] : []),
   ], {
     step: "8 Review",
     context: `${model.provider}/${model.id}  →  ${benchmark.title}`,
-    title: "Interactive run plan",
-    message: "Review the output contract, Pi handoff, and cleanup policy.",
+    title: safeToLaunch ? "Ready to launch Pi" : "Review cleanup limitation",
+    message: safeToLaunch
+      ? "The run slot will be created only after you confirm."
+      : "Go back is selected by default because this provider has no unload adapter.",
     label: (item) => item.label,
     summary: (item) => item.detail,
     details: () => receipt,
     compact: true,
+    tone: safeToLaunch ? undefined : "warning",
     allowBack: true,
   }));
-  return selected !== BACK && selected.action === "finish";
+  return selected !== BACK && selected.action === "launch";
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -1419,6 +1404,7 @@ async function main(argv = process.argv.slice(2)) {
     let samples = null;
     let concurrency = null;
     let inspectArgs = null;
+    let dataScienceAccess = null;
     let configureWasInteractive = false;
     let samplesWereInteractive = false;
     let concurrencyWasInteractive = false;
@@ -1529,6 +1515,7 @@ async function main(argv = process.argv.slice(2)) {
         preferredModelId = selectedModel.id;
         translated = null;
         lifecycle = null;
+        dataScienceAccess = null;
         stage = "suite";
         continue;
       }
@@ -1687,13 +1674,14 @@ async function main(argv = process.argv.slice(2)) {
           continue;
         }
         selectedInteractiveBenchmark = result;
+        dataScienceAccess = null;
 
         if (selectedSuite.id === BENCHMARK_SUITE_IDS.dataScience) {
           let accessAction = "retry";
           while (accessAction === "retry") {
             ui.showLoading("Checking Data Science project access…", "SUPABASE_URL + SUPABASE_ANON_KEY");
             try {
-              await loadProjectDataScienceAccess({ repositoryRoot: cwd });
+              dataScienceAccess = await loadProjectDataScienceAccess({ repositoryRoot: cwd });
               accessAction = "continue";
             } catch (error) {
               const recovery = selectedOrCancel(await ui.select([
@@ -1801,7 +1789,10 @@ async function main(argv = process.argv.slice(2)) {
         }
         concurrency = result;
         ui.showLoading("Preparing the final run plan…", `${selectedModel.provider}/${selectedModel.id}  →  ${selectedTask.displayName}`);
-        lifecycle = await prepareLocalModelLifecycle(selectedModel, translated);
+        lifecycle = await prepareLocalModelLifecycle(selectedModel, {
+          baseUrl: translated.baseUrl,
+          apiKey: translated.childEnv?.[translated.apiKeyEnv],
+        });
         stage = "review";
         continue;
       }
@@ -1867,8 +1858,29 @@ async function main(argv = process.argv.slice(2)) {
 
     ui.stop({ preserveScreen: true });
     if (selectedSuite.id !== BENCHMARK_SUITE_IDS.inspect) {
-      console.log(`\nReviewed ${selectedInteractiveBenchmark.title} with ${selectedModel.provider}/${selectedModel.id}.`);
-      console.log("No run was created. Interactive Pi execution will be enabled in Phase 4.");
+      console.log(`\nPreparing ${selectedInteractiveBenchmark.title} with ${selectedModel.provider}/${selectedModel.id}.`);
+      const execution = await executeInteractiveBenchmark({
+        repositoryRoot: cwd,
+        benchmark: selectedInteractiveBenchmark,
+        model: selectedModel,
+        modelRuntime,
+        dataScienceAccess,
+        onPrepared: ({ prepared, launchCommand }) => {
+          console.log(`Run slot: ${prepared.paths.runDirectory}`);
+          if (process.env.BENCH_VERBOSE === "1") console.log(`$ ${launchCommand}`);
+          console.log("Starting interactive Pi…\n");
+        },
+      });
+      const exitStatus = execution.childResult?.status ?? 1;
+      process.exitCode = exitStatus;
+      console.log(exitStatus === 0
+        ? `\nPi exited. The prepared run is at ${execution.prepared.paths.runDirectory}.`
+        : `\nPi exited with status ${exitStatus}. Run metadata was updated at ${execution.prepared.paths.runDirectory}.`);
+      if (execution.cleanupResult?.message) {
+        const cleanupMessage = `Local model: ${execution.cleanupResult.message}.`;
+        if (execution.cleanupResult.status === "failed") console.error(`Warning: ${cleanupMessage}`);
+        else console.log(cleanupMessage);
+      }
       return;
     }
 

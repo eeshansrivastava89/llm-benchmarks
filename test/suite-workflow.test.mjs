@@ -87,7 +87,7 @@ test("interactive review identifies the run root, Pi handoff, and local cleanup"
   assert.equal(review.runRoot, "/project/runs");
   assert.match(review.launch.join("\n"), /@prompt\.md/);
   assert.match(review.cleanup, /Unload.*Ollama/);
-  const unsupportedCleanup = buildInteractiveReview({
+  const unsupportedReview = buildInteractiveReview({
     repositoryRoot: "/project",
     suite: interactiveSuites[0],
     benchmark: interactiveSuites[0].benchmarks[0],
@@ -96,8 +96,9 @@ test("interactive review identifies the run root, Pi handoff, and local cleanup"
       id: "local-model",
       backend: { id: "llama-cpp", location: "local", status: "online" },
     },
-  }).cleanup;
-  assert.match(unsupportedCleanup, /no automatic unload adapter.*leave.*running/i);
+  });
+  assert.equal(unsupportedReview.cleanupSupported, false);
+  assert.match(unsupportedReview.cleanup, /no automatic unload adapter.*leave.*running/i);
   assert.throws(
     () => buildInteractiveReview({
       repositoryRoot: "/project",

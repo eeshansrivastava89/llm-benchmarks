@@ -73,7 +73,8 @@ function shellQuote(value) {
 }
 
 export function formatCommand(command, args, apiKeyEnv) {
-  return `${apiKeyEnv}=<redacted> ${[command, ...args].map(shellQuote).join(" ")}`;
+  const prefix = apiKeyEnv ? `${apiKeyEnv}=<redacted> ` : "";
+  return `${prefix}${[command, ...args].map(shellQuote).join(" ")}`;
 }
 
 export function buildInspectInvocation(task, model, translated, config, inspectPassthrough = []) {

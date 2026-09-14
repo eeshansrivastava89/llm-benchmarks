@@ -27,12 +27,12 @@ async function responseJson(response, action) {
   return response.json();
 }
 
-function localModelAdapter(model, translated, fetchImpl) {
-  if (classifyBackend(translated.baseUrl).location !== "local") return null;
+function localModelAdapter(model, connection, fetchImpl) {
+  if (classifyBackend(connection.baseUrl).location !== "local") return null;
 
   if (model.provider === "ollama") {
-    const statusUrl = localApiUrl(translated.baseUrl, "api/ps");
-    const unloadUrl = localApiUrl(translated.baseUrl, "api/generate");
+    const statusUrl = localApiUrl(connection.baseUrl, "api/ps");
+    const unloadUrl = localApiUrl(connection.baseUrl, "api/generate");
     return {
       async isLoaded() {
         const data = await responseJson(
@@ -59,9 +59,9 @@ function localModelAdapter(model, translated, fetchImpl) {
   }
 
   if (model.provider === "omlx") {
-    const statusUrl = localApiUrl(translated.baseUrl, "v1/models/status");
-    const unloadUrl = localApiUrl(translated.baseUrl, `v1/models/${encodeURIComponent(model.id)}/unload`);
-    const apiKey = translated.childEnv?.[translated.apiKeyEnv];
+    const statusUrl = localApiUrl(connection.baseUrl, "v1/models/status");
+    const unloadUrl = localApiUrl(connection.baseUrl, `v1/models/${encodeURIComponent(model.id)}/unload`);
+    const apiKey = connection.apiKey;
     const headers = apiKey ? { authorization: `Bearer ${apiKey}` } : {};
     return {
       async isLoaded() {
@@ -89,20 +89,58 @@ function localModelAdapter(model, translated, fetchImpl) {
   return null;
 }
 
-export function describeInteractiveCleanup(model) {
-  if (model.backend?.location !== "local") return "No local model process to unload.";
-  if (model.provider === "ollama") return "Unload the selected Ollama model after Pi exits.";
-  if (model.provider === "omlx") return "Unload the selected oMLX model after Pi exits.";
-  return `This local backend has no automatic unload adapter; Bench will leave ${model.provider}/${model.id} running.`;
+export function interactiveCleanupSupport(model) {
+  if (model.backend?.location !== "local") {
+    return { supported: true, required: false, summary: "No local model process to unload." };
+  }
+  if (model.provider === "ollama") {
+    return { supported: true, required: true, summary: "Unload the selected Ollama model after Pi exits." };
+  }
+  if (model.provider === "omlx") {
+    return { supported: true, required: true, summary: "Unload the selected oMLX model after Pi exits." };
+  }
+  return {
+    supported: false,
+    required: true,
+    summary: `This local backend has no automatic unload adapter; Bench will leave ${model.provider}/${model.id} running.`,
+  };
 }
 
-export async function prepareLocalModelLifecycle(model, translated, options = {}) {
+export async function prepareLocalModelLifecycle(model, connection, options = {}) {
   if (model.backend.location !== "local") return null;
-  const adapter = localModelAdapter(model, translated, options.fetchImpl ?? fetch);
+  const adapter = localModelAdapter(model, connection, options.fetchImpl ?? fetch);
   if (!adapter) {
     return {
       summary: `keep loaded · no unload adapter for ${model.provider}`,
       cleanup: async () => ({ status: "skipped", message: `No cleanup adapter for ${model.provider}` }),
+    };
+  }
+
+  if (options.policy === "always") {
+    return {
+      summary: "unload after Pi exits",
+      async cleanup() {
+        let statusUnavailable = false;
+        try {
+          if (!await adapter.isLoaded()) {
+            return { status: "unchanged", message: "Model was not loaded after the Pi session" };
+          }
+        } catch {
+          statusUnavailable = true;
+        }
+        try {
+          await adapter.unload();
+          return {
+            status: "unloaded",
+            message: statusUnavailable
+              ? `Unloaded ${model.provider}/${model.id} without a status check`
+              : `Unloaded ${model.provider}/${model.id}`,
+          };
+        } catch (error) {
+          const message = `Could not unload ${model.provider}/${model.id}: ${errorMessage(error)}`;
+          return { status: "failed", message };
+        }
+      },
     };
   }
 

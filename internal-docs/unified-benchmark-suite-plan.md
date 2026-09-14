@@ -1,6 +1,6 @@
 # Unified Benchmark Suite Plan
 
-**Status:** Phase 3 complete; Phase 4 not started
+**Status:** Phase 4 complete; Phase 5 not started
 **Primary command:** `bench`  
 **Scope:** Repository consolidation, Inspect/visual/data-science execution, and local viewer orchestration
 
@@ -478,17 +478,17 @@ Exit criteria:
 
 ### Phase 4: Launch interactive Pi and clean up local models
 
-- [ ] Create the run slot only after final confirmation.
-- [ ] Stop the Bench alternate screen before launching Pi.
-- [ ] Launch Pi with the exact provider, model, run-directory `cwd`, session name, and `@prompt.md`.
-- [ ] Keep provider credentials under Pi's control.
-- [ ] Refactor local lifecycle adapters to consume provider connection data rather than Inspect translation output.
-- [ ] Add an explicit always-unload policy for Visual and Data Science.
-- [ ] Preserve ownership-aware cleanup for Inspect.
-- [ ] Keep the Bench parent alive during interactive Pi signal handling.
-- [ ] Run cleanup after normal exit, nonzero exit, and handled termination.
-- [ ] Remove the transient data-science access file in `finally`.
-- [ ] Mark launch failures without leaking credentials or local secret values.
+- [x] Create the run slot only after final confirmation.
+- [x] Stop the Bench alternate screen before launching Pi.
+- [x] Launch Pi with the exact provider, model, run-directory `cwd`, session name, and `@prompt.md`.
+- [x] Keep provider credentials under Pi's control.
+- [x] Refactor local lifecycle adapters to consume provider connection data rather than Inspect translation output.
+- [x] Add an explicit always-unload policy for Visual and Data Science.
+- [x] Preserve ownership-aware cleanup for Inspect.
+- [x] Keep the Bench parent alive during interactive Pi signal handling.
+- [x] Run cleanup after normal exit, nonzero exit, and handled termination.
+- [x] Remove the transient data-science access file in `finally`.
+- [x] Mark launch failures without leaking credentials or local secret values.
 
 Exit criteria:
 

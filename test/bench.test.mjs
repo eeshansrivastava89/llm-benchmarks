@@ -240,7 +240,6 @@ test("Ollama models loaded by bench are unloaded after the run", async () => {
   });
   const lifecycle = await prepareLocalModelLifecycle(selected, {
     baseUrl: selected.baseUrl,
-    childEnv: {},
   }, {
     fetchImpl: async (url, options = {}) => {
       calls.push({ url: String(url), options });
@@ -279,7 +278,6 @@ test("bench preserves a local model that was already loaded", async () => {
   });
   const lifecycle = await prepareLocalModelLifecycle(selected, {
     baseUrl: selected.baseUrl,
-    childEnv: {},
   }, {
     fetchImpl: async () => {
       requests += 1;
@@ -294,6 +292,59 @@ test("bench preserves a local model that was already loaded", async () => {
   assert.equal(requests, 1);
 });
 
+test("interactive cleanup unloads a model even when it was loaded before Pi", async () => {
+  let loaded = true;
+  const selected = model({
+    provider: "ollama",
+    id: "interactive-model",
+    baseUrl: "http://localhost:11434/v1",
+    backend: { location: "local", status: "online" },
+  });
+  const lifecycle = await prepareLocalModelLifecycle(selected, {
+    baseUrl: selected.baseUrl,
+  }, {
+    policy: "always",
+    fetchImpl: async (url) => {
+      if (String(url).endsWith("/api/ps")) {
+        return new Response(JSON.stringify({
+          models: loaded ? [{ model: "interactive-model:latest" }] : [],
+        }));
+      }
+      loaded = false;
+      return new Response(JSON.stringify({ done: true }));
+    },
+  });
+
+  assert.equal(lifecycle.summary, "unload after Pi exits");
+  assert.equal((await lifecycle.cleanup()).status, "unloaded");
+  assert.equal(loaded, false);
+});
+
+test("interactive cleanup still attempts unload when status cannot be read", async () => {
+  let requests = 0;
+  const selected = model({
+    provider: "ollama",
+    id: "interactive-model",
+    baseUrl: "http://localhost:11434/v1",
+    backend: { location: "local", status: "online" },
+  });
+  const lifecycle = await prepareLocalModelLifecycle(selected, {
+    baseUrl: selected.baseUrl,
+  }, {
+    policy: "always",
+    fetchImpl: async () => {
+      requests += 1;
+      if (requests === 1) throw new Error("status unavailable");
+      return new Response(JSON.stringify({ done: true }));
+    },
+  });
+
+  const cleanup = await lifecycle.cleanup();
+  assert.equal(cleanup.status, "unloaded");
+  assert.match(cleanup.message, /without a status check/);
+  assert.equal(requests, 2);
+});
+
 test("oMLX models loaded by bench use the authenticated public unload endpoint", async () => {
   let loaded = false;
   const calls = [];
@@ -305,8 +356,7 @@ test("oMLX models loaded by bench use the authenticated public unload endpoint",
   });
   const lifecycle = await prepareLocalModelLifecycle(selected, {
     baseUrl: selected.baseUrl,
-    apiKeyEnv: "OMLX_API_KEY",
-    childEnv: { OMLX_API_KEY: "secret" },
+    apiKey: "secret",
   }, {
     fetchImpl: async (url, options = {}) => {
       calls.push({ url: String(url), options });
