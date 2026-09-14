@@ -17,6 +17,7 @@ Pi supplies providers, models, and authentication. Inspect owns Inspect task exe
 - [uv](https://docs.astral.sh/uv/)
 - [Pi](https://www.npmjs.com/package/@earendil-works/pi-coding-agent), installed and authenticated
 - Chromium for visual capture and Playwright tests
+- Bubblewrap on Linux for interactive-run write confinement; macOS uses the built-in Seatbelt launcher
 - Optional local model servers configured through Pi
 
 ## Install from a clean checkout
@@ -79,7 +80,9 @@ Choose one suite:
 | Visual Bench | Bench creates a run slot and launches interactive Pi there | `runs/<benchmark>/<model>/<run>/` |
 | Data Science | Same Pi handoff, with temporary dataset access | `runs/<benchmark>/<model>/<run>/` |
 
-Visual and Data Science run slots are created only after confirmation. Pi opens in the slot with `@prompt.md` submitted. When Pi exits, Bench removes temporary Data Science access and unloads supported local models. Ollama and oMLX have unload adapters; other local providers show a warning and may remain loaded.
+Visual and Data Science run slots are created only after confirmation. Bench launches the complete Pi process tree under OS-enforced write confinement. Pi and its child processes can write the assigned run slot and temporary storage, but cannot modify repository source, sibling runs, or persistent user files. Normal host reads, installed tools, IPC, provider authentication, and network access remain available; this boundary protects repository integrity and is not confidentiality or network isolation.
+
+Ambient Pi context, skills, templates, discovered extensions, settings, and session reuse are disabled for reproducibility. Bench copies only Pi's authentication and model catalogs into writable private scratch storage for the run, then deletes that scratch storage after exit. Bench retains fresh Visual session diagnostics privately under `.bench-runtime/` and discards Data Science transcripts because they may contain temporary dataset access values. None of these private files are published. When Pi exits, Bench removes temporary Data Science access and unloads supported local models. Ollama and oMLX have unload adapters; other local providers show a warning and may remain loaded.
 
 Bench can start the relevant results viewer after a successful run. The default is **No**, so runs do not open browser tabs unexpectedly.
 
@@ -220,6 +223,10 @@ pi update --models
 ### A local provider is offline
 
 Start the server configured for that provider in Pi, then choose **Retry**. Bench checks loopback reachability before launch; this does not guarantee that a specific model is already loaded.
+
+### Interactive write confinement is unavailable
+
+Bench fails before creating a run slot and never falls back to unrestricted Pi. macOS requires the built-in `/usr/bin/sandbox-exec` launcher. Linux requires Bubblewrap (`bubblewrap` on Debian and Ubuntu) and working unprivileged user namespaces; hardened AppArmor or distribution policies may need to be adjusted so `bwrap` can create its mount namespace.
 
 ### A viewer port is occupied
 

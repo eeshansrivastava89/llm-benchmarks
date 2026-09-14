@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -103,6 +103,69 @@ describe("capture media video validation", () => {
 });
 
 describe("capture media metadata updates", () => {
+  it("rejects uncaught page errors and removes media produced by the failed capture", async () => {
+    const { runsRoot, run } = await writePreparedRun();
+    await writeFile(
+      join(run.runDirectory, "metadata.json"),
+      JSON.stringify({
+        ...run,
+        settings: {
+          preview: {
+            captureAtMs: 0,
+            viewport: { width: 320, height: 180 },
+            video: true
+          }
+        }
+      }),
+      "utf8"
+    );
+    await writeFile(
+      join(run.runDirectory, "index.html"),
+      "<!doctype html><script>setTimeout(() => { throw new Error('fixture animation crashed'); }, 50)</script>",
+      "utf8"
+    );
+
+    await expect(
+      captureSingleRunMedia({
+        runsRoot,
+        runDirectory: run.runDirectory,
+        now: new Date("2026-05-08T12:00:00.000Z"),
+        videoDurationMs: 100,
+        logger: { log() {}, warn() {}, error() {} }
+      })
+    ).resolves.toMatchObject({
+      captured: 0,
+      failed: 1,
+      skipped: 0
+    });
+
+    const metadata = JSON.parse(
+      await readFile(join(run.runDirectory, "metadata.json"), "utf8")
+    ) as RunMetadata;
+    expect(metadata.status).toBe("failed");
+    expect(metadata.error?.message).toBe(
+      "Generated page crashed during capture: fixture animation crashed"
+    );
+    expect(metadata.capture?.preview).toMatchObject({
+      status: "failed",
+      error: {
+        message: "Generated page crashed during capture: fixture animation crashed"
+      }
+    });
+    expect(metadata.capture?.video).toMatchObject({
+      status: "failed",
+      error: {
+        message: "Generated page crashed during capture: fixture animation crashed"
+      }
+    });
+    await expect(stat(join(run.runDirectory, "preview.png"))).rejects.toMatchObject({
+      code: "ENOENT"
+    });
+    await expect(stat(join(run.runDirectory, ".capture-video"))).rejects.toMatchObject({
+      code: "ENOENT"
+    });
+  }, 30_000);
+
   it("marks a run completed after a successful media capture", async () => {
     const { runsRoot, run } = await writePreparedRun();
     await writeFile(

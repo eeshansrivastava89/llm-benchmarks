@@ -12,6 +12,18 @@ export default defineConfig({
     mode: "standalone"
   }),
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    server: {
+      watch: {
+        ignored: [
+          "**/.bench-runtime/**",
+          "**/comparison-exports/**",
+          "**/dist-static/**",
+          "**/logs/**",
+          "**/public/export/**",
+          "**/runs/**"
+        ]
+      }
+    }
   }
 });

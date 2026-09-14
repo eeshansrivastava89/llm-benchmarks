@@ -625,7 +625,7 @@ test("captures missing run media with visible progress", async ({ page }) => {
   });
   let runsResponse: unknown[] = [sampleRun];
   await mockApi(page, {
-    
+    captureVideoDurationMs: 1_000,
     runs: () => runsResponse,
     onCapture: async (payload) => {
       expect(payload).toMatchObject({ runDirectory: sampleRun.runDirectory });
@@ -643,6 +643,13 @@ test("captures missing run media with visible progress", async ({ page }) => {
 
   await expect.poll(() => captureCalled).toBe(true);
   await expect(page.locator("[data-run-id]").first()).toContainText("Capturing");
+  const detailProgress = page.locator("[data-capture-progress]");
+  await expect(detailProgress).toBeVisible();
+  await expect(detailProgress).toContainText("/ 1s");
+  await expect.poll(async () => Number(await detailProgress.getAttribute("aria-valuenow"))).toBeGreaterThan(0);
+  await expect.poll(async () => page.locator("[data-capture-elapsed]").evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).fontSize)
+  )).toBeGreaterThan(48);
 
   releaseCapture();
   await expect(page.locator("[data-run-id]").first()).toContainText("Video ready");
@@ -932,6 +939,7 @@ async function mockApi(
   options: {
     benchmarks?: () => typeof benchmarks;
     runs?: unknown[] | (() => unknown[]);
+    captureVideoDurationMs?: number;
     onDelete?: (payload: unknown) => void;
     onCapture?: (payload: unknown) => void | Promise<void>;
     onOpenHtml?: (payload: unknown) => void | Promise<void>;
@@ -966,7 +974,10 @@ async function mockApi(
     const runs = typeof options.runs === "function" ? options.runs() : options.runs;
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ runs: runs ?? [sampleRun] })
+      body: JSON.stringify({
+        runs: runs ?? [sampleRun],
+        captureSettings: { videoDurationMs: options.captureVideoDurationMs ?? 5_000 }
+      })
     });
   });
 

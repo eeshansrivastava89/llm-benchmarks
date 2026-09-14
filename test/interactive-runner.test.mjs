@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -8,6 +8,8 @@ import test from "node:test";
 import {
   buildPiInvocation,
   executeInteractiveBenchmark,
+  finalizeInteractiveDiagnostics,
+  interactiveDiagnosticPaths,
   interactiveModelMetadata,
   resolveLocalModelConnection,
   runForeground,
@@ -43,8 +45,43 @@ async function metadataFor(execution) {
   return JSON.parse(await readFile(execution.prepared.paths.metadataPath, "utf8"));
 }
 
-test("Pi invocation uses the exact provider, model, session name, and prompt file", () => {
-  assert.deepEqual(buildPiInvocation(cloudModel(), visualBenchmark()), [
+function confinementTestOptions(root) {
+  const runtime = {
+    platform: "darwin",
+    runtime: "sandbox-exec",
+    executable: "/usr/bin/sandbox-exec",
+  };
+  return {
+    diagnosticsRoot: join(root, "private-diagnostics"),
+    confinementCheckImpl: async () => runtime,
+    confinementLaunchImpl: async (command, args, options) => ({
+      command,
+      args,
+      cwd: options.runDirectory,
+      env: options.env,
+      runDirectory: options.runDirectory,
+      runtime,
+      cleanup: async () => {},
+    }),
+  };
+}
+
+test("Pi invocation disables ambient resources, keeps built-in tools, and uses a private session", () => {
+  const invocation = buildPiInvocation(cloudModel(), visualBenchmark(), {
+    sessionDirectory: "/run/.bench-session",
+  });
+  assert.deepEqual(invocation, [
+    "--no-extensions",
+    "--no-skills",
+    "--no-prompt-templates",
+    "--no-context-files",
+    "--no-approve",
+    "--tools",
+    "read,bash,edit,write",
+    "--session-dir",
+    "/run/.bench-session",
+    "--append-system-prompt",
+    "Write durable benchmark outputs only in the current run directory. The operating-system policy blocks persistent writes elsewhere; host reads, installed tools, IPC, and network access remain available.",
     "--provider",
     "openai",
     "--model",
@@ -82,7 +119,9 @@ test("local cleanup access stays separate from Pi command arguments", async () =
     baseUrl: "http://127.0.0.1:8000/v1",
     apiKey: "private-local-key",
   });
-  assert.doesNotMatch(buildPiInvocation(model, visualBenchmark()).join(" "), /private-local-key/);
+  assert.doesNotMatch(buildPiInvocation(model, visualBenchmark(), {
+    sessionDirectory: "/run/.bench-session",
+  }).join(" "), /private-local-key/);
 });
 
 test("foreground child execution preserves statuses and reports missing commands", async () => {
@@ -158,6 +197,33 @@ test("foreground execution forwards handled termination and waits for the child"
   assert.equal(signalTarget.listenerCount("SIGTERM"), 0);
 });
 
+test("write-confinement preflight fails before lifecycle setup or run preparation", async () => {
+  let lifecycleStarted = false;
+  let runPrepared = false;
+
+  await assert.rejects(
+    executeInteractiveBenchmark({
+      repositoryRoot: process.cwd(),
+      benchmark: visualBenchmark(),
+      model: cloudModel(),
+      modelRuntime: {},
+      confinementCheckImpl: async () => {
+        throw new Error("write confinement unavailable");
+      },
+      lifecycleFactory: async () => {
+        lifecycleStarted = true;
+      },
+      prepareRunImpl: async () => {
+        runPrepared = true;
+      },
+    }),
+    /write confinement unavailable/u,
+  );
+
+  assert.equal(lifecycleStarted, false);
+  assert.equal(runPrepared, false);
+});
+
 test("successful execution prepares one slot, launches in it, and leaves it prepared", async (t) => {
   const runsRoot = await temporaryRunsRoot(t);
   let launch;
@@ -170,6 +236,7 @@ test("successful execution prepares one slot, launches in it, and leaves it prep
     benchmark: visualBenchmark(),
     model: cloudModel(),
     modelRuntime: {},
+    ...confinementTestOptions(runsRoot),
     env: { SAFE_VALUE: "yes" },
     lifecycleFactory: async (_model, connection, options) => {
       assert.equal(connection, null);
@@ -198,14 +265,65 @@ test("successful execution prepares one slot, launches in it, and leaves it prep
     `launch:${execution.prepared.paths.runDirectory}`,
   ]);
   assert.equal(launch.command, "pi");
-  assert.deepEqual(launch.args, buildPiInvocation(cloudModel(), visualBenchmark()));
+  assert.deepEqual(launch.args, buildPiInvocation(cloudModel(), visualBenchmark(), {
+    sessionDirectory: join(execution.prepared.paths.runDirectory, ".bench-session"),
+  }));
   assert.equal(launch.options.cwd, execution.prepared.paths.runDirectory);
   assert.deepEqual(launch.options.env, { SAFE_VALUE: "yes" });
   const metadata = await metadataFor(execution);
   assert.equal(metadata.status, "prepared");
   assert.equal(metadata.runner.actualRunner, "Pi");
+  assert.deepEqual(metadata.runner.isolation, {
+    mode: "os-write-confinement",
+    runtime: "sandbox-exec",
+    platform: "darwin",
+    filesystem: "run-slot-and-temporary-write",
+    reads: "host-readable",
+    network: "host-access",
+    diagnostics: "private-bench-runtime",
+  });
   assert.equal(metadata.runner.launchCommand, execution.launchCommand);
   assert.doesNotMatch(metadata.runner.launchCommand, /undefined=<redacted>/);
+});
+
+test("Visual diagnostics move outside the run slot while Data Science diagnostics are discarded", async (t) => {
+  const root = await temporaryRunsRoot(t);
+  const prepared = {
+    paths: { runDirectory: join(root, "runs", "sakura", "model", "run-1") },
+    run: {
+      runId: "run-1",
+      benchmark: { id: "sakura" },
+      model: { slug: "model" },
+    },
+  };
+  const visualPaths = interactiveDiagnosticPaths(root, prepared);
+  await mkdir(visualPaths.stagingDirectory, { recursive: true });
+  await writeFile(join(visualPaths.stagingDirectory, "session.jsonl"), '{"type":"session"}\n');
+  await writeFile(join(visualPaths.stagingDirectory, "ignore.txt"), "ignored");
+
+  assert.deepEqual(await finalizeInteractiveDiagnostics({
+    kind: "visual",
+    ...visualPaths,
+  }), { status: "retained", files: 1 });
+  assert.equal(
+    await readFile(join(visualPaths.destinationDirectory, "session.jsonl"), "utf8"),
+    '{"type":"session"}\n',
+  );
+  assert.equal((await stat(join(visualPaths.destinationDirectory, "session.jsonl"))).mode & 0o777, 0o600);
+  await assert.rejects(stat(visualPaths.stagingDirectory), { code: "ENOENT" });
+
+  const dataSciencePaths = {
+    stagingDirectory: join(prepared.paths.runDirectory, ".bench-session-ds"),
+    destinationDirectory: join(root, ".bench-runtime", "should-not-exist"),
+  };
+  await mkdir(dataSciencePaths.stagingDirectory, { recursive: true });
+  await writeFile(join(dataSciencePaths.stagingDirectory, "session.jsonl"), "temporary-secret");
+  assert.deepEqual(await finalizeInteractiveDiagnostics({
+    kind: "data-science",
+    ...dataSciencePaths,
+  }), { status: "discarded", files: 0 });
+  await assert.rejects(stat(dataSciencePaths.stagingDirectory), { code: "ENOENT" });
+  await assert.rejects(stat(dataSciencePaths.destinationDirectory), { code: "ENOENT" });
 });
 
 test("handled termination cancels the slot after cleanup", async (t) => {
@@ -217,6 +335,7 @@ test("handled termination cancels the slot after cleanup", async (t) => {
     benchmark: visualBenchmark(),
     model: cloudModel(),
     modelRuntime: {},
+    ...confinementTestOptions(runsRoot),
     lifecycleFactory: async () => ({
       cleanup: async () => {
         cleaned = true;
@@ -253,6 +372,7 @@ test("normal Pi exit unloads Ollama through its mocked API", async (t) => {
     benchmark: visualBenchmark(),
     model,
     modelRuntime: {},
+    ...confinementTestOptions(runsRoot),
     lifecycleOptions: {
       fetchImpl: async (url, options = {}) => {
         requests.push({ url: String(url), options });
@@ -298,6 +418,7 @@ test("interrupted Pi exit unloads oMLX through its authenticated mocked API", as
     modelRuntime: {
       getAuth: async () => ({ auth: { apiKey } }),
     },
+    ...confinementTestOptions(runsRoot),
     lifecycleOptions: {
       fetchImpl: async (url, options = {}) => {
         requests.push({ url: String(url), options });
@@ -344,6 +465,7 @@ test("nonzero Pi exits fail the slot and remove Data Science access", async (t) 
     benchmark,
     model: cloudModel(),
     modelRuntime: {},
+    ...confinementTestOptions(runsRoot),
     dataScienceAccess: {
       baseUrl: "https://project.supabase.test",
       anonKey: "private-test-key",
@@ -357,6 +479,8 @@ test("nonzero Pi exits fail the slot and remove Data Science access", async (t) 
   const metadata = await metadataFor(execution);
   assert.equal(metadata.status, "failed");
   assert.equal(metadata.error.message, "Pi exited with status 7");
+  assert.equal(metadata.runner.isolation.network, "host-access");
+  assert.equal(metadata.runner.isolation.diagnostics, "discarded-after-run");
   assert.doesNotMatch(JSON.stringify(metadata), /private-test-key/);
   await assert.rejects(stat(execution.prepared.paths.supabaseConfigPath), { code: "ENOENT" });
 });
@@ -380,6 +504,7 @@ test("launch failures are sanitized, recorded, cleaned up, and remove access fil
       benchmark,
       model: cloudModel(),
       modelRuntime: {},
+      ...confinementTestOptions(runsRoot),
       dataScienceAccess: {
         baseUrl: "https://project.supabase.test",
         anonKey: "do-not-record-this-secret",

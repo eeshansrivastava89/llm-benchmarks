@@ -91,6 +91,15 @@ async function writeRun(runsRoot: string) {
       baseUrl: "http://localhost:1234/v1",
       model: "local/qwen2.5-vl",
       launchCommand: "llama-server --model /Users/test/model.gguf",
+      isolation: {
+        mode: "os-write-confinement",
+        runtime: "sandbox-exec",
+        platform: "darwin",
+        filesystem: "run-slot-and-temporary-write",
+        reads: "host-readable",
+        network: "host-access",
+        diagnostics: "private-bench-runtime"
+      },
       commandAsset: "command.txt",
       requestAsset: "request.json",
       streamAsset: "stream.ndjson",

@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { assertTrustedWriteRequest, createLocalApi } from "../../src/server/api";
+import { DEFAULT_VIDEO_DURATION_MS } from "../../src/lib/capture-media";
 import type { BenchmarkRecord, RunMetadata } from "../../src/lib/types";
 
 const benchmarks: BenchmarkRecord[] = [
@@ -42,7 +43,10 @@ describe("createLocalApi", () => {
     });
 
     await expect(api.getSavedRuns()).resolves.toEqual({
-      runs: []
+      runs: [],
+      captureSettings: {
+        videoDurationMs: DEFAULT_VIDEO_DURATION_MS
+      }
     });
   });
 
@@ -96,7 +100,10 @@ describe("createLocalApi", () => {
       failed: 0,
       runs
     });
-    expect(captureMissingRunMedia).toHaveBeenCalledWith({ runsRoot: "/runs" });
+    expect(captureMissingRunMedia).toHaveBeenCalledWith({
+      runsRoot: "/runs",
+      videoDurationMs: DEFAULT_VIDEO_DURATION_MS
+    });
   });
 
   it("captures one requested run when a run directory is provided", async () => {
@@ -123,7 +130,8 @@ describe("createLocalApi", () => {
     expect(captureSingleRunMedia).toHaveBeenCalledWith({
       runsRoot: "/runs",
       runDirectory: "/runs/sakura/model-a/run-1",
-      force: false
+      force: false,
+      videoDurationMs: DEFAULT_VIDEO_DURATION_MS
     });
   });
 
@@ -155,7 +163,8 @@ describe("createLocalApi", () => {
     expect(captureSingleRunMedia).toHaveBeenCalledWith({
       runsRoot: "/runs",
       runDirectory: "/runs/sakura/model-a/run-1",
-      force: true
+      force: true,
+      videoDurationMs: DEFAULT_VIDEO_DURATION_MS
     });
     expect(captureMissingRunMedia).not.toHaveBeenCalled();
   });

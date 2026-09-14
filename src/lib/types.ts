@@ -21,21 +21,6 @@ export interface BenchmarkRecord {
   sourcePath?: string;
 }
 
-export interface LMStudioModel {
-  id: string;
-  object?: string;
-  created?: number;
-  owned_by?: string;
-  localPath?: string;
-}
-
-export interface OmlxModel {
-  id: string;
-  object?: string;
-  created?: number;
-  owned_by?: string;
-}
-
 export type ModelSourceId = "ollama" | "omlx" | "llama-cpp" | "llama-cpp-mtp" | "cloud";
 
 export interface RunModelRecord {
@@ -63,7 +48,6 @@ export type DataScienceAssets = {
   notebook?: string;
   summary?: string;
   scorecard?: string;
-  judgeScorecard?: string;
   chartDistribution?: string;
   chartTreatmentEffect?: string;
   chartCompletionRates?: string;
@@ -121,6 +105,16 @@ export interface RunTokenMetrics {
   totalTokens?: number;
 }
 
+export interface RunIsolationMetadata {
+  mode: "os-write-confinement";
+  runtime: "sandbox-exec" | "bubblewrap";
+  platform: string;
+  filesystem: "run-slot-and-temporary-write";
+  reads: "host-readable";
+  network: "host-access";
+  diagnostics: "private-bench-runtime" | "discarded-after-run";
+}
+
 export interface RunRunnerMetadata {
   mode: RunnerMode;
   modelSource?: ModelSourceId;
@@ -132,6 +126,7 @@ export interface RunRunnerMetadata {
   baseUrl?: string;
   model?: string;
   launchCommand?: string;
+  isolation?: RunIsolationMetadata;
   requestAsset?: string;
   streamAsset?: string;
   responseAsset?: string;
@@ -147,15 +142,6 @@ export interface DsScorecard {
   earned: number;
   pct: number;
   checks?: Record<string, { label: string; max: number; earned: number; pass: boolean; detail: string }>;
-}
-
-export interface DsJudgeScorecard {
-  notebook_structure: number;
-  visualization_quality: number;
-  statistical_interpretation: number;
-  grounding: number;
-  product_recommendation: number;
-  notes: string;
 }
 
 export interface DsSummary {

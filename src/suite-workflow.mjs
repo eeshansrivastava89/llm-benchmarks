@@ -66,7 +66,9 @@ export function buildInteractiveReview({ repositoryRoot, suite, benchmark, model
     expectedAssets: interactiveExpectedAssets(benchmark.kind),
     launch: [
       "Create a new run slot only after confirmation.",
-      "Open interactive Pi inside that isolated run directory.",
+      "Allow writes only in that run slot and temporary storage.",
+      "Keep normal host reads, installed tools, IPC, and network access available.",
+      "Disable ambient Pi context, skills, extensions, and session reuse.",
       "Submit @prompt.md, then return to Bench when Pi exits.",
     ],
     cleanup: cleanup.summary,

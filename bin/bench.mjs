@@ -70,6 +70,11 @@ function setupAdvice(error) {
   if (/no authenticated models|No authentication|\/login/i.test(message)) {
     return "Open Pi, run /login, then return here and choose Retry.";
   }
+  if (/Interactive write confinement is (?:unavailable|not supported)/i.test(message)) {
+    return process.platform === "linux"
+      ? "Install Bubblewrap and enable unprivileged user namespaces, then choose Retry."
+      : "Interactive runs require the macOS Seatbelt launcher or Linux Bubblewrap.";
+  }
   if (/custom task root.*not found/i.test(message)) {
     return "Fix [tool.bench].custom-task-roots in pyproject.toml, then choose Retry.";
   }

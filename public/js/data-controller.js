@@ -27,6 +27,7 @@ export async function loadLocalData() {
     state.staticMode = false;
     state.benchmarks = benchmarks.benchmarks ?? [];
     state.runs = runs.runs ?? [];
+    applyCaptureSettings(runs);
     renderKindTabs();
     renderBenchmarks();
     renderModels();
@@ -93,6 +94,7 @@ export async function refreshRuns() {
     ]);
     state.benchmarks = benchmarks.benchmarks ?? [];
     state.runs = runs.runs ?? [];
+    applyCaptureSettings(runs);
     syncSelectedRunFromState({ rerenderDetail: true });
     renderKindTabs();
     renderBenchmarks();
@@ -118,6 +120,7 @@ export async function refreshRunsForPolling() {
 
   const runs = await fetchJson("/api/runs");
   const nextRuns = runs.runs ?? [];
+  applyCaptureSettings(runs);
   if (runsRenderSignature(nextRuns) === runsRenderSignature(state.runs)) {
     return;
   }
@@ -129,6 +132,13 @@ export async function refreshRunsForPolling() {
   renderModelSources();
   renderRuns();
   updateOnboarding();
+}
+
+function applyCaptureSettings(response) {
+  const videoDurationMs = Number(response.captureSettings?.videoDurationMs);
+  if (Number.isFinite(videoDurationMs) && videoDurationMs > 0) {
+    state.captureVideoDurationMs = videoDurationMs;
+  }
 }
 
 function runsRenderSignature(runs) {

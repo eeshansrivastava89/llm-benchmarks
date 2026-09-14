@@ -23,7 +23,7 @@ const DEFAULT_VIEWPORT: ViewportSettings = {
   height: 900
 };
 const DEFAULT_CAPTURE_AT_MS = 5000;
-const DEFAULT_VIDEO_DURATION_MS = 20_000;
+export const DEFAULT_VIDEO_DURATION_MS = 20_000;
 const DEFAULT_MIN_CAPTURE_RENDER_FPS = 12;
 const DEFAULT_FRAME_RATE_SAMPLE_MS = 1600;
 const DEFAULT_FRAME_RATE_WARMUP_MS = 400;
@@ -31,6 +31,14 @@ const DEFAULT_HTML_ASSET = "index.html";
 const DEFAULT_PREVIEW_ASSET = "preview.png";
 const DEFAULT_VIDEO_ASSET = "preview.webm";
 const DEFAULT_MP4_ASSET = "preview.mp4";
+const MAX_PAGE_ERROR_LENGTH = 500;
+
+class GeneratedPageRuntimeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "GeneratedPageRuntimeError";
+  }
+}
 
 export interface CaptureLogger {
   log(message?: unknown, ...optionalParams: unknown[]): void;
@@ -209,6 +217,8 @@ async function captureRunMediaWithPlaywright(
   const mp4CapturePath = options.force ? join(run.runDirectory, ".capture-preview.mp4") : mp4Path;
   const videoDirectory = join(run.runDirectory, ".capture-video");
   let convertedMp4 = false;
+  let previewWritten = false;
+  let pageRuntimeFailed = false;
 
   if (!needsPreview && !needsVideo) {
     return { captured: false, run };
@@ -251,6 +261,10 @@ async function captureRunMediaWithPlaywright(
         : {})
     });
     const page = await context.newPage();
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => {
+      pageErrors.push(formatPageError(error));
+    });
     video = page.video() ?? undefined;
 
     await page.goto(pathToFileURL(htmlPath).href, {
@@ -261,12 +275,15 @@ async function captureRunMediaWithPlaywright(
     if (captureAtMs > 0) {
       await page.waitForTimeout(captureAtMs);
     }
+    assertNoPageErrors(pageErrors);
 
     if (needsPreview) {
       await page.screenshot({
         path: previewCapturePath,
         fullPage: false
       });
+      previewWritten = true;
+      assertNoPageErrors(pageErrors);
       console.log(`[capture] preview saved: ${previewCapturePath}`);
     }
 
@@ -284,18 +301,35 @@ async function captureRunMediaWithPlaywright(
       if (!isAnimationFrameRateAcceptable(frameRate)) {
         console.warn(`[capture] ${captureFrameRateErrorMessage(frameRate, viewport)}`);
       }
+      assertNoPageErrors(pageErrors);
     }
 
     const remainingMs = Math.max(0, options.videoDurationMs - captureAtMs);
     if (needsVideo && remainingMs > 0) {
       await page.waitForTimeout(remainingMs);
     }
+    assertNoPageErrors(pageErrors);
 
     await context.close();
     context = undefined;
+  } catch (error) {
+    pageRuntimeFailed = error instanceof GeneratedPageRuntimeError;
+    throw error;
   } finally {
     if (context) {
       await context.close().catch(() => {});
+    }
+    if (pageRuntimeFailed) {
+      await Promise.all([
+        ...(previewWritten ? [rm(previewCapturePath, { force: true })] : []),
+        ...(needsVideo ? [rm(videoDirectory, { recursive: true, force: true })] : []),
+        ...(options.force
+          ? [
+              rm(videoCapturePath, { force: true }),
+              rm(mp4CapturePath, { force: true })
+            ]
+          : [])
+      ]).catch(() => {});
     }
     await browser.close();
   }
@@ -381,6 +415,24 @@ async function captureRunMediaWithPlaywright(
     captured: true,
     run: nextRun
   };
+}
+
+function assertNoPageErrors(pageErrors: string[]): void {
+  if (pageErrors.length === 0) return;
+
+  const uniqueErrors = [...new Set(pageErrors)];
+  const detail = uniqueErrors.slice(0, 3).join("; ");
+  const additionalCount = uniqueErrors.length - 3;
+  throw new GeneratedPageRuntimeError(
+    `Generated page crashed during capture: ${detail}` +
+      (additionalCount > 0 ? ` (${additionalCount} additional error(s))` : "")
+  );
+}
+
+function formatPageError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const firstLine = message.split(/\r?\n/u, 1)[0]?.trim();
+  return (firstLine || "Unknown page error").slice(0, MAX_PAGE_ERROR_LENGTH);
 }
 
 async function markCaptureFailed(

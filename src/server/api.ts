@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import {
   captureMissingRunMedia as defaultCaptureMissingRunMedia,
   captureSingleRunMedia as defaultCaptureSingleRunMedia,
+  DEFAULT_VIDEO_DURATION_MS,
   type CaptureMissingRunMediaResult
 } from "../lib/capture-media";
 import { assertSafeRunAssetPath, isPathInside, resolveRunAssetPath } from "../lib/asset-paths";
@@ -76,6 +77,7 @@ export interface LocalApiDependencies {
   scoreDsRun?: typeof defaultScoreDsRun;
   captureMissingRunMedia?: typeof defaultCaptureMissingRunMedia;
   captureSingleRunMedia?: typeof defaultCaptureSingleRunMedia;
+  captureVideoDurationMs?: number;
   openFile?: (path: string) => Promise<void>;
   exportComparisonVideo?: typeof defaultExportComparisonVideo;
 }
@@ -103,6 +105,9 @@ export interface SystemStatsResponse {
 
 export interface SavedRunsResponse {
   runs: RunMetadata[];
+  captureSettings: {
+    videoDurationMs: number;
+  };
 }
 
 export interface DeleteRunResponse {
@@ -157,6 +162,8 @@ export function createLocalApi(dependencies: LocalApiDependencies = {}): LocalAp
     dependencies.captureMissingRunMedia ?? defaultCaptureMissingRunMedia;
   const captureSingleRunMedia =
     dependencies.captureSingleRunMedia ?? defaultCaptureSingleRunMedia;
+  const captureVideoDurationMs =
+    dependencies.captureVideoDurationMs ?? DEFAULT_VIDEO_DURATION_MS;
   const openFile = dependencies.openFile ?? defaultOpenFile;
   const exportComparisonVideo = dependencies.exportComparisonVideo ?? defaultExportComparisonVideo;
 
@@ -175,7 +182,10 @@ export function createLocalApi(dependencies: LocalApiDependencies = {}): LocalAp
 
     async getSavedRuns() {
       return {
-        runs: await listRunMetadata(runsRoot)
+        runs: await listRunMetadata(runsRoot),
+        captureSettings: {
+          videoDurationMs: captureVideoDurationMs
+        }
       };
     },
 
@@ -228,11 +238,15 @@ export function createLocalApi(dependencies: LocalApiDependencies = {}): LocalAp
         return captureSingleRunMedia({
           runsRoot,
           runDirectory: readRequiredString(request.runDirectory, "runDirectory"),
-          force
+          force,
+          videoDurationMs: captureVideoDurationMs
         });
       }
 
-      return captureMissingRunMedia({ runsRoot });
+      return captureMissingRunMedia({
+        runsRoot,
+        videoDurationMs: captureVideoDurationMs
+      });
     },
 
     async openRunHtml(request) {

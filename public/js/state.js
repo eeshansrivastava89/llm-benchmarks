@@ -21,6 +21,7 @@ export const state = {
   compareSelection: [],
   comparisonExportBusy: false,
   captureRunDirectory: "",
+  captureVideoDurationMs: null,
   scoreBusy: false,
   scoreRunDirectory: "",
   onboardingDismissed: false,

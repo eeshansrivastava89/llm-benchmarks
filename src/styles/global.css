@@ -532,6 +532,13 @@ html[data-theme="dark"] .sync-target-logo { filter: brightness(1.1); }
 .artifact-video { display: block; border-radius: 0.55rem; background: black; }
 .artifact-empty { display: grid; place-items: center; align-content: center; gap: 0.45rem; padding: 2rem; color: var(--muted-foreground); text-align: center; }
 .artifact-empty strong { color: var(--foreground); }
+.detail-capture-progress { width: min(34rem, 88%); display: grid; justify-items: center; gap: clamp(0.7rem, 1.4vmin, 1.1rem); color: var(--foreground); text-align: center; }
+.detail-capture-kicker { color: var(--primary); font-size: 0.72rem; font-weight: 750; letter-spacing: 0.12em; text-transform: uppercase; }
+.detail-capture-time { display: flex; align-items: baseline; justify-content: center; color: var(--muted-foreground); font-family: var(--font-mono); font-size: clamp(1rem, 2vw, 1.35rem); font-variant-numeric: tabular-nums; line-height: 1; }
+.detail-capture-time strong { color: var(--foreground); font-size: clamp(3.4rem, 8vw, 6.5rem); font-weight: 650; letter-spacing: -0.08em; }
+.detail-capture-track { width: 100%; height: 0.55rem; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--primary), transparent 88%); }
+.detail-capture-track span { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--primary); transform: scaleX(0); transform-origin: left center; transition: transform 100ms linear; }
+.detail-capture-status { color: var(--muted-foreground); font-size: 0.82rem; }
 .detail-inspector { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 0.75rem; overflow: hidden; min-width: 0; }
 
 .run-identity, .inspector-section { min-width: 0; border: 1px solid var(--app-border); border-radius: 0.9rem; background: var(--card); box-shadow: var(--shadow); }
@@ -616,6 +623,10 @@ html[data-theme="dark"] .sync-target-logo { filter: brightness(1.1); }
   font-size: 0.8rem;
   font-weight: 500;
   text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-capture-track span { transition: none; }
 }
 
 @media (max-width: 1180px) {

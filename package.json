@@ -23,7 +23,7 @@
     "build:static": "node scripts/build-static.mjs",
     "audit:static": "node scripts/audit-static-build.mjs",
     "publish": "node scripts/publish.mjs",
-    "check:bench": "node --check ./bin/bench.mjs && node --check ./src/benchmark-suites.mjs && node --check ./src/catalog.mjs && node --check ./src/errors.mjs && node --check ./src/interactive-runner.mjs && node --check ./src/local-lifecycle.mjs && node --check ./src/preferences.mjs && node --check ./src/providers.mjs && node --check ./src/run-plan.mjs && node --check ./src/suite-workflow.mjs && node --check ./src/ui/bench-ui.mjs && node --check ./src/ui/presentation.mjs && node --check ./scripts/audit-static-build.mjs && node --check ./scripts/build-static.mjs && node --check ./scripts/migrate-model-source.mjs && node --check ./scripts/publish.mjs && node --check ./src/viewer-config.mjs && node --check ./src/viewers.mjs && node --check ./test/bench.test.mjs && node --check ./test/benchmark-suites.test.mjs && node --check ./test/interactive-runner.test.mjs && node --check ./test/suite-workflow.test.mjs && node --check ./test/viewers.test.mjs && uv run python -m compileall -q ./src/bench_inspect ./benchmarks ./scripts",
+    "check:bench": "node --check ./bin/bench.mjs && node --check ./src/benchmark-suites.mjs && node --check ./src/catalog.mjs && node --check ./src/errors.mjs && node --check ./src/interactive-runner.mjs && node --check ./src/write-confinement.mjs && node --check ./src/local-lifecycle.mjs && node --check ./src/preferences.mjs && node --check ./src/providers.mjs && node --check ./src/run-plan.mjs && node --check ./src/suite-workflow.mjs && node --check ./src/ui/bench-ui.mjs && node --check ./src/ui/presentation.mjs && node --check ./scripts/audit-static-build.mjs && node --check ./scripts/build-static.mjs && node --check ./scripts/publish.mjs && node --check ./src/viewer-config.mjs && node --check ./src/viewers.mjs && node --check ./test/bench.test.mjs && node --check ./test/benchmark-suites.test.mjs && node --check ./test/interactive-runner.test.mjs && node --check ./test/write-confinement.test.mjs && node --check ./test/suite-workflow.test.mjs && node --check ./test/viewers.test.mjs && uv run python -m compileall -q ./src/bench_inspect ./benchmarks ./scripts",
     "check:visual": "astro check && tsc --noEmit",
     "check": "npm run check:bench && npm run check:visual",
     "test:bench": "node --test ./test/*.test.mjs",
@@ -48,8 +48,6 @@
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.8.0",
-    "lucide-static": "^1.16.0",
-    "serve": "^14.2.6",
     "vitest": "^4.1.6"
   },
   "overrides": {

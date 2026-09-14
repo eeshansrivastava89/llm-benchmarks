@@ -109,7 +109,11 @@ export function openDetail(run) {
 }
 
 export function renderDetail(run) {
-  const detail = detailViewModel(run);
+  const capturing = state.captureBusy && state.captureRunDirectory === run.runDirectory;
+  const detail = detailViewModel(run, {
+    capturing,
+    captureVideoDurationMs: state.captureVideoDurationMs
+  });
   els.detailBackdrop.querySelector(".detail-shell")?.setAttribute("data-detail-kind", "visual");
   els.detailTitle.textContent = detail.title;
   els.detailSubtitle.textContent = detail.subtitle;

@@ -3,12 +3,14 @@ import { displayRunError, hasCapturedVideo, runCardState, runKind, runRecordText
 import { renderStackPill } from "./stack-pills.js";
 import { escapeAttribute, escapeHtml, formatDateTime } from "./utils.js";
 
-export function detailViewModel(run) {
+export function detailViewModel(run, options = {}) {
   const textRecord = runRecordText(run);
   return {
     title: run.benchmark?.title ?? "Run detail",
     subtitle: (run.model?.id ?? "Unknown model") + " · updated " + formatDateTime(run.updatedAt ?? run.createdAt),
-    previewHtml: renderDetailArtifact(run),
+    previewHtml: options.capturing
+      ? renderCaptureProgress(options.captureVideoDurationMs)
+      : renderDetailArtifact(run),
     textRecord,
     promptText: textRecord.value || textRecord.emptyText,
     promptLength: textRecord.value ? textRecord.value.length.toLocaleString() + " chars" : "missing",
@@ -48,6 +50,25 @@ function renderDetailMeta(run) {
     '<span class="meta-label">Created</span><strong>' + escapeHtml(formatDateTime(run.createdAt)) + "</strong>" +
     '<span class="meta-label">Updated</span><strong>' + escapeHtml(formatDateTime(run.updatedAt)) + "</strong>" +
     (completedAt ? '<span class="meta-label">Captured</span><strong>' + escapeHtml(formatDateTime(completedAt)) + "</strong>" : "")
+  );
+}
+
+export function renderCaptureProgress(videoDurationMs) {
+  const durationMs = Number(videoDurationMs);
+  const hasDuration = Number.isFinite(durationMs) && durationMs > 0;
+  const totalSeconds = hasDuration ? Math.ceil(durationMs / 1000) : null;
+
+  return (
+    '<div class="detail-capture-progress" data-capture-progress role="progressbar" aria-label="Capture progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Capture starting">' +
+      '<span class="detail-capture-kicker">Capturing media</span>' +
+      '<p class="detail-capture-time"><strong data-capture-elapsed>0s</strong>' +
+        (totalSeconds === null ? "" : '<span> / ' + String(totalSeconds) + "s</span>") +
+      "</p>" +
+      '<div class="detail-capture-track" aria-hidden="true"><span data-capture-progress-bar></span></div>' +
+      '<p class="detail-capture-status" data-capture-status>' +
+        (hasDuration ? "Recording the animated preview…" : "Preparing capture…") +
+      "</p>" +
+    "</div>"
   );
 }
 
