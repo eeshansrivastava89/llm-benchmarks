@@ -3,7 +3,11 @@ import { hasCapturedVideo, runKind } from "./runs.js";
 
 export function startHtmlPolling(options = {}) {
   if (state.htmlPollInterval) return;
-  const knownReadyRunIds = new Set(readyVisualRuns().map(runKey));
+  const initiallyReady = readyVisualRuns();
+  const knownReadyRunIds = new Set(initiallyReady.map(runKey));
+  if (initiallyReady.length > 0) {
+    options.onDetect?.(initiallyReady.length);
+  }
 
   state.htmlPollInterval = setInterval(async () => {
     if (state.staticMode || state.captureBusy) return;

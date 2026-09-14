@@ -81,12 +81,16 @@ test("interactive review identifies the run root, Pi handoff, and local cleanup"
     repositoryRoot: "/project",
     suite: interactiveSuites[0],
     benchmark: interactiveSuites[0].benchmarks[0],
-    model,
+    model: {
+      ...model,
+      auth: { apiKey: "provider-secret-must-not-render" },
+    },
   });
 
   assert.equal(review.runRoot, "/project/runs");
   assert.match(review.launch.join("\n"), /@prompt\.md/);
   assert.match(review.cleanup, /Unload.*Ollama/);
+  assert.doesNotMatch(JSON.stringify(review), /provider-secret-must-not-render/);
   const unsupportedReview = buildInteractiveReview({
     repositoryRoot: "/project",
     suite: interactiveSuites[0],

@@ -22,7 +22,6 @@ import {
   benchmarkCategories,
   benchmarkDetails,
   benchmarkListItem,
-  cleanLines,
   formatCount,
   listTheme,
   selectorDetails,

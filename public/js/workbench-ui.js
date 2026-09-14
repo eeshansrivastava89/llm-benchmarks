@@ -2,7 +2,7 @@ import { assetHref } from "./assets.js";
 import { compareRunKey, selectedCompareRuns } from "./compare.js";
 import { renderComparePreviewGrid } from "./compare-ui.js";
 import { icon } from "./icons.js";
-import { displayRunError, hasCapturedVideo, needsDsScoring, needsMediaCapture, runCardIdentity, runCardMediaMessage, runCardState, runKind, stackAttemptIdentity } from "./runs.js";
+import { displayRunError, hasCapturedVideo, runCardIdentity, runCardMediaMessage, runCardState, runKind, stackAttemptIdentity } from "./runs.js";
 import { renderStackSummary } from "./stack-pills.js";
 import { escapeAttribute, escapeHtml, formatDateShort } from "./utils.js";
 
@@ -99,9 +99,7 @@ function renderRunCard(run, mode, context) {
       : runCardState(run);
   const identity = runCardIdentity(run, mode);
   const stack = stackAttemptIdentity(run);
-  const kind = runKind(run);
-  const isScoredDs = kind === "data-science" && Boolean(run.dsScorecard);
-  const hasVideo = kind === "visual" && hasCapturedVideo(run);
+  const mediaMessage = runCardMediaMessage(run, isCapturing, isScoring);
 
   return (
     '<article class="run-card" data-open-run data-run-id="' + escapeAttribute(run.runId) + '" tabindex="0" role="button" aria-label="' +
@@ -112,8 +110,9 @@ function renderRunCard(run, mode, context) {
           '<strong class="truncate-line">' + escapeHtml(identity.primary) + "</strong>" +
         "</span>" +
         '<span class="run-card-meta">' +
-          renderMetaPills(run, stack) +
+          renderMetaPills(stack) +
         "</span>" +
+        '<span class="run-card-message">' + escapeHtml(mediaMessage) + "</span>" +
         '<span class="run-card-footer">' +
           '<span class="status-label">' +
             '<span class="status-dot" data-status="' + escapeAttribute(stateLabel.status) + '"></span>' +
@@ -126,11 +125,10 @@ function renderRunCard(run, mode, context) {
   );
 }
 
-function renderMetaPills(run, stack) {
-  const model = escapeHtml(run.model?.id ?? run.model?.slug ?? "unknown");
+function renderMetaPills(stack) {
   const harness = escapeHtml(stack.harness ?? "");
   const backend = escapeHtml(stack.backend ?? "");
-  let pills = '<span class="meta-pill meta-pill-model">' + model + "</span>";
+  let pills = "";
   if (harness) {
     pills += '<span class="meta-pill meta-pill-harness">' + harness + "</span>";
   }
@@ -138,54 +136,6 @@ function renderMetaPills(run, stack) {
     pills += '<span class="meta-pill meta-pill-backend">' + backend + "</span>";
   }
   return pills;
-}
-
-function renderRunCaptureAction(run, isCapturing, context) {
-  const kind = runKind(run);
-
-  // Data-science: score button
-  if (kind === "data-science") {
-    const canScore = context.canOperate &&
-      needsDsScoring(run);
-    const hasScorecard = run.assets?.ds?.scorecard;
-    const canRescore = context.canOperate &&
-      run.runDirectory && hasScorecard;
-    if (!canScore && !canRescore) return "";
-
-    const isScoring = context.scoreRunDirectory && run.runDirectory === context.scoreRunDirectory;
-    const label = hasScorecard ? "Rescore" : "Score";
-    const title = run.benchmark?.title ?? run.benchmark?.id ?? "run";
-    const model = run.model?.id ?? "unknown model";
-    return (
-      '<span class="run-card-actions" data-placement="card">' +
-        '<button type="button" class="btn-sm-outline run-card-score operational-control" data-score-run-id="' + escapeAttribute(run.runId) + '" ' +
-          'aria-label="' + escapeAttribute(label + " " + title + " on " + model) + '"' +
-          (isScoring || context.scoreBusy ? " disabled" : "") + '>' +
-          icon("check-circle") + escapeHtml(isScoring ? "Scoring..." : label) +
-        '</button>' +
-      '</span>'
-    );
-  }
-
-  // Visual: capture button
-  const canCapture = context.canOperate &&
-    needsMediaCapture(run);
-  if (!canCapture) {
-    return "";
-  }
-
-  const label = "Capture preview";
-  const title = run.benchmark?.title ?? run.benchmark?.id ?? "run";
-  const model = run.model?.id ?? "unknown model";
-  return (
-    '<span class="run-card-actions" data-placement="card">' +
-      '<button type="button" class="btn-sm-outline run-card-capture operational-control" data-capture-run-id="' + escapeAttribute(run.runId) + '" ' +
-        'aria-label="' + escapeAttribute(label + " for " + title + " on " + model) + '"' +
-        (isCapturing || context.captureBusy ? " disabled" : "") + '>' +
-        icon("camera") + escapeHtml(isCapturing ? "Capturing..." : label) +
-      '</button>' +
-    '</span>'
-  );
 }
 
 function renderRunsPagination(showingStart, showingEnd, totalRuns, totalPages, runPage) {

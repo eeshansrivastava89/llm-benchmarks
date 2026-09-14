@@ -142,6 +142,8 @@ test("Bench prepares data-science runs only with validated project access", asyn
   );
   assert.equal(accessFile.headers.apikey, "project-test-key");
   assert.equal((await stat(prepared.paths.supabaseConfigPath)).mode & 0o777, 0o600);
+  assert.doesNotMatch(await readFile(prepared.paths.metadataPath, "utf8"), /project-test-key/);
+  assert.doesNotMatch(await readFile(prepared.paths.promptPath, "utf8"), /project-test-key/);
 });
 
 test("shell Data Science settings take precedence over the project env file", async (t) => {

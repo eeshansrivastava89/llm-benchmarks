@@ -33,6 +33,7 @@ export async function loadLocalData() {
     renderHarnesses();
     renderModelSources();
     renderRuns();
+    updateOnboarding();
     startHtmlPolling({
       onRefresh: refreshRunsForPolling,
       onDetect: showHtmlDetectToast

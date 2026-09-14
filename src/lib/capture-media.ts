@@ -466,6 +466,7 @@ async function writeUpdatedRunMetadata(
   const next: RunMetadata = {
     ...current,
     ...update,
+    runDirectory: run.runDirectory,
     assets: {
       ...current.assets,
       ...update.assets,

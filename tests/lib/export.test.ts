@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { generateStaticExport } from "../../src/lib/export.ts";
+import { auditStaticBuild } from "../../scripts/audit-static-build.mjs";
 import type { RunMetadata } from "../../src/lib/types.ts";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -198,8 +199,18 @@ describe("generateStaticExport", () => {
     const runsRoot = join(root, "runs");
     const publicExportDirectory = join(root, "public", "export");
     await writeBenchmark(benchmarkDirectory);
-    const { runDirectory } = await writeRun(runsRoot);
-
+    const { runDirectory, metadata } = await writeRun(runsRoot);
+    await writeFile(
+      join(runDirectory, "metadata.json"),
+      JSON.stringify({
+        ...metadata,
+        benchmark: {
+          ...metadata.benchmark,
+          prompt: "Authorization: Bearer historical-secret-must-not-publish"
+        }
+      }),
+      "utf8"
+    );
     await writeFile(
       join(runDirectory, "prompt.md"),
       [
@@ -234,6 +245,7 @@ describe("generateStaticExport", () => {
       )
     ).rejects.toMatchObject({ code: "ENOENT" });
     expect(JSON.stringify(manifest)).not.toContain(runDirectory);
+    expect(JSON.stringify(manifest)).not.toContain("historical-secret-must-not-publish");
   });
 
   it("omits traversal asset names while exporting run assets", async () => {
@@ -396,6 +408,24 @@ describe("generateStaticExport", () => {
     const exportedDir = join(publicExportDirectory, "runs", "ab-test-analysis", "qwen3-30b", "2026-05-26T01-02-03-004Z");
     await expect(readFile(join(exportedDir, "summary.json"), "utf8")).resolves.toBe(JSON.stringify({ status: "significant" }));
     await expect(readFile(join(exportedDir, "chart-treatment-effect.png"), "utf8")).resolves.toBe("png bytes");
+  });
+});
+
+describe("static build privacy audit", () => {
+  it("rejects private run artifacts and credential-like export content without echoing values", async () => {
+    const root = await createTempRoot("llm-visual-static-audit-");
+    const runDirectory = join(root, "export", "runs", "sakura", "model", "run");
+    await mkdir(runDirectory, { recursive: true });
+    await writeFile(join(runDirectory, "supabase.json"), "private-access-value", "utf8");
+    await writeFile(
+      join(runDirectory, "metadata.json"),
+      JSON.stringify({ authorization: "Bearer private-access-value" }),
+      "utf8"
+    );
+
+    await expect(auditStaticBuild(root)).rejects.toThrow(/private run artifact/);
+    await expect(auditStaticBuild(root)).rejects.toThrow(/authorization header/);
+    await expect(auditStaticBuild(root)).rejects.not.toThrow(/private-access-value/);
   });
 });
 

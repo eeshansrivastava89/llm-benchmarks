@@ -100,6 +100,7 @@ export async function scoreDsRun(
   const timestamp = new Date().toISOString();
   const next: RunMetadata = {
     ...metadata,
+    runDirectory,
     status: "completed",
     completedAt: timestamp,
     updatedAt: timestamp,

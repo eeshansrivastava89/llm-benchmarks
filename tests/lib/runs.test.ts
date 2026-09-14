@@ -173,6 +173,25 @@ describe("run metadata helpers", () => {
     expect(run.promptText).toBe("filesystem prompt text");
   });
 
+  it("uses the scanned folder instead of a migrated absolute run path", async () => {
+    const runsRoot = await createRunsRoot();
+    const paths = buildRunPaths({
+      runsRoot,
+      benchmarkId: "sakura",
+      modelId: "model-a",
+      runId: "2026-05-06T01-02-03-004Z"
+    });
+    const metadata = createMetadata("/old/repository/runs/sakura/model-a/run-1");
+
+    await writeRunMetadata(paths, metadata);
+    await writeFile(paths.previewPath, "png", "utf8");
+
+    const [run] = await listRunMetadata(runsRoot);
+
+    expect(run.runDirectory).toBe(paths.runDirectory);
+    expect(run.assets.preview).toBe("preview.png");
+  });
+
   it("ignores traversal asset paths when hydrating saved run metadata", async () => {
     const runsRoot = await createRunsRoot();
     const paths = buildRunPaths({

@@ -42,15 +42,17 @@ export async function generateStaticExport(
     loadBenchmarks(benchmarkDirectory),
     listRunMetadata(runsRoot)
   ]);
+  const staticBenchmarks = benchmarks.map(toStaticBenchmark);
+  const benchmarksById = new Map(staticBenchmarks.map((benchmark) => [benchmark.id, benchmark]));
   const exportedRuns = await Promise.all(
     runs
       .filter((run) => isExportableKind(run.kind ?? "visual"))
-      .map((run) => exportRunAssets(run, publicExportDirectory))
+      .map((run) => exportRunAssets(run, publicExportDirectory, benchmarksById.get(run.benchmark.id)))
   );
   const manifest: StaticExportManifest = {
     version: 1,
     generatedAt: (options.generatedAt ?? new Date()).toISOString(),
-    benchmarks: benchmarks.map(toStaticBenchmark),
+    benchmarks: staticBenchmarks,
     runs: exportedRuns,
     machineProfile: getSystemStats(options.generatedAt ?? new Date())
   };
@@ -61,7 +63,8 @@ export async function generateStaticExport(
 
 async function exportRunAssets(
   run: RunMetadata,
-  publicExportDirectory: string
+  publicExportDirectory: string,
+  canonicalBenchmark?: BenchmarkRecord
 ): Promise<RunMetadata> {
   const benchmarkId = assertSafePathSegment(run.benchmark.id, "Export path segment");
   const modelSlug = assertSafePathSegment(run.model.slug, "Export path segment");
@@ -91,7 +94,7 @@ async function exportRunAssets(
     ...(run.schemaVersion ? { schemaVersion: run.schemaVersion } : {}),
     kind: run.kind ?? "visual",
     runId: run.runId,
-    benchmark: toStaticBenchmark(run.benchmark),
+    benchmark: canonicalBenchmark ?? toStaticBenchmark(run.benchmark),
     model: run.model,
     status: run.status,
     createdAt: run.createdAt,

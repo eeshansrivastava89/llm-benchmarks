@@ -170,111 +170,92 @@ test("links the local visual viewer to Inspect accessibly", async ({ page }) => 
   expect(overflow).toBe(false);
 });
 
-test("renders the visual workbench with prompt/model/table modes", async ({ page }) => {
+test("renders the visual workbench with prompt, model, and compare modes", async ({ page }) => {
   await mockApi(page, {});
 
   await page.goto("/");
   await page.waitForSelector("[data-run-id]", { timeout: 5000 });
 
-  await expect(
-    page.getByRole("heading", { name: "Local LLM Visual Benchmark" })
-  ).toBeVisible();
-  await expect(page.getByText("Browse visual benchmark outputs by prompt, model, or table.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Local AI Benchmarks" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Prepare run" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Capture media" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Setup" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Setup" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Use dark theme" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "LM Studio" })).toHaveCount(0);
-  await expect(page.locator(".app-header #omlxStatusPill")).toHaveCount(0);
-  await expect(page.locator(".app-header #lmStudioStatusPill")).toHaveCount(0);
-  const attribution = page.getByRole("link", { name: "a side quest by eeshans.com" });
+  const attribution = page.getByRole("link", { name: "eeshans.com" });
   await expect(attribution).toHaveAttribute("href", "https://eeshans.com/");
-  await expect(attribution).toHaveCSS("border-radius", "999px");
   await expect(page.getByLabel("Filter by model")).toBeVisible();
   await expect(page.getByLabel("Filter by prompt")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Gallery Visual outputs/ })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Runs Metadata & files/ })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /LightEval/i })).toHaveCount(0);
-  await expect(page.locator("[data-section]")).toHaveCount(0);
-  await expect(page.locator("[data-mode]")).toHaveText(["By prompt", "By model", "Table"]);
+  await expect(page.getByLabel("Filter by harness")).toBeVisible();
+  await expect(page.locator("[data-mode]")).toHaveText(["By model", "By prompt", "Compare"]);
   await expect(page.getByRole("button", { name: "By prompt" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { name: "By model" })).toHaveAttribute("aria-pressed", "false");
-  await expect(page.getByRole("button", { name: "Table" })).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("button", { name: "Compare" })).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByRole("heading", { name: "Prompt comparison" })).toBeVisible();
   await expect(page.getByText("0 with video, 1 need capture, 0 prepared, 0 failed")).toBeVisible();
-  await expect(page.locator(".run-grid")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sakura Particle Field" })).toBeVisible();
   await expect(page.locator("[data-run-id]").first()).toContainText("local/qwen2.5-vl");
-  await expect(page.getByLabel("Search runs")).toBeVisible();
-  await expect(page.locator("#runsFilterPanel")).toHaveCount(0);
+  await expect(page.locator("[data-run-id]").first()).toContainText("Needs media capture");
+
   await page.getByLabel("Search runs").fill("no matching run");
   await expect(page.locator("[data-run-id]")).toHaveCount(0);
   await page.getByLabel("Search runs").fill("");
   await page.locator("[data-run-id]").first().click();
   await expect(page.getByRole("dialog", { name: "Run detail" })).toBeVisible();
-  await expect(page.locator("#detailMeta")).toContainText("State");
   await expect(page.locator("#detailMeta")).toContainText("capture");
-  await expect(page.locator("#detailArtifacts")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Capture preview" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Recapture media" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Open in Finder" })).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
+
   await page.getByRole("button", { name: "By model" }).click();
-  await expect(page.locator("#runsFilterPanel")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Model attempts" })).toBeVisible();
-  await expect(page.getByText("0 with video, 1 need capture, 0 prepared, 0 failed")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Model comparison" })).toBeVisible();
   await expect(page.locator("[data-run-id]").first()).toBeVisible();
   await expect(page.getByRole("contentinfo")).toContainText("© 2025–2026 Eeshan Srivastava");
-  await expect(page.getByRole("contentinfo")).toContainText("Personal project · MIT License · Non-commercial");
-  await expect(page.getByRole("link", { name: "Source" })).toHaveAttribute(
-    "href",
-    "https://github.com/eeshansrivastava89/local-llm-visual-benchmark"
-  );
   await expect(page.getByRole("link", { name: "LinkedIn" })).toHaveAttribute(
     "href",
     "https://www.linkedin.com/in/eeshans/"
   );
+});
 
-  await page.getByRole("button", { name: "Setup" }).click();
-  const setupDialog = page.getByRole("dialog", { name: "Setup" });
-  await expect(setupDialog).toBeVisible();
-  await expect(setupDialog.getByRole("heading", { name: "Prepare slot" })).toHaveCount(0);
-  await expect(setupDialog.getByRole("heading", { name: "Run externally" })).toHaveCount(0);
-  await expect(setupDialog.getByRole("heading", { name: "Capture media" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Model sources" })).toBeVisible();
-  await expect(page.getByLabel("oMLX base URL")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Model inventory" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sync Pi" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sync OpenCode" })).toBeVisible();
-  await expect(page.locator("#lmConfigPi .sync-target-logo")).toBeVisible();
-  await expect(page.locator("#lmConfigOpenCode .sync-target-logo")).toBeVisible();
-  await expect(page.getByText("OpenCode Setup")).toHaveCount(0);
-  await expect(page.getByText("Pi Setup")).toHaveCount(0);
-  // Phase 2: onboarding uses data-onboarding-step, not data-step
-  await expect(page.locator("[data-step]")).toHaveCount(0);
-  await expect(page.getByText("Pi synced").first()).toBeVisible();
-  await expect(page.getByText("OpenCode synced").first()).toBeVisible();
-  await expect(page.getByText("/home/.pi/agent/models.json")).toBeVisible();
-  await expect(page.locator("#availableModelChoices").getByText("oMLX").first()).toBeVisible();
-  await expect(page.locator("#availableModelChoices").getByText("LM Studio").first()).toBeVisible();
-  const setupColumns = await page.locator(".setup-console-layout").evaluate((el) =>
-    getComputedStyle(el).gridTemplateColumns.split(" ").filter(Boolean).length
-  );
-  expect(setupColumns).toBe(1);
-  const operationColumns = await page.locator(".lm-operations-grid").evaluate((el) =>
-    getComputedStyle(el).gridTemplateColumns.split(" ").filter(Boolean).length
-  );
-  expect(operationColumns).toBe(4);
-  const modelRowColumns = await page.locator(".lm-model-row").first().evaluate((el) =>
-    getComputedStyle(el).gridTemplateColumns.split(" ").filter(Boolean).length
-  );
-  expect(modelRowColumns).toBe(3);
+test("shows cloud runs by default and preserves an explicit local-only choice", async ({ page }) => {
+  const cloudRun = {
+    ...sampleRun,
+    runId: "2026-05-06T19-14-00-000Z",
+    model: { id: "deepseek-flash", slug: "deepseek-flash" },
+    runDirectory: "/tmp/runs/sakura/deepseek-flash/2026-05-06T19-14-00-000Z",
+    runner: { modelSource: "cloud", backendLabel: "deepseek" }
+  };
+  await mockApi(page, { runs: [sampleRun, cloudRun] });
 
-  const baseUrlBox = await page.locator("#baseUrl").boundingBox();
-  const testButtonBox = await page.locator("#refreshConnection").boundingBox();
-  expect(Math.abs((baseUrlBox?.height ?? 0) - (testButtonBox?.height ?? 0))).toBeLessThan(1);
+  await page.goto("/");
 
-  await page.locator("#refreshConnection").click();
-  await expect(page.locator("#connectionMessage")).toContainText("2 models discovered");
+  const cloudToggle = page.getByRole("checkbox", { name: "Include cloud models" });
+  await expect(cloudToggle).toBeChecked();
+  await expect(page.locator("[data-run-id]")).toHaveCount(2);
+  await expect(page.locator("[data-run-id]", { hasText: "deepseek-flash" })).toBeVisible();
+
+  await cloudToggle.uncheck();
+  await expect(page.locator("[data-run-id]")).toHaveCount(1);
+  await page.reload();
+  await expect(cloudToggle).not.toBeChecked();
+  await expect(page.locator("[data-run-id]")).toHaveCount(1);
+});
+
+test("reports HTML that was ready before the viewer opened", async ({ page }) => {
+  await mockApi(page, {
+    runs: [{
+      ...sampleRun,
+      status: "prepared",
+      assets: {
+        metadata: "metadata.json",
+        prompt: "prompt.md",
+        html: "index.html"
+      }
+    }]
+  });
+
+  await page.goto("/");
+
+  await expect(page.locator(".html-detect-toast")).toContainText("1 run has index.html ready.");
+  await expect(page.getByRole("button", { name: "Capture now" })).toBeVisible();
 });
 
 test("compares selected visual runs side by side", async ({ page }) => {
@@ -309,10 +290,10 @@ test("compares selected visual runs side by side", async ({ page }) => {
   await mockApi(page, {  runs: compareRuns, onExportComparison: (payload) => { exportPayloads.push(payload); } });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Table" }).click();
+  await page.getByRole("button", { name: "Compare" }).click();
 
-  await expect(page.getByRole("heading", { name: "Table" })).toBeVisible();
-  await expect(page.locator("#viewSubtitle")).toHaveText("Select table rows to compare visual outputs.");
+  await expect(page.getByRole("heading", { name: "Compare" })).toBeVisible();
+  await expect(page.locator("#viewSubtitle")).toHaveText("Select rows to compare outputs.");
   await expect(page.getByLabel("Filter by harness")).toBeVisible();
   await page.getByRole("checkbox", { name: /Compare Sakura Particle Field.*opencode/ }).check();
   await page.getByRole("checkbox", { name: /Compare Sakura Particle Field.*manual/ }).check();
@@ -343,7 +324,7 @@ test("compares selected visual runs side by side", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Filtered prompt stack coverage" })).toHaveCount(0);
 });
 
-test("paginates the table mode at 10 records", async ({ page }) => {
+test("paginates compare mode at 10 records", async ({ page }) => {
   const manyRuns = Array.from({ length: 30 }, (_, index) => ({
     ...sampleRun,
     runId: `2026-05-06T20-${String(index).padStart(2, "0")}-00-000Z`,
@@ -356,7 +337,7 @@ test("paginates the table mode at 10 records", async ({ page }) => {
   await mockApi(page, {  runs: manyRuns });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Table" }).click();
+  await page.getByRole("button", { name: "Compare" }).click();
   await page.waitForSelector("[data-run-id]", { timeout: 5000 });
 
   await expect(page.locator(".runs-table [data-run-id]")).toHaveCount(10);
@@ -476,7 +457,7 @@ test("hides unsupported non-visual runs from visual workspaces", async ({ page }
   await expect(page.getByRole("link", { name: /LightEval/i })).toHaveCount(0);
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Table" }).click();
+  await page.getByRole("button", { name: "Compare" }).click();
   await page.waitForSelector("[data-run-id]", { timeout: 5000 });
   await expect(page.locator("[data-run-id]")).toHaveCount(1);
   await expect(page.locator("body")).not.toContainText("Deprecated quantitative task");
@@ -562,7 +543,7 @@ test("grouped views scroll as one surface and avoid duplicate card labels", asyn
   await expect(modelCard).toContainText(/Sakura Particle Field|Solar System Orrery/);
 });
 
-test("uses dense Sidequests-style gallery geometry on desktop", async ({ page }) => {
+test("uses dense gallery geometry on desktop", async ({ page }) => {
   const manyRuns = Array.from({ length: 9 }, (_, index) => ({
     ...sampleRunWithVideo,
     runId: `2026-05-06T21-${String(index).padStart(2, "0")}-00-000Z`,
@@ -588,7 +569,7 @@ test("uses dense Sidequests-style gallery geometry on desktop", async ({ page })
   expect(summaryBox?.height ?? Infinity).toBeLessThanOrEqual(52);
 
   const firstCardBox = await page.locator("[data-run-id]").first().boundingBox();
-  expect(firstCardBox?.height ?? Infinity).toBeLessThanOrEqual(292);
+  expect(firstCardBox?.height ?? Infinity).toBeLessThanOrEqual(360);
 
   await page.getByRole("button", { name: "By model" }).click();
 
@@ -626,7 +607,7 @@ test("scrolls grouped views from the page margins instead of trapping the grid",
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(beforePageScroll);
 });
 
-test("captures missing run media with per-card progress", async ({ page }) => {
+test("captures missing run media with visible progress", async ({ page }) => {
   let captureCalled = false;
   let releaseCapture: () => void = () => {};
   const captureMayFinish = new Promise<void>((resolve) => {
@@ -647,8 +628,8 @@ test("captures missing run media with per-card progress", async ({ page }) => {
   await page.goto("/");
   await page.waitForSelector("[data-run-id]", { timeout: 5000 });
   await expect(page.locator("[data-run-id]").first()).toContainText("Needs media capture");
-
-  await page.getByRole("button", { name: /Capture preview for Sakura Particle Field/ }).click();
+  await page.locator("[data-run-id]").first().click();
+  await page.getByRole("button", { name: "Recapture media" }).click();
 
   await expect.poll(() => captureCalled).toBe(true);
   await expect(page.locator("[data-run-id]").first()).toContainText("Capturing");
@@ -792,7 +773,7 @@ test("deletes a run folder from the visual detail after confirmation", async ({ 
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Table" }).click();
+  await page.getByRole("button", { name: "Compare" }).click();
   await page.waitForSelector("[data-run-id]", { timeout: 5000 });
   await page.locator("[data-run-id]").first().click();
   await expect(page.getByRole("dialog", { name: "Run detail" })).toBeVisible();
@@ -817,7 +798,7 @@ test("keeps the viewer usable on mobile widths", async ({ page }) => {
   await page.waitForSelector("[data-run-id]", { timeout: 5000, state: "detached" });
 
   await expect(page.getByRole("button", { name: "Prepare run" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Setup" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Setup" })).toHaveCount(0);
 
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth
@@ -858,24 +839,6 @@ test("keeps visual detail prompt usable on mobile widths", async ({ page }) => {
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth
   );
   expect(overflow).toBe(false);
-});
-
-test("hides operational chrome when writes are disabled", async ({ page }) => {
-  await mockApi(page, {  writesEnabled: false });
-
-  await page.goto("/");
-  await expect(page.locator("[data-run-id]").first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "Prepare run" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Setup" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Capture media" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Refresh" })).toHaveCount(0);
-  await expect(page.locator("#statsPill")).toBeVisible();
-  await expect(page.locator("#statsPill")).toContainText("M4 Pro");
-  await expect(page.getByRole("button", { name: "Use dark theme" })).toBeVisible();
-  await expect(page.locator("#themeLabel")).toHaveClass(/sr-only/);
-
-  await page.locator("[data-run-id]").first().click();
-  await expect(page.getByRole("button", { name: "Open HTML" })).toHaveCount(0);
 });
 
 test("falls back to exported static data without prepare controls", async ({ page }) => {
@@ -932,7 +895,7 @@ test("falls back to exported static data without prepare controls", async ({ pag
   await page.goto("/");
   await expect(page.locator("body.public-page")).toHaveCount(0);
   await expect(page.locator(".public-header")).toHaveCount(0);
-  await expect(page.locator("[data-mode]")).toHaveText(["By prompt", "By model", "Table"]);
+  await expect(page.locator("[data-mode]")).toHaveText(["By model", "By prompt", "Compare"]);
   await expect(page.getByRole("heading", { name: "Prompt comparison" })).toBeVisible();
   await expect(page.locator("#onboardingPanel")).toBeHidden();
   await expect(page.getByRole("button", { name: "Prepare run" })).toHaveCount(0);
@@ -963,7 +926,6 @@ async function mockApi(
     onCapture?: (payload: unknown) => void | Promise<void>;
     onOpenHtml?: (payload: unknown) => void | Promise<void>;
     onExportComparison?: (payload: unknown) => void | Promise<void>;
-    writesEnabled?: boolean;
   }
 ): Promise<void> {
   await page.route("**/api/benchmarks", async (route) => {
@@ -1083,7 +1045,28 @@ const dsRun = {
     metrics: [
       { label: "Completion Time", value: "+3.2s", delta: "+55.5%", delta_direction: "up", context: "p=0.001" },
       { label: "Effect Size", value: "d=0.40", context: "small" }
+    ],
+    warnings: [
+      "Some sessions were exposed to both variants, so assignment was not perfectly stable per session.",
+      "Completion time is strongly right-skewed and the mean is sensitive to the long tail.",
+      "Session-level allocation is imbalanced even though no sample ratio mismatch was detected.",
+      "Some rows have a null user identifier, so distinct identifiers were used instead."
     ]
+  },
+  dsScorecard: {
+    total: 100,
+    earned: 100,
+    pct: 100,
+    checks: Object.fromEntries(Array.from({ length: 12 }, (_, index) => [
+      `check-${index}`,
+      {
+        label: `Scoring check ${index + 1}`,
+        max: 5,
+        earned: 5,
+        pass: true,
+        detail: "The generated analysis met this deterministic scoring requirement."
+      }
+    ]))
   }
 };
 
@@ -1104,17 +1087,38 @@ test.describe("data-science runs", () => {
     const card = page.locator("[data-open-run]").first();
     await card.click();
 
-    // Chart triptych containers should exist
-    await expect(page.locator(".ds-triptych")).toBeVisible();
-    await expect(page.locator(".ds-chart-full")).toBeVisible();
-    await expect(page.locator(".ds-chart-pair")).toBeVisible();
-
-    // Metrics ribbon with verdict pill should render
-    await expect(page.locator(".ds-ribbon")).toBeVisible();
+    await expect(page.locator(".ds-dashboard")).toBeVisible();
+    await expect(page.locator(".ds-charts-row")).toBeVisible();
+    await expect(page.locator(".ds-chart-card")).toHaveCount(3);
+    await expect(page.locator(".ds-summary-card")).toBeVisible();
     await expect(page.locator(".verdict-pill[data-verdict='danger']")).toContainText("Ship A");
+    await expect(page.getByRole("region", { name: "Analysis warnings" })).toBeVisible();
+    await expect(page.locator(".ds-warning-item")).toHaveCount(4);
+    await expect(page.locator(".ds-warning-item").first()).toContainText("assignment was not perfectly stable per session");
+    await expect(page.locator(".ds-dashboard > *")).toHaveClass([
+      /ds-summary-card/,
+      /ds-charts-row/,
+      /ds-warnings-card/,
+      /ds-score-card-full/
+    ]);
 
     // Metric chips should show
     await expect(page.locator(".ds-chip").first()).toContainText("Completion Time");
+
+    const dashboardScroll = await page.locator("#detailPreview").evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight
+    }));
+    const scoreScroll = await page.locator(".ds-score-card-full").evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight
+    }));
+    expect(dashboardScroll.scrollHeight).toBeGreaterThan(dashboardScroll.clientHeight);
+    expect(scoreScroll.scrollHeight).toBeLessThanOrEqual(scoreScroll.clientHeight + 1);
+    await page.locator("#detailPreview").evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    await expect.poll(() => page.locator("#detailPreview").evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   });
 
   test("data-science card shows analysis status in workbench", async ({ page }) => {

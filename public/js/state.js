@@ -15,7 +15,7 @@ export const state = {
   runsPerPage: 10,
   workspace: "visual",
   mode: "model",
-  showCloudModels: false,
+  showCloudModels: true,
   refreshBusy: false,
   selectedRun: null,
   compareSelection: [],

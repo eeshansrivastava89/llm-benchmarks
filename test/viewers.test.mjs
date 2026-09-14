@@ -15,7 +15,7 @@ async function viewerFixture(t, overrides = {}) {
   t.after(() => rm(repositoryRoot, { recursive: true, force: true }));
   const descriptorSet = createViewerDescriptors({
     repositoryRoot,
-    environment: {},
+    environment: overrides.environment ?? {},
   });
   descriptorSet.viewers.inspect.startupTimeoutMs = overrides.startupTimeoutMs ?? 100;
   descriptorSet.viewers.visual.startupTimeoutMs = overrides.startupTimeoutMs ?? 100;
@@ -30,6 +30,8 @@ function fakeManager(descriptorSet, controls = {}) {
     endpointStatus: async (descriptor) => controls.endpoint?.[descriptor.id] ?? "stopped",
     spawnViewer: async (descriptor) => {
       controls.spawnCount = (controls.spawnCount ?? 0) + 1;
+      controls.spawnedIds = [...(controls.spawnedIds ?? []), descriptor.id];
+      controls.onSpawn?.(descriptor);
       return controls.child?.[descriptor.id] ?? { pid: descriptor.id === "inspect" ? 4101 : 4102, exitCode: null };
     },
     processMatches: async () => controls.processMatches ?? true,
@@ -118,7 +120,10 @@ test("Inspect result links use local viewer configuration and require an explici
 });
 
 test("starting records ownership, reuses the healthy process, and opens its URL", async (t) => {
-  const { descriptorSet } = await viewerFixture(t);
+  const privateValue = "provider-secret-must-not-persist";
+  const { descriptorSet } = await viewerFixture(t, {
+    environment: { PROVIDER_API_KEY: privateValue },
+  });
   const controls = {
     endpoint: { inspect: "stopped" },
     groupExists: true,
@@ -145,6 +150,7 @@ test("starting records ownership, reuses the healthy process, and opens its URL"
   assert.equal((await stat(descriptorSet.runtimeRoot)).mode & 0o777, 0o700);
   assert.equal((await stat(descriptorSet.statePath)).mode & 0o777, 0o600);
   assert.doesNotMatch(JSON.stringify(state), /API_KEY|SUPABASE|secret/i);
+  assert.doesNotMatch(JSON.stringify(descriptorSet.viewers), new RegExp(privateValue));
 
   const [reused] = await manager.start("inspect");
   assert.equal(reused.action, "reused");
@@ -152,6 +158,28 @@ test("starting records ownership, reuses the healthy process, and opens its URL"
   assert.equal(controls.spawnCount, 1);
   await manager.open("inspect");
   assert.equal(controls.openedUrl, "http://127.0.0.1:7575");
+});
+
+test("both viewer descriptors launch independent fake children", async (t) => {
+  const { descriptorSet } = await viewerFixture(t);
+  const controls = {
+    endpoint: { inspect: "stopped", visual: "stopped" },
+    groupExists: true,
+    onSleep() {
+      for (const id of controls.spawnedIds ?? []) controls.endpoint[id] = "healthy";
+    },
+  };
+  const { manager } = fakeManager(descriptorSet, controls);
+
+  const results = await manager.start("both");
+
+  assert.deepEqual(controls.spawnedIds, ["inspect", "visual"]);
+  assert.deepEqual(results.map(({ id, action }) => [id, action]), [
+    ["inspect", "started"],
+    ["visual", "started"],
+  ]);
+  const state = JSON.parse(await readFile(descriptorSet.statePath, "utf8"));
+  assert.deepEqual(Object.keys(state.viewers).sort(), ["inspect", "visual"]);
 });
 
 test("a matching external viewer is reused but never recorded as owned", async (t) => {

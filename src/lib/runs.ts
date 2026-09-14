@@ -165,7 +165,13 @@ async function readMetadataIfPresent(path: string): Promise<RunMetadata | undefi
     if (metadata.kind && !isKnownRunKind(metadata.kind)) {
       return undefined;
     }
-    return hydrateAssetAvailability(metadata);
+    return hydrateAssetAvailability({
+      ...metadata,
+      // The folder being scanned is authoritative. Migrated metadata can retain
+      // an absolute path from its source repository, which must never be used
+      // for local reads, writes, or asset URLs.
+      runDirectory: dirname(path)
+    });
   } catch (error) {
     if (isMissingPathError(error) || error instanceof SyntaxError) {
       return undefined;

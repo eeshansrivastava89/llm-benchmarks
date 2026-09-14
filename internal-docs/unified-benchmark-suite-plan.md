@@ -1,6 +1,6 @@
 # Unified Benchmark Suite Plan
 
-**Status:** Phase 6 complete; Phase 7 is next
+**Status:** Phase 7 complete; Phase 8 is next
 **Primary command:** `bench`  
 **Scope:** Repository consolidation, Inspect/visual/data-science execution, and local viewer orchestration
 
@@ -535,24 +535,26 @@ Exit criteria:
 
 ### Phase 7: End-to-end validation
 
-- [ ] Run all Node syntax, TypeScript, Astro, Vitest, and Python compile checks.
-- [ ] Run all Bench Node tests and visual unit tests.
-- [ ] Add fake-child tests for Pi and both viewer processes.
-- [ ] Test normal exit, nonzero exit, missing command, startup timeout, port collision, stale PID, and stop behavior.
-- [ ] Mock Ollama and oMLX unload APIs for normal and interrupted Pi sessions.
-- [ ] Verify no provider secret appears in metadata, viewer state, logs, or command previews.
-- [ ] Run one local one-sample Inspect check.
-- [ ] Run one inexpensive local visual benchmark through interactive Pi.
-- [ ] Run the data-science preparation path without publishing credentials.
-- [ ] Open both viewers, follow the cross-link, and verify each reads its native result format.
-- [ ] Build the static gallery and inspect the export for local paths, URLs, prompts, raw responses, and secrets.
-- [ ] Remove the temporary test run artifacts or keep them only in ignored directories.
+- [x] Run all Node syntax, TypeScript, Astro, Vitest, and Python compile checks.
+- [x] Run all Bench Node tests and visual unit tests.
+- [x] Add fake-child tests for Pi and both viewer processes.
+- [x] Test normal exit, nonzero exit, missing command, startup timeout, port collision, stale PID, and stop behavior.
+- [x] Mock Ollama and oMLX unload APIs for normal and interrupted Pi sessions.
+- [x] Verify no provider secret appears in metadata, viewer state, logs, or command previews.
+- [x] Run one local one-sample Inspect check.
+- [x] Run one inexpensive visual benchmark through interactive Pi and verify its generated HTML and captured media in the viewer.
+- [x] Run the data-science preparation path with a synthetic credential and verify that it remains confined to the private `supabase.json` file.
+- [x] Open both viewers, follow the cross-link, and verify each reads its native result format.
+- [x] Build the static gallery and inspect the export for local paths, URLs, prompts, raw responses, and secrets.
+- [x] Remove temporary artifacts and verify that no managed viewer processes or runtime state remain.
 
 Exit criteria:
 
 - All automated tests pass.
 - Both benchmark execution paths and both viewer paths have been exercised locally.
 - No paid broad benchmark run is required for validation.
+
+Automated results and the remaining human checks are recorded in `internal-docs/phase-7-end-to-end-validation.md`.
 
 ### Phase 8: Cut over to one maintained repository
 

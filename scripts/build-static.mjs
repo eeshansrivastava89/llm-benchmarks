@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { generateStaticExport } from "../src/lib/export.ts";
+import { auditStaticBuild } from "./audit-static-build.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -38,8 +39,10 @@ await cp(publicExportDirectory, join(staticOutputDirectory, "export"), {
   recursive: true
 });
 await writeFile(join(staticOutputDirectory, ".nojekyll"), "", "utf8");
+const audit = await auditStaticBuild(staticOutputDirectory);
 
 process.stdout.write(`Wrote static publish build to ${staticOutputDirectory}.\n`);
+process.stdout.write(`Static build privacy audit passed for ${audit.filesChecked} files.\n`);
 
 async function readExistingExport(directory) {
   try {

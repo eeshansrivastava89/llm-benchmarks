@@ -70,11 +70,13 @@ function renderDataScienceArtifact(run) {
 
   const summaryHtml = renderDsSummaryCard(run);
   const chartsHtml = renderDsCharts(treatmentHref, distributionHref, completionHref);
+  const warningsHtml = renderDsWarnings(run.dsSummary);
   const scoresHtml = renderDsScores(run);
 
   return '<div class="ds-dashboard">' +
     summaryHtml +
     chartsHtml +
+    warningsHtml +
     scoresHtml +
     '</div>';
 }
@@ -85,18 +87,32 @@ function renderDsSummaryCard(run) {
   const verdict = verdictPill(summary);
   const decisionText = escapeHtml(summary.decision || '');
   const chips = (summary.metrics ?? []).map(renderMetricChip).join('');
-  const warnings = (summary.warnings ?? []).length > 0
-    ? '<div class="ds-warnings">' + summary.warnings.map(function(w) { return '<span class="ds-warning-tag">' + escapeHtml(w) + '</span>'; }).join('') + '</div>'
-    : '';
 
   return '<div class="ds-card ds-summary-card">' +
     '<div class="ds-summary-top">' +
       verdict +
       '<p class="ds-decision">' + decisionText + '</p>' +
     '</div>' +
-    warnings +
     '<div class="ds-metrics-strip">' + chips + '</div>' +
     '</div>';
+}
+
+function renderDsWarnings(summary) {
+  const warnings = summary?.warnings ?? [];
+  if (warnings.length === 0) return '';
+
+  return '<section class="ds-card ds-warnings-card" aria-label="Analysis warnings">' +
+    '<div class="ds-warnings-head">' +
+      '<h3>Analysis warnings</h3>' +
+      '<span class="ds-warnings-count">' + String(warnings.length) + '</span>' +
+    '</div>' +
+    '<ul class="ds-warnings-list">' + warnings.map(function(warning) {
+      return '<li class="ds-warning-item">' +
+        '<span class="ds-warning-marker" aria-hidden="true">!</span>' +
+        '<span>' + escapeHtml(warning) + '</span>' +
+      '</li>';
+    }).join('') + '</ul>' +
+  '</section>';
 }
 
 function renderDsCharts(treatmentHref, distributionHref, completionHref) {

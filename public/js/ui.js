@@ -22,7 +22,7 @@ export function updateOnboarding() {
     return;
   }
   const completedStep = onboardingCompletedStep();
-  if (completedStep >= 5) {
+  if (completedStep >= 3) {
     panel.hidden = true;
     return;
   }

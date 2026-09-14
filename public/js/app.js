@@ -59,14 +59,16 @@ function initWorkspaceState() {
       document.body.dataset.workspace = savedKind;
     }
   } catch { /* localStorage unavailable */ }
-  // Restore persisted cloud models toggle
+  // Show every run by default, while preserving an explicit local-only choice.
   try {
     const savedCloud = localStorage.getItem("showCloudModels");
-    if (savedCloud === "true") {
-      state.showCloudModels = true;
-      if (els.cloudModelsToggle) els.cloudModelsToggle.checked = true;
+    if (savedCloud === "true" || savedCloud === "false") {
+      state.showCloudModels = savedCloud === "true";
     }
   } catch { /* localStorage unavailable */ }
+  if (els.cloudModelsToggle) {
+    els.cloudModelsToggle.checked = state.showCloudModels;
+  }
 }
 
 function configureControllers() {

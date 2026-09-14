@@ -141,6 +141,32 @@ describe("capture media metadata updates", () => {
     expect(metadata.error).toBeUndefined();
   });
 
+  it("replaces a migrated run path when capture updates metadata", async () => {
+    const { runsRoot, run } = await writePreparedRun();
+    await writeFile(
+      join(run.runDirectory, "metadata.json"),
+      JSON.stringify({
+        ...run,
+        runDirectory: "/old/repository/runs/sakura/model-a/run-1"
+      }),
+      "utf8"
+    );
+
+    await captureMissingRunMedia({
+      runsRoot,
+      now: new Date("2026-05-08T12:00:00.000Z"),
+      captureRunMedia: async (capturedRun) => ({
+        captured: true,
+        run: capturedRun
+      })
+    });
+
+    const metadata = JSON.parse(
+      await readFile(join(run.runDirectory, "metadata.json"), "utf8")
+    ) as RunMetadata;
+    expect(metadata.runDirectory).toBe(run.runDirectory);
+  });
+
   it("preserves a written preview when video capture fails later", async () => {
     const { runsRoot, run } = await writePreparedRun();
     await writeFile(

@@ -106,6 +106,41 @@ test("foreground child execution preserves statuses and reports missing commands
   );
 });
 
+test("foreground Pi execution accepts a controllable fake child", async () => {
+  const child = new EventEmitter();
+  child.exitCode = null;
+  child.signalCode = null;
+  child.kill = () => true;
+  let spawnCall;
+
+  const running = runForeground("pi", ["--provider", "test"], {
+    cwd: "/tmp/fake-run",
+    env: { SAFE_VALUE: "yes" },
+    signalTarget: new EventEmitter(),
+    spawnImpl: (command, args, options) => {
+      spawnCall = { command, args, options };
+      queueMicrotask(() => child.emit("close", 0, null));
+      return child;
+    },
+  });
+
+  assert.deepEqual(await running, {
+    code: 0,
+    signal: null,
+    interruptedBy: null,
+    status: 0,
+  });
+  assert.deepEqual(spawnCall, {
+    command: "pi",
+    args: ["--provider", "test"],
+    options: {
+      cwd: "/tmp/fake-run",
+      env: { SAFE_VALUE: "yes" },
+      stdio: "inherit",
+    },
+  });
+});
+
 test("foreground execution forwards handled termination and waits for the child", async () => {
   const signalTarget = new EventEmitter();
   const running = runForeground(
@@ -200,6 +235,98 @@ test("handled termination cancels the slot after cleanup", async (t) => {
   const metadata = await metadataFor(execution);
   assert.equal(metadata.status, "cancelled");
   assert.ok(metadata.cancelledAt);
+});
+
+test("normal Pi exit unloads Ollama through its mocked API", async (t) => {
+  const runsRoot = await temporaryRunsRoot(t);
+  const requests = [];
+  const model = cloudModel({
+    provider: "ollama",
+    id: "qwen-test",
+    baseUrl: "http://127.0.0.1:11434/v1",
+    backend: { location: "local", status: "online" },
+  });
+
+  const execution = await executeInteractiveBenchmark({
+    repositoryRoot: process.cwd(),
+    runsRoot,
+    benchmark: visualBenchmark(),
+    model,
+    modelRuntime: {},
+    lifecycleOptions: {
+      fetchImpl: async (url, options = {}) => {
+        requests.push({ url: String(url), options });
+        if (String(url).endsWith("/api/ps")) {
+          return new Response(JSON.stringify({ models: [{ name: "qwen-test:latest" }] }));
+        }
+        assert.deepEqual(JSON.parse(options.body), { model: "qwen-test", keep_alive: 0 });
+        return new Response(JSON.stringify({ done: true }));
+      },
+    },
+    runForegroundImpl: async () => ({
+      code: 0,
+      signal: null,
+      interruptedBy: null,
+      status: 0,
+    }),
+  });
+
+  assert.equal(execution.cleanupResult.status, "unloaded");
+  assert.deepEqual(requests.map(({ url }) => new URL(url).pathname), [
+    "/api/ps",
+    "/api/generate",
+  ]);
+  assert.equal((await metadataFor(execution)).status, "prepared");
+});
+
+test("interrupted Pi exit unloads oMLX through its authenticated mocked API", async (t) => {
+  const runsRoot = await temporaryRunsRoot(t);
+  const requests = [];
+  const apiKey = "private-omlx-cleanup-key";
+  const model = cloudModel({
+    provider: "omlx",
+    id: "Qwen/Test Model",
+    baseUrl: "http://127.0.0.1:8000/v1",
+    backend: { location: "local", status: "online" },
+  });
+
+  const execution = await executeInteractiveBenchmark({
+    repositoryRoot: process.cwd(),
+    runsRoot,
+    benchmark: visualBenchmark(),
+    model,
+    modelRuntime: {
+      getAuth: async () => ({ auth: { apiKey } }),
+    },
+    lifecycleOptions: {
+      fetchImpl: async (url, options = {}) => {
+        requests.push({ url: String(url), options });
+        if (String(url).endsWith("/models/status")) {
+          return new Response(JSON.stringify({
+            models: [{ id: model.id, loaded: true }],
+          }));
+        }
+        return new Response(JSON.stringify({ status: "ok" }));
+      },
+    },
+    runForegroundImpl: async () => ({
+      code: null,
+      signal: "SIGTERM",
+      interruptedBy: "SIGTERM",
+      status: 143,
+    }),
+  });
+
+  assert.equal(execution.cleanupResult.status, "unloaded");
+  assert.deepEqual(requests.map(({ url }) => new URL(url).pathname), [
+    "/v1/models/status",
+    "/v1/models/Qwen%2FTest%20Model/unload",
+  ]);
+  assert.equal(requests.every(({ options }) => options.headers.authorization === `Bearer ${apiKey}`), true);
+  const metadata = await metadataFor(execution);
+  assert.equal(metadata.status, "cancelled");
+  assert.doesNotMatch(JSON.stringify(metadata), /private-omlx-cleanup-key/);
+  assert.doesNotMatch(execution.launchCommand, /private-omlx-cleanup-key/);
 });
 
 test("nonzero Pi exits fail the slot and remove Data Science access", async (t) => {
