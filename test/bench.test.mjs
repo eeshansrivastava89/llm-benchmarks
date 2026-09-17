@@ -7,41 +7,25 @@ import test from "node:test";
 
 import { stripTerminalSequences } from "@earendil-works/pi-tui";
 
-import {
-  BenchError,
-  annotateProviderBackends,
-  buildBenchmarkSources,
-  buildInspectInvocation,
-  classifyBackend,
-  discoverRegisteredTasks,
-  discoverTasks,
-  formatSampleCount,
-  generateTaskConfigTemplate,
-  groupModels,
-  inspectOptionValue,
-  loadSweepData,
-  localConcurrencyChoices,
-  modelCompatibility,
-  parseViewCommand,
-  passthroughArgs,
-  prepareLocalModelLifecycle,
-  probeTcp,
-  resolveInspectModel,
-  runInherited,
-  sampleChoices,
-  sentenceHint,
-  sweepWarningLines,
-  taskConfigPath,
-  validateTaskConfig,
-} from "../bin/bench.mjs";
-import {
-  benchmarkCategories,
-  benchmarkDetails,
-  benchmarkListItem,
-  formatCount,
-  taskWarning,
-} from "../src/ui/bench-ui.mjs";
+import { passthroughArgs } from "../bin/bench.mjs";
+import { buildBenchmarkSources, loadSweepData, sweepWarningLines } from "../src/catalog.mjs";
+import { parseViewCommand, viewerActionLine } from "../src/cli-view.mjs";
+import { BenchError } from "../src/errors.mjs";
+import { discoverRegisteredTasks, discoverTasks } from "../src/inspect-discovery.mjs";
+import { prepareLocalModelLifecycle } from "../src/local-lifecycle.mjs";
+import { modelCompatibility, resolveInspectModel } from "../src/inspect-translate.mjs";
+import { runForeground } from "../src/interactive-runner.mjs";
 import { loadBenchPreferences, saveBenchPreferences } from "../src/preferences.mjs";
+import { annotateProviderBackends, classifyBackend, groupModels, probeTcp } from "../src/providers.mjs";
+import {
+  buildInspectInvocation,
+  formatSampleCount,
+  inspectOptionValue,
+  localConcurrencyChoices,
+  sampleChoices,
+} from "../src/run-plan.mjs";
+import { generateTaskConfigTemplate, taskConfigPath, validateTaskConfig } from "../src/task-config.mjs";
+import { benchmarkCategories, benchmarkDetails, benchmarkListItem, formatCount, taskWarning } from "../src/ui/presentation.mjs";
 
 function model(overrides = {}) {
   return {
@@ -89,6 +73,16 @@ test("viewer commands are parsed before Inspect passthrough options", () => {
   assert.deepEqual(parseViewCommand(["view", "stop", "visual"]), { action: "stop", target: "visual" });
   assert.throws(() => parseViewCommand(["view", "unknown"]), /Usage: bench view/);
   assert.throws(() => parseViewCommand(["view", "status", "extra"]), /Usage: bench view/);
+});
+
+test("viewer action messages distinguish managed, external, and already-stopped services", () => {
+  const result = { label: "Visual results", url: "http://127.0.0.1:4321", health: "healthy" };
+  assert.match(viewerActionLine({ ...result, action: "reused", owned: false }), /not managed by Bench; bench view stop will leave it running/);
+  assert.match(viewerActionLine({ ...result, action: "reused", owned: true, pid: 123 }), /reused.*PID 123/);
+  assert.match(viewerActionLine({ ...result, action: "not-owned" }), /left running: existing viewer/);
+  assert.match(viewerActionLine({ ...result, health: "occupied", action: "not-owned" }), /unknown application/);
+  assert.match(viewerActionLine({ ...result, health: "stopped", action: "already-stopped" }), /already stopped/);
+  assert.match(viewerActionLine({ ...result, action: "stale-state-removed" }), /no process was stopped/);
 });
 
 test("passthrough arguments require and preserve the separator", () => {
@@ -154,14 +148,6 @@ test("TCP probe reports whether a local server is listening", async () => {
   assert.equal(await probeTcp({ hostname: "127.0.0.1", port: address.port }), false);
 });
 
-test("benchmark descriptions are reduced to one normalized sentence", () => {
-  assert.equal(
-    sentenceHint("Measures reasoning. Includes several task variants."),
-    "Measures reasoning.",
-  );
-  assert.equal(sentenceHint("  One-line   summary without punctuation  "), "One-line summary without punctuation");
-});
-
 test("sample choices are bounded by the official dataset size", () => {
   assert.equal(formatSampleCount(58_492), "58,492");
   assert.equal(formatSampleCount(null), "unavailable");
@@ -212,11 +198,11 @@ test("model compatibility rejects known unusable choices before authentication",
   assert.equal(modelCompatibility(readyRuntime, model()).ready, true);
   assert.match(
     modelCompatibility(modelRuntime({ subscription: true }), model()).reason,
-    /Subscription login/,
+    /not supported by Inspect/,
   );
   assert.match(
     modelCompatibility(readyRuntime, model({ api: "unknown-api" })).reason,
-    /Unsupported API format/,
+    /Unsupported Pi API/,
   );
   assert.match(
     modelCompatibility(readyRuntime, model({ backend: { location: "local", status: "offline" } })).reason,
@@ -306,7 +292,7 @@ test("bench preserves a local model that was already loaded", async () => {
   assert.equal(requests, 1);
 });
 
-test("interactive cleanup unloads a model even when it was loaded before Pi", async () => {
+test("interactive cleanup preserves a model that was loaded before Pi", async () => {
   let loaded = true;
   const selected = model({
     provider: "ollama",
@@ -317,7 +303,6 @@ test("interactive cleanup unloads a model even when it was loaded before Pi", as
   const lifecycle = await prepareLocalModelLifecycle(selected, {
     baseUrl: selected.baseUrl,
   }, {
-    policy: "always",
     fetchImpl: async (url) => {
       if (String(url).endsWith("/api/ps")) {
         return new Response(JSON.stringify({
@@ -329,12 +314,12 @@ test("interactive cleanup unloads a model even when it was loaded before Pi", as
     },
   });
 
-  assert.equal(lifecycle.summary, "unload after Pi exits");
-  assert.equal((await lifecycle.cleanup()).status, "unloaded");
-  assert.equal(loaded, false);
+  assert.match(lifecycle.summary, /already running/);
+  assert.equal((await lifecycle.cleanup()).status, "kept");
+  assert.equal(loaded, true);
 });
 
-test("interactive cleanup still attempts unload when status cannot be read", async () => {
+test("interactive cleanup does not unload when initial status cannot be read", async () => {
   let requests = 0;
   const selected = model({
     provider: "ollama",
@@ -345,7 +330,6 @@ test("interactive cleanup still attempts unload when status cannot be read", asy
   const lifecycle = await prepareLocalModelLifecycle(selected, {
     baseUrl: selected.baseUrl,
   }, {
-    policy: "always",
     fetchImpl: async () => {
       requests += 1;
       if (requests === 1) throw new Error("status unavailable");
@@ -354,9 +338,9 @@ test("interactive cleanup still attempts unload when status cannot be read", asy
   });
 
   const cleanup = await lifecycle.cleanup();
-  assert.equal(cleanup.status, "unloaded");
-  assert.match(cleanup.message, /without a status check/);
-  assert.equal(requests, 2);
+  assert.equal(cleanup.status, "skipped");
+  assert.match(cleanup.message, /status was unavailable/);
+  assert.equal(requests, 1);
 });
 
 test("oMLX models loaded by bench use the authenticated public unload endpoint", async () => {
@@ -697,7 +681,7 @@ test("Inspect discovery handles empty results, failures, and missing uv", async 
 });
 
 test("Inspect child exit status is preserved", async () => {
-  const status = await runInherited(
+  const { status } = await runForeground(
     process.execPath,
     ["-e", "process.exit(7)"],
     { cwd: process.cwd(), env: process.env },
@@ -750,7 +734,7 @@ test("OpenCode Go adapter sends a fresh session header through Inspect", async (
     { logDir },
     ["--display", "none", "--max-retries", "0", "--max-tokens", "16"],
   );
-  const status = await runInherited("uv", args, {
+  const { status } = await runForeground("uv", args, {
     cwd: process.cwd(),
     env: translated.childEnv,
   });
@@ -834,7 +818,7 @@ def fixed_sampling():
     { logDir },
     ["--display", "none", "--max-retries", "0"],
   );
-  const status = await runInherited("uv", args, {
+  const { status } = await runForeground("uv", args, {
     cwd: process.cwd(),
     env: translated.childEnv,
   });
