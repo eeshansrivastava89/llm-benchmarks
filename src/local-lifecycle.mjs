@@ -1,9 +1,5 @@
-import { BenchError } from "./errors.mjs";
+import { BenchError, errorMessage } from "./errors.mjs";
 import { classifyBackend } from "./providers.mjs";
-
-function errorMessage(error) {
-  return error instanceof Error ? error.message : String(error);
-}
 
 function localApiUrl(baseUrl, path) {
   const url = new URL(baseUrl);
@@ -94,10 +90,10 @@ export function interactiveCleanupSupport(model) {
     return { supported: true, required: false, summary: "No local model process to unload." };
   }
   if (model.provider === "ollama") {
-    return { supported: true, required: true, summary: "Unload the selected Ollama model after Pi exits." };
+    return { supported: true, required: true, summary: "Keep preloaded Ollama models; unload only if this run started with the model unloaded." };
   }
   if (model.provider === "omlx") {
-    return { supported: true, required: true, summary: "Unload the selected oMLX model after Pi exits." };
+    return { supported: true, required: true, summary: "Keep preloaded oMLX models; unload only if this run started with the model unloaded." };
   }
   return {
     supported: false,
@@ -113,34 +109,6 @@ export async function prepareLocalModelLifecycle(model, connection, options = {}
     return {
       summary: `keep loaded · no unload adapter for ${model.provider}`,
       cleanup: async () => ({ status: "skipped", message: `No cleanup adapter for ${model.provider}` }),
-    };
-  }
-
-  if (options.policy === "always") {
-    return {
-      summary: "unload after Pi exits",
-      async cleanup() {
-        let statusUnavailable = false;
-        try {
-          if (!await adapter.isLoaded()) {
-            return { status: "unchanged", message: "Model was not loaded after the Pi session" };
-          }
-        } catch {
-          statusUnavailable = true;
-        }
-        try {
-          await adapter.unload();
-          return {
-            status: "unloaded",
-            message: statusUnavailable
-              ? `Unloaded ${model.provider}/${model.id} without a status check`
-              : `Unloaded ${model.provider}/${model.id}`,
-          };
-        } catch (error) {
-          const message = `Could not unload ${model.provider}/${model.id}: ${errorMessage(error)}`;
-          return { status: "failed", message };
-        }
-      },
     };
   }
 

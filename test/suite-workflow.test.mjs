@@ -89,7 +89,7 @@ test("interactive review identifies the run root, Pi handoff, and local cleanup"
 
   assert.equal(review.runRoot, "/project/runs");
   assert.match(review.launch.join("\n"), /@prompt\.md/);
-  assert.match(review.cleanup, /Unload.*Ollama/);
+  assert.match(review.cleanup, /Keep preloaded Ollama/);
   assert.doesNotMatch(JSON.stringify(review), /provider-secret-must-not-render/);
   const unsupportedReview = buildInteractiveReview({
     repositoryRoot: "/project",

@@ -3,6 +3,7 @@ import { constants as fsConstants } from "node:fs";
 import { access, mkdtemp, realpath, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { delimiter, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { BenchError } from "./errors.mjs";
 
@@ -26,6 +27,9 @@ const PI_RUNTIME_BOOTSTRAP = [
   '    chmod 600 "$runtime_agent_dir/$name"',
   "  fi",
   "done",
+  '"$1" "$2"',
+  "shift 2",
+  "unset BENCH_PI_LOCAL_MODEL",
   'exec "$@"',
 ].join("\n");
 
@@ -74,6 +78,7 @@ export async function createWriteConfinementLaunch(command, args, options) {
     const environment = writeConfinementEnvironment(
       options.env ?? process.env,
       scratchDirectory,
+      options.localModel,
     );
     return {
       command: executable,
@@ -95,6 +100,7 @@ export async function createWriteConfinementLaunch(command, args, options) {
     const environment = writeConfinementEnvironment(
       options.env ?? process.env,
       LINUX_SCRATCH_DIRECTORY,
+      options.localModel,
     );
     return {
       command: executable,
@@ -133,9 +139,10 @@ export function createSeatbeltProfile(runDirectory) {
   ].join("\n");
 }
 
-export function writeConfinementEnvironment(source, scratchDirectory) {
+export function writeConfinementEnvironment(source, scratchDirectory, localModel) {
   return {
     ...source,
+    BENCH_PI_LOCAL_MODEL: localModel ? JSON.stringify(localModel) : "",
     PI_CODING_AGENT_DIR: join(scratchDirectory, "pi-agent"),
     TMPDIR: scratchDirectory,
     TMP: scratchDirectory,
@@ -264,6 +271,8 @@ function piRuntimeBootstrap(command, args, sourceEnvironment, runtimeEnvironment
     "bench-pi-bootstrap",
     sourceAgentDirectory,
     runtimeEnvironment.PI_CODING_AGENT_DIR,
+    process.execPath,
+    fileURLToPath(new URL("./pi-run-config.mjs", import.meta.url)),
     command,
     ...args,
   ];

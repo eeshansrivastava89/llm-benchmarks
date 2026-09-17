@@ -2,9 +2,11 @@ import { spawn } from "node:child_process";
 import { chmod, copyFile, mkdir, readdir, rm } from "node:fs/promises";
 import { constants as osConstants } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { prepareInteractiveBenchmarkRun } from "./benchmark-suites.mjs";
-import { BenchError } from "./errors.mjs";
+import { BenchError, errorMessage } from "./errors.mjs";
+import { backendIdentity, isBackendKey } from "./lib/backend-labels.ts";
 import { prepareLocalModelLifecycle } from "./local-lifecycle.mjs";
 import { updateRunMetadata, markRunFailed } from "./lib/runs.ts";
 import { formatCommand } from "./run-plan.mjs";
@@ -30,6 +32,7 @@ export function buildPiInvocation(model, benchmark, options = {}) {
   }
   return [
     "--no-extensions",
+    ...(model.localDiscovery ? ["--extension", fileURLToPath(new URL("./pi-extensions/local-models.mjs", import.meta.url))] : []),
     "--no-skills",
     "--no-prompt-templates",
     "--no-context-files",
@@ -57,18 +60,71 @@ export function interactiveModelMetadata(model) {
   }
 
   const provider = model.provider.toLowerCase();
-  if (provider === "ollama") return { modelSource: "ollama", backendLabel: "Ollama" };
-  if (provider === "omlx") return { modelSource: "omlx", backendLabel: "oMLX" };
+  if (isBackendKey(provider)) {
+    const identity = backendIdentity(provider);
+    return { modelSource: identity.modelSource, backendLabel: identity.label };
+  }
   if (provider.includes("mtp")) {
-    return { modelSource: "llama-cpp-mtp", backendLabel: "llama.cpp MTP" };
+    return { modelSource: "llama-cpp-mtp", backendLabel: backendIdentity("llama-cpp-mtp").label };
   }
   return { modelSource: "llama-cpp", backendLabel: model.provider };
 }
 
-export async function resolveLocalModelConnection(modelRuntime, model) {
-  if (model.backend?.location !== "local") return null;
+// Providers registered by user Pi extensions exist only in processes that load
+// those extensions. The confined interactive run starts Pi with --no-extensions
+// and a minimal config copy, so their definitions and resolved auth must travel
+// through the private per-run configuration instead.
+export function isExtensionProvider(modelRuntime, model) {
+  return modelRuntime?.extensionProviders?.has(model.provider) === true;
+}
+
+// API implementations registered by pi-ai itself. A static provider entry in the
+// private per-run config can stream only these; any other api name exists solely
+// inside the extension that registered it, and the confined run starts Pi
+// without extensions (mirrors pi-ai's BUILTIN_APIS registry).
+const STATIC_REPLICABLE_APIS = new Set([
+  "anthropic-messages",
+  "openai-completions",
+  "openai-responses",
+  "openai-codex-responses",
+  "azure-openai-responses",
+  "google-generative-ai",
+  "google-vertex",
+  "mistral-conversations",
+  "bedrock-converse-stream",
+  "pi-messages",
+]);
+
+// Returns the reason an extension-registered provider cannot be faithfully
+// replicated as a static definition in the private per-run config, or null when
+// the shape is safe. Surfaced at model selection instead of failing mid-run.
+export async function extensionProviderStaticGap(modelRuntime, model) {
+  if (!isExtensionProvider(modelRuntime, model)) return null;
+  if (!STATIC_REPLICABLE_APIS.has(model.api)) {
+    return `API "${model.api}" exists only inside its Pi extension; the private run configuration can stream built-in APIs only.`;
+  }
+  let resolution;
+  try {
+    resolution = await modelRuntime.getAuth(model, {
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    return `Pi could not resolve credentials for ${model.provider}/${model.id}; the private run configuration cannot pre-stage them.`;
+  }
+  const hasApiKey = typeof resolution?.auth?.apiKey === "string" && resolution.auth.apiKey.length > 0;
+  const hasEnv = Boolean(resolution?.env && Object.keys(resolution.env).length > 0);
+  if (!hasApiKey && !hasEnv) {
+    return `Pi resolved no API key or environment credentials for ${model.provider}/${model.id}; the private run would rely on the copied Pi credentials alone.`;
+  }
+  return null;
+}
+
+export async function resolveModelConnection(modelRuntime, model) {
+  const extensionRegistered = isExtensionProvider(modelRuntime, model);
+  if (model.backend?.location !== "local" && !extensionRegistered) return null;
   const connection = { baseUrl: model.baseUrl };
-  if (model.provider !== "omlx") return connection;
+  const requiresAuth = model.provider === "omlx" || model.localDiscovery || extensionRegistered;
+  if (!requiresAuth) return connection;
 
   let resolution;
   try {
@@ -76,11 +132,17 @@ export async function resolveLocalModelConnection(modelRuntime, model) {
       signal: AbortSignal.timeout(15_000),
     });
   } catch {
-    throw new BenchError(`Could not resolve local cleanup access for ${model.provider}/${model.id}`);
+    throw new BenchError(`Could not resolve connection details for ${model.provider}/${model.id}`);
+  }
+  if ((model.localDiscovery || extensionRegistered) && !resolution) {
+    throw new BenchError(`Could not resolve access for ${model.provider}/${model.id}`);
   }
   return {
     baseUrl: resolution?.auth?.baseUrl ?? model.baseUrl,
     apiKey: resolution?.auth?.apiKey,
+    ...((model.localDiscovery || extensionRegistered)
+      ? { auth: resolution?.auth, env: resolution?.env }
+      : {}),
   };
 }
 
@@ -153,11 +215,11 @@ export async function executeInteractiveBenchmark(input) {
     env: input.env ?? process.env,
   });
   const modelMetadata = interactiveModelMetadata(input.model);
-  const connection = await resolveLocalModelConnection(input.modelRuntime, input.model);
+  const connection = await resolveModelConnection(input.modelRuntime, input.model);
   const lifecycle = await (input.lifecycleFactory ?? prepareLocalModelLifecycle)(
     input.model,
     connection,
-    { ...(input.lifecycleOptions ?? {}), policy: "always" },
+    input.lifecycleOptions ?? {},
   );
   let prepared = null;
   let args = null;
@@ -197,7 +259,10 @@ export async function executeInteractiveBenchmark(input) {
       input.confinementLaunchImpl ?? createWriteConfinementLaunch
     )(command, args, {
       runDirectory: prepared.paths.runDirectory,
-      env: input.env ?? process.env,
+      env: { ...(input.env ?? process.env), ...connection?.env },
+      localModel: input.model.localDiscovery || isExtensionProvider(input.modelRuntime, input.model)
+        ? { model: input.model, auth: connection?.auth }
+        : undefined,
       platform: confinementRuntime?.platform,
       runtime: confinementRuntime?.runtime,
       executable: confinementRuntime?.executable,
@@ -208,6 +273,7 @@ export async function executeInteractiveBenchmark(input) {
         ...prepared.run.runner,
         actualRunner: "Pi",
         launchCommand,
+        ...(input.model.localModelPolicy ? { settingsControl: input.model.localModelPolicy } : {}),
         isolation: writeConfinementMetadata(
           confinementLaunch.runtime,
           input.benchmark.kind === "data-science"
@@ -346,8 +412,4 @@ function safeLaunchFailureMessage(error) {
   return /Required command not found/u.test(errorMessage(error))
     ? "Could not launch Pi because the pi command was not found."
     : "Could not launch Pi.";
-}
-
-function errorMessage(error) {
-  return error instanceof Error ? error.message : String(error);
 }

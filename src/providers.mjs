@@ -1,18 +1,21 @@
+import { readFile } from "node:fs/promises";
 import { connect } from "node:net";
+import { join } from "node:path";
 
-import { BenchError } from "./errors.mjs";
+import { BenchError, errorMessage } from "./errors.mjs";
+import { classifyBackend, discoverLocalProviders } from "./local-models.mjs";
+
+export { classifyBackend } from "./local-models.mjs";
 
 export const MODEL_DISCOVERY_TIMEOUT_MS = 15_000;
 const LOCAL_PROBE_TIMEOUT_MS = 400;
 
-function errorMessage(error) {
-  return error instanceof Error ? error.message : String(error);
-}
 
 export async function discoverModels(cwd) {
   let createAgentSessionServices;
+  let getAgentDir;
   try {
-    ({ createAgentSessionServices } = await import("@earendil-works/pi-coding-agent"));
+    ({ createAgentSessionServices, getAgentDir } = await import("@earendil-works/pi-coding-agent"));
   } catch (error) {
     throw new BenchError(`Pi SDK unavailable. Run \`npm install\`. (${errorMessage(error)})`);
   }
@@ -55,13 +58,30 @@ export async function discoverModels(cwd) {
   if (runtimeError) {
     throw new BenchError(`Pi model configuration error: ${runtimeError}`);
   }
-  const providers = await annotateProviderBackends(groupModels(models));
+  let config;
+  try {
+    config = JSON.parse(await readFile(join(getAgentDir(), "models.json"), "utf8"));
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  const localProviders = await discoverLocalProviders(services.modelRuntime, config?.providers);
+  const localIds = new Set(localProviders.map(({ provider }) => provider));
+  const staticModels = models.filter((model) => !localIds.has(model.provider));
+  const providers = [
+    ...await annotateProviderBackends(staticModels.length ? groupModels(staticModels) : []),
+    ...localProviders,
+  ].sort((a, b) => a.provider.localeCompare(b.provider));
+  if (providers.length === 0) throw noModelsError();
   return { modelRuntime: services.modelRuntime, providers, diagnostics };
+}
+
+function noModelsError() {
+  return new BenchError("Pi has no authenticated models available. Run `pi`, then `/login`, or configure an API key.");
 }
 
 export function groupModels(models) {
   if (models.length === 0) {
-    throw new BenchError("Pi has no authenticated models available. Run `pi`, then `/login`, or configure an API key.");
+    throw noModelsError();
   }
 
   const grouped = new Map();
@@ -77,35 +97,6 @@ export function groupModels(models) {
       provider,
       models: providerModels.sort((left, right) => left.id.localeCompare(right.id)),
     }));
-}
-
-export function classifyBackend(baseUrl) {
-  let url;
-  try {
-    url = new URL(baseUrl);
-  } catch {
-    return { location: "unknown", status: "unknown" };
-  }
-
-  const hostname = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
-  const isLoopback = hostname === "localhost"
-    || hostname.endsWith(".localhost")
-    || /^127(?:\.\d{1,3}){3}$/.test(hostname)
-    || hostname === "::1"
-    || hostname.startsWith("::ffff:127.");
-  if (!isLoopback) return { location: "cloud" };
-
-  const defaultPort = url.protocol === "https:" ? 443 : url.protocol === "http:" ? 80 : undefined;
-  const port = url.port ? Number.parseInt(url.port, 10) : defaultPort;
-  if (!port) return { location: "local", status: "unknown" };
-
-  return {
-    location: "local",
-    status: "unknown",
-    hostname,
-    port,
-    endpoint: `${hostname}:${port}`,
-  };
 }
 
 export function probeTcp({ hostname, port }, timeoutMs = LOCAL_PROBE_TIMEOUT_MS) {

@@ -8,10 +8,12 @@ import test from "node:test";
 import {
   buildPiInvocation,
   executeInteractiveBenchmark,
+  extensionProviderStaticGap,
   finalizeInteractiveDiagnostics,
   interactiveDiagnosticPaths,
   interactiveModelMetadata,
-  resolveLocalModelConnection,
+  isExtensionProvider,
+  resolveModelConnection,
   runForeground,
 } from "../src/interactive-runner.mjs";
 
@@ -111,7 +113,7 @@ test("local cleanup access stays separate from Pi command arguments", async () =
     baseUrl: "http://127.0.0.1:8000/v1",
     backend: { location: "local", status: "online" },
   });
-  const connection = await resolveLocalModelConnection({
+  const connection = await resolveModelConnection({
     getAuth: async () => ({ auth: { apiKey: "private-local-key" } }),
   }, model);
 
@@ -122,6 +124,124 @@ test("local cleanup access stays separate from Pi command arguments", async () =
   assert.doesNotMatch(buildPiInvocation(model, visualBenchmark(), {
     sessionDirectory: "/run/.bench-session",
   }).join(" "), /private-local-key/);
+});
+
+test("live local models and resolved auth reach only private run configuration", async (t) => {
+  const runsRoot = await temporaryRunsRoot(t);
+  const model = cloudModel({
+    provider: "ollama", id: "new-download", baseUrl: "http://127.0.0.1:11434/v1",
+    backend: { location: "local", status: "online" }, localDiscovery: true,
+  });
+  const auth = { apiKey: "private-discovery-key" };
+  const confinement = confinementTestOptions(runsRoot);
+  let payload;
+  const execution = await executeInteractiveBenchmark({
+    repositoryRoot: process.cwd(), runsRoot, benchmark: visualBenchmark(), model,
+    modelRuntime: { getAuth: async () => ({ auth }) },
+    ...confinement,
+    confinementLaunchImpl: async (command, args, options) => {
+      payload = options.localModel;
+      return confinement.confinementLaunchImpl(command, args, options);
+    },
+    lifecycleFactory: async () => ({ cleanup: async () => ({ status: "unloaded" }) }),
+    runForegroundImpl: async () => ({ code: 0, status: 0 }),
+  });
+  assert.deepEqual(payload, { model, auth });
+  assert.doesNotMatch(JSON.stringify(await metadataFor(execution)), /private-discovery-key|localDiscovery/);
+  assert.doesNotMatch(execution.launchCommand, /private-discovery-key/);
+});
+
+test("extension-registered providers travel through the private per-run configuration", async (t) => {
+  const runsRoot = await temporaryRunsRoot(t);
+  const model = cloudModel({
+    provider: "ollama-cloud", id: "glm-5.3-flash", baseUrl: "https://ollama.com/v1",
+  });
+  const auth = { apiKey: "private-cloud-key", headers: {} };
+  const confinement = confinementTestOptions(runsRoot);
+  let payload;
+  const execution = await executeInteractiveBenchmark({
+    repositoryRoot: process.cwd(), runsRoot, benchmark: visualBenchmark(), model,
+    modelRuntime: { extensionProviders: new Set(["ollama-cloud"]), getAuth: async () => ({ auth }) },
+    ...confinement,
+    confinementLaunchImpl: async (command, args, options) => {
+      payload = options.localModel;
+      return confinement.confinementLaunchImpl(command, args, options);
+    },
+    runForegroundImpl: async () => ({ code: 0, status: 0 }),
+  });
+
+  assert.deepEqual(payload, { model, auth });
+  assert.equal(execution.args.includes("--extension"), false);
+  assert.doesNotMatch(JSON.stringify(await metadataFor(execution)), /private-cloud-key|extensionProviders/);
+  assert.doesNotMatch(execution.launchCommand, /private-cloud-key/);
+});
+
+test("plain cloud providers stay on Pi's own copied configuration", async (t) => {
+  const runsRoot = await temporaryRunsRoot(t);
+  const model = cloudModel();
+  const confinement = confinementTestOptions(runsRoot);
+  let payload;
+  let sawAuth = false;
+  await executeInteractiveBenchmark({
+    repositoryRoot: process.cwd(), runsRoot, benchmark: visualBenchmark(), model,
+    modelRuntime: {
+      extensionProviders: new Set(),
+      getAuth: async () => { sawAuth = true; return { auth: { apiKey: "unused" } }; },
+    },
+    ...confinement,
+    confinementLaunchImpl: async (command, args, options) => {
+      payload = options.localModel;
+      return confinement.confinementLaunchImpl(command, args, options);
+    },
+    runForegroundImpl: async () => ({ code: 0, status: 0 }),
+  });
+
+  assert.equal(payload, undefined);
+  assert.equal(sawAuth, false);
+});
+
+test("extension-provider guard accepts faithful static shapes and flags the rest", async () => {
+  const cloudModel = (overrides = {}) => ({
+    provider: "ollama-cloud", id: "glm-5.3-flash", api: "openai-completions",
+    baseUrl: "https://ollama.com/v1", backend: { location: "cloud", status: "online" },
+    ...overrides,
+  });
+  const runtime = (overrides = {}) => ({
+    extensionProviders: new Set(["ollama-cloud"]),
+    getAuth: async () => ({ auth: { apiKey: "stored-key", headers: {} }, env: {} }),
+    ...overrides,
+  });
+
+  assert.equal(await extensionProviderStaticGap(runtime(), cloudModel()), null);
+  assert.equal(
+    await extensionProviderStaticGap({ extensionProviders: new Set() }, cloudModel()),
+    null,
+  );
+  assert.match(
+    await extensionProviderStaticGap(runtime(), cloudModel({ api: "totally-custom-api" })),
+    /exists only inside its Pi extension/,
+  );
+  assert.match(
+    await extensionProviderStaticGap({
+      extensionProviders: new Set(["ollama-cloud"]),
+      getAuth: async () => { throw new Error("credentials unavailable"); },
+    }, cloudModel()),
+    /cannot pre-stage/,
+  );
+  assert.match(
+    await extensionProviderStaticGap({
+      extensionProviders: new Set(["ollama-cloud"]),
+      getAuth: async () => ({ auth: { headers: {} }, env: {} }),
+    }, cloudModel()),
+    /no API key or environment credentials/,
+  );
+  assert.equal(
+    await extensionProviderStaticGap({
+      extensionProviders: new Set(["ollama-cloud"]),
+      getAuth: async () => ({ auth: {}, env: { ACCOUNT_ID: "value" } }),
+    }, cloudModel()),
+    null,
+  );
 });
 
 test("foreground child execution preserves statuses and reports missing commands", async () => {
@@ -258,7 +378,7 @@ test("successful execution prepares one slot, launches in it, and leaves it prep
     },
   });
 
-  assert.equal(lifecyclePolicy, "always");
+  assert.equal(lifecyclePolicy, undefined);
   assert.equal(cleanupCalls, 1);
   assert.deepEqual(events, [
     `prepared:${execution.prepared.paths.runDirectory}`,
@@ -356,7 +476,7 @@ test("handled termination cancels the slot after cleanup", async (t) => {
   assert.ok(metadata.cancelledAt);
 });
 
-test("normal Pi exit unloads Ollama through its mocked API", async (t) => {
+test("normal Pi exit preserves an already-loaded Ollama model", async (t) => {
   const runsRoot = await temporaryRunsRoot(t);
   const requests = [];
   const model = cloudModel({
@@ -391,15 +511,12 @@ test("normal Pi exit unloads Ollama through its mocked API", async (t) => {
     }),
   });
 
-  assert.equal(execution.cleanupResult.status, "unloaded");
-  assert.deepEqual(requests.map(({ url }) => new URL(url).pathname), [
-    "/api/ps",
-    "/api/generate",
-  ]);
+  assert.equal(execution.cleanupResult.status, "kept");
+  assert.deepEqual(requests.map(({ url }) => new URL(url).pathname), ["/api/ps"]);
   assert.equal((await metadataFor(execution)).status, "prepared");
 });
 
-test("interrupted Pi exit unloads oMLX through its authenticated mocked API", async (t) => {
+test("interrupted Pi exit preserves an already-loaded oMLX model", async (t) => {
   const runsRoot = await temporaryRunsRoot(t);
   const requests = [];
   const apiKey = "private-omlx-cleanup-key";
@@ -438,11 +555,8 @@ test("interrupted Pi exit unloads oMLX through its authenticated mocked API", as
     }),
   });
 
-  assert.equal(execution.cleanupResult.status, "unloaded");
-  assert.deepEqual(requests.map(({ url }) => new URL(url).pathname), [
-    "/v1/models/status",
-    "/v1/models/Qwen%2FTest%20Model/unload",
-  ]);
+  assert.equal(execution.cleanupResult.status, "kept");
+  assert.deepEqual(requests.map(({ url }) => new URL(url).pathname), ["/v1/models/status"]);
   assert.equal(requests.every(({ options }) => options.headers.authorization === `Bearer ${apiKey}`), true);
   const metadata = await metadataFor(execution);
   assert.equal(metadata.status, "cancelled");

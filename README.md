@@ -8,7 +8,7 @@
 - **Visual Bench** asks Pi to build browser artifacts, then captures them in the local workbench.
 - **Data Science** asks Pi to analyze the project dataset and produce a notebook, charts, and scored summaries.
 
-Pi supplies providers, models, and authentication. Inspect owns Inspect task execution and logs. The visual application owns Markdown prompts, visual and Data Science run folders, capture, scoring, comparisons, and the publish-safe gallery export.
+Pi supplies provider connections, model settings, cloud catalogs, and authentication. Local servers supply their installed model inventory. Inspect owns Inspect task execution and logs. The visual application owns Markdown prompts, visual and Data Science run folders, capture, scoring, comparisons, and the publish-safe gallery export.
 
 ## Requirements
 
@@ -38,7 +38,11 @@ pi
 /login
 ```
 
-Custom and local providers belong in Pi's model configuration. `bench` does not copy provider credentials into project configuration, run metadata, commands, or viewer state.
+Custom and local provider connections belong in Pi's model configuration. `bench` does not copy provider credentials into project configuration, run metadata, commands, or viewer state.
+
+For loopback OpenAI-compatible servers, Bench reads the live `/v1/models` inventory at startup and whenever you select the provider. oMLX's `/v1/models/status` and Ollama's `/api/show` supply model metadata, including image support and context capacity. Configure the provider's `baseUrl` and `api` once; no static `models` entries are required. Non-generation models are excluded. If context or input metadata is missing, Bench shows the model as unavailable rather than inventing values; those fields can be supplied explicitly in Pi. Ollama's reported model context capacity can differ from the server's runtime allocation. Cloud discovery is unchanged.
+
+Local generation is server-managed unless you explicitly configured a Pi override. One explicitly loaded Pi extension removes Pi's implicit output cap and thinking controls from local agent requests. Explicit `maxTokens`, `samplingParams`, and configured thinking mappings remain effective; changing the thinking level in Pi restores Pi's normal thinking serialization. The picker and Pi status line show which side controls output and thinking. Bench does not set sampling defaults, MTP, quantization, or server configuration.
 
 Verify the installation:
 
@@ -82,7 +86,7 @@ Choose one suite:
 
 Visual and Data Science run slots are created only after confirmation. Bench launches the complete Pi process tree under OS-enforced write confinement. Pi and its child processes can write the assigned run slot and temporary storage, but cannot modify repository source, sibling runs, or persistent user files. Normal host reads, installed tools, IPC, provider authentication, and network access remain available; this boundary protects repository integrity and is not confidentiality or network isolation.
 
-Ambient Pi context, skills, templates, discovered extensions, settings, and session reuse are disabled for reproducibility. Bench copies only Pi's authentication and model catalogs into writable private scratch storage for the run, then deletes that scratch storage after exit. Bench retains fresh Visual session diagnostics privately under `.bench-runtime/` and discards Data Science transcripts because they may contain temporary dataset access values. None of these private files are published. When Pi exits, Bench removes temporary Data Science access and unloads supported local models. Ollama and oMLX have unload adapters; other local providers show a warning and may remain loaded.
+Ambient Pi context, skills, templates, discovered extensions, settings, and session reuse are disabled for reproducibility. Bench copies only Pi's authentication and model catalogs into writable private scratch storage for the run. For local runs, the explicit Pi extension registers the selected model from a private manifest; there is no static-model fallback if the extension cannot load. Bench deletes the scratch storage after exit and never updates the global Pi catalog. Bench retains fresh Visual session diagnostics privately under `.bench-runtime/` and discards Data Science transcripts because they may contain temporary dataset access values. None of these private files are published. When Pi exits, Bench removes temporary Data Science access. Ollama and oMLX models that were already loaded are left alone; models loaded during a Bench run are unloaded afterward. If the initial load status is unknown, cleanup is skipped. Other local providers show a warning and may remain loaded.
 
 Bench can start the relevant results viewer after a successful run. The default is **No**, so runs do not open browser tabs unexpectedly.
 
@@ -136,7 +140,7 @@ BENCH_VISUAL_VIEWER_PORT=14321 \
 bench view both
 ```
 
-Viewer ownership and private logs live under ignored `.bench-runtime/`. Bench reuses a healthy matching service, refuses an unknown application on the configured port, and stops only a process group whose identity still matches its ownership record.
+Viewer ownership and private logs live under ignored `.bench-runtime/`. Bench reuses a healthy matching service, refuses an unknown application on the configured port, and stops only a process group whose identity still matches its ownership record. Opening an existing unmanaged viewer does not transfer ownership: Bench labels it explicitly and leaves it running on `bench view stop`. Do not delete `.bench-runtime/viewers.json` while managed viewers are running.
 
 The Visual viewer reads Visual and Data Science runs. In local mode it can:
 
@@ -222,7 +226,7 @@ pi update --models
 
 ### A local provider is offline
 
-Start the server configured for that provider in Pi, then choose **Retry**. Bench checks loopback reachability before launch; this does not guarantee that a specific model is already loaded.
+Start the server configured for that provider in Pi, then choose **Retry**. Live local discovery requires a successful model-list response; connection errors, authentication failures, and invalid responses show no stale models. An empty inventory means the server has no eligible models. Download a model and reselect the provider to refresh. Models need not already be loaded in memory.
 
 ### Interactive write confinement is unavailable
 

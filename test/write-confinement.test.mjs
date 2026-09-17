@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { mkdtemp, mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import {
@@ -76,6 +77,8 @@ test("Linux launch keeps the host readable, overlays writable temp storage, and 
     "bench-pi-bootstrap",
     "/home/test/.pi/agent",
     "/tmp/bench-interactive/pi-agent",
+    process.execPath,
+    fileURLToPath(new URL("../src/pi-run-config.mjs", import.meta.url)),
     "pi", "--model", "test",
   ]);
   assert.equal(launch.env.PATH, "/host/bin");
@@ -164,6 +167,13 @@ test("OS confinement preserves normal tools and Playwright while denying persist
   const symlinkTarget = join(sibling, "symlink-target.txt");
   await mkdir(workspace);
   await mkdir(sibling);
+  const sourceAgentDirectory = join(root, "pi-agent");
+  await mkdir(sourceAgentDirectory);
+  const sourceConfig = JSON.stringify({ providers: { "bench-local": {
+    baseUrl: "http://127.0.0.1:8000/v1", api: "openai-completions", apiKey: "old-key",
+    models: [{ id: "old-model" }],
+  } } });
+  await writeFile(join(sourceAgentDirectory, "models.json"), sourceConfig);
   await writeFile(symlinkTarget, "unchanged");
   await symlink(symlinkTarget, join(workspace, "outside-link"));
   t.after(() => Promise.all([
@@ -186,7 +196,9 @@ test("OS confinement preserves normal tools and Playwright while denying persist
     "uv --version",
     "rg --version",
     "pi --version",
-    "pi --no-extensions --no-skills --no-prompt-templates --no-context-files --no-approve --list-models >/dev/null",
+    `pi --no-extensions --extension ${JSON.stringify(fileURLToPath(new URL("../src/pi-extensions/local-models.mjs", import.meta.url)))} --no-skills --no-prompt-templates --no-context-files --no-approve --list-models | grep bench-downloaded-model`,
+    'test -z "${BENCH_PI_LOCAL_MODEL:-}"',
+    'node -e \'const fs = require("node:fs"); const p = process.env.PI_CODING_AGENT_DIR; const config = JSON.parse(fs.readFileSync(p + "/bench-local-model.json")); const auth = JSON.parse(fs.readFileSync(p + "/auth.json")); if (!auth["bench-local"].key || config.model.contextWindow !== 65536) process.exit(45);\' ',
     "node --input-type=module -e 'import { chromium } from \"@playwright/test\"; const browser = await chromium.launch({ headless: true }); const page = await browser.newPage(); await page.setContent(\"<h1>confined</h1>\"); await page.screenshot({ path: process.argv[1] }); await browser.close();' \"$1/playwright.png\"",
   ].join("\n");
   const launch = await createWriteConfinementLaunch("/bin/sh", [
@@ -194,10 +206,19 @@ test("OS confinement preserves normal tools and Playwright while denying persist
   ], {
     ...runtime,
     runDirectory: workspace,
-    env: process.env,
+    env: { ...process.env, PI_CODING_AGENT_DIR: sourceAgentDirectory },
+    localModel: {
+      model: {
+        provider: "bench-local", id: "bench-downloaded-model", api: "openai-completions",
+        baseUrl: "http://127.0.0.1:8000/v1", contextWindow: 65536, maxTokens: 4096,
+        input: ["text"], reasoning: false, localDiscovery: true,
+        localModelPolicy: { output: "server", thinking: "server" },
+      },
+      auth: { apiKey: "private-test-key" },
+    },
   });
-
   try {
+    assert.doesNotMatch(JSON.stringify(launch.args), /private-test-key/);
     const result = await run(launch.command, launch.args, {
       cwd: launch.runDirectory,
       env: launch.env,
@@ -208,6 +229,7 @@ test("OS confinement preserves normal tools and Playwright while denying persist
     await launch.cleanup();
   }
 
+  assert.equal(await readFile(join(sourceAgentDirectory, "models.json"), "utf8"), sourceConfig);
   assert.equal(await readFile(join(workspace, "allowed.txt"), "utf8"), "allowed");
   await stat(join(workspace, "playwright.png"));
   assert.equal(await readFile(symlinkTarget, "utf8"), "unchanged");

@@ -4,7 +4,7 @@ Project-specific instructions for coding agents working on the unified benchmark
 
 ## Product boundary
 
-`bench` is the single workflow for Inspect, Visual, and Data Science benchmarks. Pi is the source of truth for providers, models, and authentication. Inspect remains the source of truth for Inspect tasks and `.eval` logs. The visual application remains the source of truth for Markdown benchmark prompts, run preparation, capture, scoring, and gallery exports.
+`bench` is the single workflow for Inspect, Visual, and Data Science benchmarks. Pi is the source of truth for provider connections, model settings, cloud catalogs, and authentication. Local servers are the source of truth for installed models and default generation settings. Bench discovers their live inventory/metadata and passes the selected definition through private per-run Pi configuration, never a global catalog sync. Do not invent token limits, sampling values, or capabilities. The explicit local Pi adapter removes implicit generation controls while preserving explicit Pi settings; cloud behavior stays unchanged. Inspect remains the source of truth for Inspect tasks and `.eval` logs. The visual application remains the source of truth for Markdown benchmark prompts, run preparation, capture, scoring, and gallery exports.
 
 Do not restore the old offgrid/minimal-ai runner or create duplicate provider, prompt, run-path, metadata, or asset logic.
 
