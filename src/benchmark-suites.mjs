@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { loadBenchmarks } from "./lib/benchmarks.ts";
+import { errorMessage } from "./errors.mjs";
 import {
   prepareRun,
   validateDataScienceAccess,
@@ -51,7 +52,6 @@ export async function prepareInteractiveBenchmarkRun(input) {
     benchmark: input.benchmark,
     modelId: input.modelId,
     modelSource: input.modelSource,
-    runner: "pi",
     kind: input.benchmark.kind,
     baseUrl: input.baseUrl,
     backendLabel: input.backendLabel,
@@ -113,8 +113,4 @@ function unquote(value) {
     }
   }
   return value;
-}
-
-function errorMessage(error) {
-  return error instanceof Error ? error.message : String(error);
 }

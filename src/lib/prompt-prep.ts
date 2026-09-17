@@ -1,18 +1,16 @@
 import { mkdir, writeFile } from "node:fs/promises";
 
+import { modelSourceLabel } from "./backend-labels.ts";
 import { buildRunPaths, createRunId } from "./paths.ts";
 import { writePromptMarkdown, writeRunMetadata } from "./runs.ts";
 import type {
   BenchmarkRecord,
   ModelSourceId,
   PreparedRun,
-  RunnerMode,
   RunAssets,
   RunKind,
   RunMetadata,
 } from "./types.ts";
-
-export type PrepareRunRunner = "manual" | "pi" | "opencode" | "hermes";
 
 export interface DataScienceAccess {
   baseUrl: string;
@@ -23,7 +21,6 @@ export interface PrepareRunInput {
   benchmark: BenchmarkRecord;
   modelId: string;
   modelSource?: ModelSourceId;
-  runner?: PrepareRunRunner;
   kind?: RunKind;
   baseUrl?: string;
   backendLabel?: string;
@@ -34,7 +31,6 @@ export interface PrepareRunInput {
 
 export async function prepareRun(input: PrepareRunInput): Promise<PreparedRun> {
   const now = input.now ?? new Date();
-  const runner = input.runner ?? "manual";
   const kind = resolveRunKind(input);
   const dataScienceAccess = kind === "data-science"
     ? validateDataScienceAccess(input.dataScienceAccess)
@@ -45,10 +41,7 @@ export async function prepareRun(input: PrepareRunInput): Promise<PreparedRun> {
     modelId: input.modelId,
     runId: createRunId(now),
   });
-  const prompt = buildToolPrompt({
-    benchmark: input.benchmark,
-    kind,
-  });
+  const prompt = input.benchmark.prompt.trim();
   const timestamp = now.toISOString();
   const modelSource = input.modelSource;
   const backendLabel = modelSource
@@ -69,10 +62,12 @@ export async function prepareRun(input: PrepareRunInput): Promise<PreparedRun> {
     preparedAt: timestamp,
     runDirectory: paths.runDirectory,
     assets: buildRunAssets(kind),
+    // Every prepared run is a Pi run; other harness labels exist only in
+    // historical metadata and stay display-only.
     runner: {
-      mode: runnerModeFor(runner),
+      mode: "external",
       ...(modelSource ? { modelSource } : {}),
-      intendedRunner: runnerLabel(runner),
+      intendedRunner: "Pi",
       backendLabel,
       baseUrl: normalizeOptionalString(input.baseUrl),
       model: input.modelId,
@@ -81,7 +76,7 @@ export async function prepareRun(input: PrepareRunInput): Promise<PreparedRun> {
         reported: false,
       },
     },
-    ...(runner === "manual" ? {} : { tool: runner }),
+    tool: "pi",
   };
 
   await mkdir(paths.runDirectory, { recursive: true });
@@ -143,34 +138,6 @@ export function expectedRunOutputAssets(kind: RunKind): string[] {
   return [assets.html, assets.preview, assets.video].filter(
     (asset): asset is string => Boolean(asset),
   );
-}
-
-export function buildToolPrompt(input: {
-  benchmark: BenchmarkRecord;
-  kind?: RunKind;
-}): string {
-  return input.benchmark.prompt.trim();
-}
-
-function runnerModeFor(runner: PrepareRunRunner): RunnerMode {
-  if (runner === "manual") return "manual";
-  return "external";
-}
-
-function runnerLabel(runner: PrepareRunRunner): string {
-  if (runner === "hermes") return "Hermes";
-  if (runner === "opencode") return "OpenCode";
-  if (runner === "pi") return "Pi";
-  return "manual";
-}
-
-function modelSourceLabel(source: ModelSourceId, customLabel?: string): string {
-  if (source === "ollama") return "Ollama";
-  if (source === "omlx") return "oMLX";
-  if (source === "llama-cpp") return "llama.cpp";
-  if (source === "llama-cpp-mtp") return "llama.cpp MTP";
-  if (source === "cloud") return customLabel ?? "Cloud";
-  return source;
 }
 
 function normalizeOptionalString(

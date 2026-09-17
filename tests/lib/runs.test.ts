@@ -9,8 +9,6 @@ import {
   updateRunMetadata,
   listRunMetadata,
   writePromptMarkdown,
-  writeRawResponse,
-  writeRunHtml,
   writeRunMetadata
 } from "../../src/lib/runs";
 import type { RunMetadata } from "../../src/lib/types";
@@ -108,22 +106,6 @@ describe("run metadata helpers", () => {
     });
   });
 
-  it("writes raw model responses to the run raw response path", async () => {
-    const runsRoot = await createRunsRoot();
-    const paths = buildRunPaths({
-      runsRoot,
-      benchmarkId: "sakura",
-      modelId: "lmstudio-community/Qwen2.5 Coder:7B Instruct",
-      runId: "2026-05-06T01-02-03-004Z"
-    });
-
-    await writeRawResponse(paths, "raw response text");
-
-    await expect(readFile(paths.rawResponsePath, "utf8")).resolves.toBe(
-      "raw response text"
-    );
-  });
-
   it("writes prepared prompts to the run prompt path", async () => {
     const runsRoot = await createRunsRoot();
     const paths = buildRunPaths({
@@ -138,21 +120,6 @@ describe("run metadata helpers", () => {
     await expect(readFile(paths.promptPath, "utf8")).resolves.toBe(
       "copy this prompt"
     );
-  });
-
-  it("writes extracted HTML to the run index path", async () => {
-    const runsRoot = await createRunsRoot();
-    const paths = buildRunPaths({
-      runsRoot,
-      benchmarkId: "sakura",
-      modelId: "lmstudio-community/Qwen2.5 Coder:7B Instruct",
-      runId: "2026-05-06T01-02-03-004Z"
-    });
-    const html = "<!doctype html><html><head></head><body></body></html>";
-
-    await writeRunHtml(paths, html);
-
-    await expect(readFile(paths.htmlPath, "utf8")).resolves.toBe(html);
   });
 
   it("hydrates prompt text from the run folder prompt file", async () => {

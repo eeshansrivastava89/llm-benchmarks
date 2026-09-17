@@ -3,6 +3,7 @@ import { readFile, stat, writeFile } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import type { APIRoute } from "astro";
 import {
   captureMissingRunMedia as defaultCaptureMissingRunMedia,
   captureSingleRunMedia as defaultCaptureSingleRunMedia,
@@ -19,6 +20,7 @@ import {
   listRunMetadata as defaultListRunMetadata
 } from "../lib/runs";
 import { getSystemStats as defaultGetSystemStats } from "../lib/system-stats";
+import { backendIdentity, isBackendKey } from "../lib/backend-labels";
 import type { BenchmarkRecord, RunMetadata, RunRunnerMetadata } from "../lib/types";
 import {
   ApiRequestError,
@@ -341,33 +343,24 @@ function runnerBackendPatch(backend: EditableRunBackend, customBackend?: string)
       backendLabel: undefined
     };
   }
-  if (backend === "omlx") {
-    return {
-      modelSource: "omlx",
-      backendLabel: "oMLX"
-    };
-  }
-  if (backend === "llama-cpp" || backend === "lmstudio" || backend === "llama.cpp") {
-    return {
-      modelSource: "llama-cpp",
-      backendLabel: backend === "lmstudio" ? "LM Studio" : "llama.cpp"
-    };
-  }
-  if (backend === "llama-cpp-mtp") {
-    return {
-      modelSource: "llama-cpp-mtp",
-      backendLabel: "llama.cpp MTP"
-    };
-  }
   if (backend === "cloud" || backend === "custom") {
     return {
       modelSource: "cloud",
       backendLabel: customBackend ?? "Cloud"
     };
   }
+  // "llama.cpp" is accepted as an alias for the canonical "llama-cpp" key.
+  const key = backend === "llama.cpp" ? "llama-cpp" : backend;
+  if (isBackendKey(key)) {
+    const identity = backendIdentity(key);
+    return {
+      modelSource: identity.modelSource,
+      backendLabel: identity.label
+    };
+  }
   return {
     modelSource: undefined,
-    backendLabel: backend === "mlx" ? "Base MLX" : backend
+    backendLabel: backend
   };
 }
 
@@ -499,6 +492,22 @@ export async function readJsonRequest(request: Request): Promise<unknown> {
   } catch {
     throw new ApiRequestError(400, "Request body must be valid JSON.");
   }
+}
+
+/**
+ * Standard JSON write endpoint: trust check, JSON body parse, handler call,
+ * and error mapping. GET and binary endpoints stay hand-written.
+ */
+export function writeJsonRoute<TBody>(
+  handler: (body: TBody) => Promise<unknown>
+): APIRoute {
+  return async ({ request }) =>
+    apiJsonResponse(
+      Promise.resolve()
+        .then(() => assertTrustedWriteRequest(request))
+        .then(() => readJsonRequest(request))
+        .then((body) => handler(body as TBody))
+    );
 }
 
 export function getDefaultLocalApi(): LocalApi {

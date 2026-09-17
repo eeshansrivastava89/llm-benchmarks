@@ -11,12 +11,11 @@ import {
   convertWebmToMp4IfAvailable,
   fileExists,
   isAnimationFrameRateAcceptable,
-  parseFrameRateFromError,
-  toRunError
+  parseFrameRateFromError
 } from "./capture-validation";
+import { toRunError } from "./error-utils";
 import type { AnimationFrameRateMeasurement, CapturePage } from "./capture-validation";
 
-export { isAnimationFrameRateAcceptable, isVideoMostlyBlack } from "./capture-validation";
 
 const DEFAULT_VIEWPORT: ViewportSettings = {
   width: 1600,

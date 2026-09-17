@@ -8,6 +8,8 @@ import { execFile } from "node:child_process";
 import { stat } from "node:fs/promises";
 import { promisify } from "node:util";
 
+import { isMissingPathError } from "./error-utils";
+
 const execFileAsync = promisify(execFile);
 
 export interface AnimationFrameRateMeasurement {
@@ -117,7 +119,7 @@ export async function isVideoMostlyBlack(path: string): Promise<boolean | undefi
     const averageLuma = lumaTotal / (bytes.length / 3);
     return visiblePixels === 0 && maxChannel < 24 && averageLuma < 8;
   } catch (error) {
-    if (isMissingCommandError(error)) {
+    if (isMissingPathError(error)) {
       return undefined;
     }
 
@@ -182,35 +184,4 @@ export async function fileExists(path: string): Promise<boolean> {
 
     throw error;
   }
-}
-
-export function isMissingCommandError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "ENOENT"
-  );
-}
-
-export function isMissingPathError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "ENOENT"
-  );
-}
-
-export function toRunError(error: unknown) {
-  if (error instanceof Error) {
-    return {
-      message: error.message,
-      ...(error.stack ? { stack: error.stack } : {})
-    };
-  }
-
-  return {
-    message: String(error)
-  };
 }

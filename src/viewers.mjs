@@ -3,7 +3,8 @@ import { chmod, open, mkdir, readFile, rename, writeFile } from "node:fs/promise
 import { platform } from "node:os";
 import { join, resolve } from "node:path";
 
-import { BenchError } from "./errors.mjs";
+import { BenchError, errorMessage } from "./errors.mjs";
+import { openExternalUrl } from "./open-url.mjs";
 import { probeTcp } from "./providers.mjs";
 import { resolveViewerEndpoints } from "./viewer-config.mjs";
 
@@ -191,7 +192,7 @@ async function startViewer(descriptorSet, id, dependencies) {
       const reason = child.signalCode ? `signal ${child.signalCode}` : `status ${child.exitCode}`;
       throw new BenchError(`${descriptor.label} exited with ${reason}; see ${descriptor.logPath}`);
     }
-    await dependencies.sleep(optionsPollInterval(dependencies));
+    await dependencies.sleep(dependencies.pollIntervalMs);
   }
 
   await terminateStartedChild(child.pid, descriptor, dependencies);
@@ -204,7 +205,7 @@ async function stopViewer(descriptorSet, id, dependencies) {
   const entry = state.viewers[id];
   if (!entry) {
     const status = await viewerStatus(descriptor, null, dependencies);
-    return { ...status, action: "not-owned" };
+    return { ...status, action: status.health === "stopped" ? "already-stopped" : "not-owned" };
   }
 
   const stateMatches = entry.commandId === descriptor.commandId && entry.url === descriptor.url;
@@ -235,7 +236,7 @@ async function stopViewer(descriptorSet, id, dependencies) {
       dependencies.endpointStatus(descriptor),
     ]);
     if (!stillRunning && endpoint !== "healthy") break;
-    await dependencies.sleep(optionsPollInterval(dependencies));
+    await dependencies.sleep(dependencies.pollIntervalMs);
   }
 
   if (await dependencies.groupExists(entry.pgid)) {
@@ -245,7 +246,7 @@ async function stopViewer(descriptorSet, id, dependencies) {
     await dependencies.signalGroup(entry.pgid, "SIGKILL");
     const killDeadline = dependencies.clock() + dependencies.stopTimeoutMs;
     while (dependencies.clock() < killDeadline && await dependencies.groupExists(entry.pgid)) {
-      await dependencies.sleep(optionsPollInterval(dependencies));
+      await dependencies.sleep(dependencies.pollIntervalMs);
     }
     if (await dependencies.groupExists(entry.pgid)) {
       throw new BenchError(`${descriptor.label} process group ${entry.pgid} did not stop`);
@@ -378,7 +379,7 @@ async function terminateStartedChild(pgid, descriptor, dependencies) {
   await dependencies.signalGroup(pgid, "SIGTERM");
   const deadline = dependencies.clock() + dependencies.stopTimeoutMs;
   while (dependencies.clock() < deadline && await dependencies.groupExists(pgid)) {
-    await dependencies.sleep(optionsPollInterval(dependencies));
+    await dependencies.sleep(dependencies.pollIntervalMs);
   }
   if (await dependencies.groupExists(pgid) && await dependencies.processMatches(entry, descriptor)) {
     await dependencies.signalGroup(pgid, "SIGKILL");
@@ -423,22 +424,8 @@ function viewerDescriptor(descriptorSet, id) {
   return descriptor;
 }
 
-function optionsPollInterval(dependencies) {
-  return dependencies.pollIntervalMs;
-}
-
 async function defaultOpenUrl(url) {
-  const command = platform() === "darwin"
-    ? ["open", [url]]
-    : platform() === "win32"
-      ? ["cmd", ["/c", "start", "", url]]
-      : ["xdg-open", [url]];
-  const child = spawn(command[0], command[1], { detached: true, stdio: "ignore" });
-  await new Promise((resolvePromise, reject) => {
-    child.once("spawn", resolvePromise);
-    child.once("error", reject);
-  });
-  child.unref();
+  await openExternalUrl(url);
 }
 
 function execFileText(command, args) {
@@ -448,8 +435,4 @@ function execFileText(command, args) {
       else resolvePromise(stdout);
     });
   });
-}
-
-function errorMessage(error) {
-  return error instanceof Error ? error.message : String(error);
 }

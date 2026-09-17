@@ -1,6 +1,7 @@
 import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
 import { join, posix, resolve } from "node:path";
 import { assertSafePathSegment, assertSafeRunAssetPath, isPathInside, resolveRunAssetPath } from "./asset-paths.ts";
+import { isMissingPathError } from "./error-utils.ts";
 import { loadBenchmarks } from "./benchmarks.ts";
 import { listRunMetadata } from "./runs.ts";
 import { getSystemStats, type SystemStats } from "./system-stats.ts";
@@ -238,14 +239,6 @@ async function writePrettyJson(path: string, value: unknown): Promise<void> {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
-function isMissingPathError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "ENOENT"
-  );
-}
 
 const EXPORTABLE_RUN_KINDS = new Set(["visual", "data-science"]);
 
@@ -260,11 +253,4 @@ function exportDsAssets(ds: NonNullable<RunMetadata["assets"]["ds"]>): NonNullab
   if (ds.chartTreatmentEffect) result.chartTreatmentEffect = safeAsset(ds.chartTreatmentEffect);
   if (ds.chartCompletionRates) result.chartCompletionRates = safeAsset(ds.chartCompletionRates);
   return result;
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const manifest = await generateStaticExport();
-  process.stdout.write(
-    `Wrote static export manifest with ${manifest.benchmarks.length} benchmarks and ${manifest.runs.length} runs.\n`
-  );
 }

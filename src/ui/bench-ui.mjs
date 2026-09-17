@@ -1,6 +1,3 @@
-import { spawn } from "node:child_process";
-import { platform } from "node:os";
-
 import {
   CancellableLoader,
   Input,
@@ -22,26 +19,23 @@ import {
   benchmarkCategories,
   benchmarkDetails,
   benchmarkListItem,
-  formatCount,
   listTheme,
   selectorDetails,
   sourceTabs,
   style,
-  taskWarning,
 } from "./presentation.mjs";
+
+import { openExternalUrl } from "../open-url.mjs";
+import { SelectionCancelled } from "../errors.mjs";
 
 export const BACK = Symbol("back");
 export const CANCEL = Symbol("cancel");
 
-function openExternalUrl(url) {
-  const command = platform() === "darwin"
-    ? ["open", [url]]
-    : platform() === "win32"
-      ? ["cmd", ["/c", "start", "", url]]
-      : ["xdg-open", [url]];
-  const child = spawn(command[0], command[1], { detached: true, stdio: "ignore" });
-  child.on("error", () => {});
-  child.unref();
+// Resolves a picker result, turning the CANCEL sentinel into the standard
+// cancellation error so every flow exits through one path.
+export function selectedOrCancel(result) {
+  if (result === CANCEL) throw new SelectionCancelled();
+  return result;
 }
 
 class SelectorScreen extends VStack {
@@ -726,10 +720,3 @@ export class BenchUI {
 }
 
 export const benchUiStyle = style;
-export {
-  benchmarkCategories,
-  benchmarkDetails,
-  benchmarkListItem,
-  formatCount,
-  taskWarning,
-};

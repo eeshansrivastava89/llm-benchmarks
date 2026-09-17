@@ -127,6 +127,7 @@ export interface RunRunnerMetadata {
   model?: string;
   launchCommand?: string;
   isolation?: RunIsolationMetadata;
+  settingsControl?: { output: "server" | "pi"; thinking: "server" | "pi" };
   requestAsset?: string;
   streamAsset?: string;
   responseAsset?: string;

@@ -60,14 +60,13 @@ describe("prepareRun", () => {
     );
   });
 
-  it("records custom model source metadata for manual cloud runs", async () => {
+  it("records custom model source metadata for cloud runs", async () => {
     const runsRoot = await mkdtemp(join(tmpdir(), "viewer-prep-custom-runs-"));
     const prepared = await prepareRun({
       benchmark,
       modelId: "ChatGPT",
       modelSource: "cloud",
       backendLabel: "Cloud",
-      runner: "manual",
       runsRoot,
       now: new Date("2026-05-07T04:00:32.122Z")
     });
@@ -77,10 +76,11 @@ describe("prepareRun", () => {
         id: "ChatGPT",
         slug: "chatgpt"
       },
+      tool: "pi",
       runner: {
-        mode: "manual",
+        mode: "external",
         modelSource: "cloud",
-        intendedRunner: "manual",
+        intendedRunner: "Pi",
         backendLabel: "Cloud",
         model: "ChatGPT"
       }
@@ -93,7 +93,6 @@ describe("prepareRun", () => {
       benchmark,
       modelId: "Qwen3.6-35B-A3B-4bit",
       modelSource: "omlx",
-      runner: "opencode",
       baseUrl: "http://127.0.0.1:8000/v1",
       runsRoot,
       now: new Date("2026-05-07T04:00:32.122Z")
@@ -102,11 +101,11 @@ describe("prepareRun", () => {
     expect(prepared.command).toBeUndefined();
     expect(prepared.run).toMatchObject({
       kind: "visual",
-      tool: "opencode",
+      tool: "pi",
       runner: {
         mode: "external",
         modelSource: "omlx",
-        intendedRunner: "OpenCode",
+        intendedRunner: "Pi",
         backendLabel: "oMLX",
         baseUrl: "http://127.0.0.1:8000/v1"
       }

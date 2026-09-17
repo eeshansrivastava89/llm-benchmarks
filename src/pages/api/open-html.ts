@@ -1,20 +1,11 @@
-import type { APIRoute } from "astro";
 import {
-  apiJsonResponse,
-  assertTrustedWriteRequest,
   getDefaultLocalApi,
-  readJsonRequest,
+  writeJsonRoute,
   type OpenRunHtmlRequest
 } from "../../server/api";
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) =>
-  apiJsonResponse(
-    Promise.resolve()
-      .then(() => assertTrustedWriteRequest(request))
-      .then(() => readJsonRequest(request))
-      .then((body) =>
-        getDefaultLocalApi().openRunHtml(body as OpenRunHtmlRequest)
-      )
-  );
+export const POST = writeJsonRoute<OpenRunHtmlRequest>((body) =>
+  getDefaultLocalApi().openRunHtml(body)
+);

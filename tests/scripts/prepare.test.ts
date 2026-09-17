@@ -1,45 +1,8 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildToolPrompt } from "../../src/lib/prompt-prep.ts";
 import { loadBenchmarks } from "../../src/lib/benchmarks.ts";
 
 const BENCHMARKS = join(import.meta.dirname, "..", "..", "benchmarks");
-
-describe("buildToolPrompt", () => {
-  const visualBenchmark = {
-    id: "sakura",
-    kind: "visual" as const,
-    title: "Sakura Tree",
-    description: "Cherry blossom animation.",
-    prompt: "Animate a cherry blossom tree.",
-    sourcePath: "",
-  };
-
-  const dsBenchmark = {
-    id: "ab-test-analysis",
-    kind: "data-science" as const,
-    title: "A/B Test Analysis",
-    description: "Analyze the A/B test.",
-    prompt: "Analyze the A/B test data from Supabase.",
-    sourcePath: "",
-  };
-
-  it("returns a visual benchmark prompt as-is", () => {
-    const prompt = buildToolPrompt({
-      benchmark: visualBenchmark,
-      kind: "visual",
-    });
-    expect(prompt).toBe("Animate a cherry blossom tree.");
-  });
-
-  it("returns a data-science benchmark prompt as-is", () => {
-    const prompt = buildToolPrompt({
-      benchmark: dsBenchmark,
-      kind: "data-science",
-    });
-    expect(prompt).toBe("Analyze the A/B test data from Supabase.");
-  });
-});
 
 describe("loadBenchmarks", () => {
   it("loads benchmarks from the project benchmarks directory", async () => {

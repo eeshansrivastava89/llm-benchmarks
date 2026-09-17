@@ -42,9 +42,14 @@ export function cleanLines(value) {
 
 export function formatCount(value) {
   if (!Number.isInteger(value)) return "—";
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1)}m`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1)}k`;
-  return String(value);
+  const scaled = value >= 1_000_000
+    ? [value / 1_000_000, "m"]
+    : value >= 1_000
+      ? [value / 1_000, "k"]
+      : null;
+  if (!scaled) return String(value);
+  const rounded = scaled[0] < 10 ? scaled[0].toFixed(1) : String(Math.round(scaled[0]));
+  return `${rounded.endsWith(".0") ? rounded.slice(0, -2) : rounded}${scaled[1]}`;
 }
 
 export function sourceTabs(sources, activeIndex) {

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import test from "node:test";
 
 import { resolveInspectResultsUrl } from "../src/viewer-config.mjs";
@@ -192,6 +195,68 @@ test("a matching external viewer is reused but never recorded as owned", async (
   assert.equal(result.owned, false);
   assert.equal(controls.spawnCount, undefined);
   await assert.rejects(readFile(descriptorSet.statePath, "utf8"), { code: "ENOENT" });
+});
+
+test("stop is idempotent and leaves external viewers and unknown port occupants alone", async (t) => {
+  const { descriptorSet } = await viewerFixture(t);
+  const controls = { endpoint: { visual: "stopped" } };
+  const { manager, signals } = fakeManager(descriptorSet, controls);
+  assert.equal((await manager.stop("visual"))[0].action, "already-stopped");
+  controls.endpoint.visual = "healthy";
+  assert.equal((await manager.stop("visual"))[0].action, "not-owned");
+  controls.endpoint.visual = "occupied";
+  assert.equal((await manager.stop("visual"))[0].action, "not-owned");
+  assert.deepEqual(signals, []);
+});
+
+test("ownership survives the launching CLI exiting and a new CLI can stop the real process", { skip: process.platform === "win32" }, async (t) => {
+  const { repositoryRoot } = await viewerFixture(t);
+  const socket = createServer();
+  await new Promise((resolvePromise) => socket.listen(0, "127.0.0.1", resolvePromise));
+  const port = socket.address().port;
+  await new Promise((resolvePromise) => socket.close(resolvePromise));
+  const serverPath = join(repositoryRoot, "viewer-server.mjs");
+  await writeFile(serverPath, `
+    import { createServer } from 'node:http';
+    createServer((req, res) => {
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify({ benchmarks: [] }));
+    }).listen(Number(process.argv[2]), '127.0.0.1');
+  `);
+  const controllerPath = join(repositoryRoot, "viewer-cli.mjs");
+  await writeFile(controllerPath, `
+    import { createViewerDescriptors, createViewerManager } from ${JSON.stringify(new URL("../src/viewers.mjs", import.meta.url).href)};
+    const descriptorSet = createViewerDescriptors({
+      repositoryRoot: ${JSON.stringify(repositoryRoot)},
+      environment: { BENCH_VISUAL_VIEWER_PORT: '${port}', BENCH_INSPECT_VIEWER_PORT: '${port === 7575 ? 7576 : 7575}' },
+    });
+    Object.assign(descriptorSet.viewers.visual, {
+      command: process.execPath, args: [${JSON.stringify(serverPath)}, '${port}'],
+      processMarkers: [${JSON.stringify(serverPath)}, '${port}'], startupTimeoutMs: 5000,
+    });
+    console.log(JSON.stringify(await createViewerManager({ descriptorSet })[process.argv[2]]('visual')));
+  `);
+  const run = async (action) => {
+    const { stdout } = await promisify(execFile)(process.execPath, [controllerPath, action], { timeout: 15_000 });
+    return JSON.parse(stdout)[0];
+  };
+  const started = await run("start");
+  t.after(() => {
+    // Best-effort cleanup of only the child created by this test if an assertion fails.
+    try { process.kill(-started.pid, "SIGTERM"); } catch (error) { if (error.code !== "ESRCH") throw error; }
+  });
+  assert.equal(started.action, "started");
+  assert.equal(started.owned, true);
+  const status = await run("status");
+  assert.equal(status.owned, true);
+  assert.equal(status.pid, started.pid);
+  const reused = await run("start");
+  assert.equal(reused.action, "reused");
+  assert.equal(reused.owned, true);
+  assert.equal(reused.pid, started.pid);
+  assert.equal((await run("stop")).action, "stopped");
+  assert.equal((await run("status")).health, "stopped");
+  assert.equal((await run("stop")).action, "already-stopped");
 });
 
 test("an unknown application on a configured port blocks startup", async (t) => {

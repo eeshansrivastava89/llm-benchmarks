@@ -6,10 +6,12 @@ import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import {
   captureMissingRunMedia,
-  captureSingleRunMedia,
+  captureSingleRunMedia
+} from "../../src/lib/capture-media";
+import {
   isAnimationFrameRateAcceptable,
   isVideoMostlyBlack
-} from "../../src/lib/capture-media";
+} from "../../src/lib/capture-validation";
 import type { RunMetadata } from "../../src/lib/types";
 
 const execFileAsync = promisify(execFile);

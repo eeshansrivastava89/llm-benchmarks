@@ -1,8 +1,9 @@
 import { mkdir, readdir, readFile, rm, rmdir, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { isPathInside, resolveRunAssetPath } from "./asset-paths.ts";
+import { isMissingPathError, toRunError } from "./error-utils.ts";
 import type { RunPaths } from "./paths.ts";
-import type { DsScorecard, DsSummary, RunError, RunMetadata } from "./types.ts";
+import type { DsScorecard, DsSummary, RunMetadata } from "./types.ts";
 
 export type RunMetadataUpdate = Partial<Omit<RunMetadata, "runId">>;
 
@@ -14,25 +15,12 @@ export async function writeRunMetadata(
   await writePrettyJson(paths.metadataPath, metadata);
 }
 
-export async function writeRawResponse(
-  paths: RunPaths,
-  rawResponse: string
-): Promise<void> {
-  await mkdir(paths.runDirectory, { recursive: true });
-  await writeFile(paths.rawResponsePath, rawResponse, "utf8");
-}
-
 export async function writePromptMarkdown(
   paths: RunPaths,
   prompt: string
 ): Promise<void> {
   await mkdir(paths.runDirectory, { recursive: true });
   await writeFile(paths.promptPath, prompt, "utf8");
-}
-
-export async function writeRunHtml(paths: RunPaths, html: string): Promise<void> {
-  await mkdir(paths.runDirectory, { recursive: true });
-  await writeFile(paths.htmlPath, html, "utf8");
 }
 
 export async function readRunMetadata(paths: RunPaths): Promise<RunMetadata> {
@@ -96,19 +84,6 @@ export async function markRunFailed(
     failedAt: timestamp,
     error: toRunError(error)
   });
-}
-
-function toRunError(error: unknown): RunError {
-  if (error instanceof Error) {
-    return {
-      message: error.message,
-      ...(error.stack ? { stack: error.stack } : {})
-    };
-  }
-
-  return {
-    message: String(error)
-  };
 }
 
 async function writePrettyJson(path: string, value: unknown): Promise<void> {
@@ -326,15 +301,6 @@ async function assetExists(metadata: RunMetadata, asset?: string): Promise<boole
 
 function sortTimestamp(metadata: RunMetadata): string {
   return metadata.updatedAt || metadata.createdAt || metadata.runId;
-}
-
-function isMissingPathError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "ENOENT"
-  );
 }
 
 function isUnsafeAssetPathError(error: unknown): boolean {

@@ -1,9 +1,9 @@
 import { cp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { generateStaticExport } from "../src/lib/export.ts";
 import { auditStaticBuild } from "./audit-static-build.mjs";
+import { run } from "./run.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -31,7 +31,13 @@ process.stdout.write(
   `${useExistingExport ? "Using existing" : "Generated"} static export with ${manifest.benchmarks.length} benchmarks and ${manifest.runs.length} runs.\n`
 );
 
-await run("npm", ["run", "build"], repoRoot);
+await run("npm", ["run", "build"], {
+  cwd: repoRoot,
+  env: {
+    ASTRO_BASE: astroBase,
+    ASTRO_OUTPUT: "static"
+  }
+});
 await rm(staticOutputDirectory, { recursive: true, force: true });
 await cp(clientBuildDirectory, staticOutputDirectory, { recursive: true });
 await rm(join(staticOutputDirectory, "export"), { recursive: true, force: true });
@@ -56,28 +62,4 @@ async function readExistingExport(directory) {
 
     throw error;
   }
-}
-
-async function run(command, args, cwd) {
-  await new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd,
-      stdio: "inherit",
-      env: {
-        ...process.env,
-        ASTRO_BASE: astroBase,
-        ASTRO_OUTPUT: "static"
-      }
-    });
-
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-
-      reject(new Error(`${command} ${args.join(" ")} exited with ${code}`));
-    });
-  });
 }

@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { generateStaticExport } from "../src/lib/export.ts";
+import { run } from "./run.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const publicExportDirectory = join(repoRoot, "public", "export");
@@ -20,11 +20,14 @@ process.stdout.write(
   ].join("\n")
 );
 
-await run("npm", ["run", "check"]);
-await run("npm", ["test"]);
+await run("npm", ["run", "check"], { cwd: repoRoot });
+await run("npm", ["test"], { cwd: repoRoot });
 await run("npm", ["run", "build:static"], {
-  STATIC_USE_EXISTING_EXPORT: "true",
-  ASTRO_BASE: "/"
+  cwd: repoRoot,
+  env: {
+    STATIC_USE_EXISTING_EXPORT: "true",
+    ASTRO_BASE: "/"
+  }
 });
 
 process.stdout.write("\nPublish check complete. Commit public/export with your changes.\n");
@@ -37,24 +40,4 @@ async function readExportRunCount(directory) {
     if (error?.code === "ENOENT") return null;
     throw error;
   }
-}
-
-async function run(command, args, env = {}) {
-  process.stdout.write(`\n$ ${[command, ...args].join(" ")}\n`);
-  await new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd: repoRoot,
-      stdio: "inherit",
-      env: { ...process.env, ...env }
-    });
-
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-      reject(new Error(`${command} ${args.join(" ")} exited with ${code}`));
-    });
-  });
 }

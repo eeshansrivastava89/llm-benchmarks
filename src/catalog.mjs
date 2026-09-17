@@ -1,15 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
-import { BenchError } from "./errors.mjs";
+import { BenchError, errorMessage } from "./errors.mjs";
 
 const DEFAULT_SWEEP_DATA_PATH = fileURLToPath(
   new URL("../bench-data/inspect-evals-sweep-deepseek-flash-2026-09-12.json", import.meta.url),
 );
 
-function errorMessage(error) {
-  return error instanceof Error ? error.message : String(error);
-}
 
 export function validateSweepData(data, path) {
   const sweep = data?.sweep;
@@ -157,12 +154,6 @@ export function buildBenchmarkSources(registered, custom, sweepData) {
     throw new BenchError("Inspect found no installed or local benchmarks");
   }
   return sources;
-}
-
-export function sentenceHint(value) {
-  const normalized = String(value).replace(/\s+/g, " ").trim();
-  const end = normalized.search(/[.!?](?=\s|$)/);
-  return end === -1 ? normalized : normalized.slice(0, end + 1);
 }
 
 function humanizeSweepValue(value) {

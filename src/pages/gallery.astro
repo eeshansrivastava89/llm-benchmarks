@@ -1,5 +1,18 @@
 ---
-import WorkbenchPage from "../components/WorkbenchPage.astro";
+// Legacy alias for the workbench home page. Astro config redirects need SSR,
+// so this static page performs the redirect itself.
+const home = import.meta.env.BASE_URL;
 ---
 
-<WorkbenchPage workspace="gallery" />
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0; url=${home}`} />
+    <link rel="canonical" href={home} />
+    <title>Local AI Benchmarks</title>
+  </head>
+  <body>
+    <p><a href={home}>Moved to the benchmark workbench.</a></p>
+  </body>
+</html>
