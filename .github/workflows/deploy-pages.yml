@@ -14,9 +14,6 @@ concurrency:
   group: github-pages
   cancel-in-progress: false
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -25,16 +22,16 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           enable-cache: true
 
@@ -89,13 +86,13 @@ jobs:
           PUBLIC_ANALYTICS_ALLOWED_HOSTS: ${{ vars.PUBLIC_ANALYTICS_ALLOWED_HOSTS }}
 
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist-static
 
       - name: Deploy Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
