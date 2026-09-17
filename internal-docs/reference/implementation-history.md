@@ -1,10 +1,10 @@
 # Unified benchmark suite implementation history
 
-**Recorded implementation:** 2026-09-12 through 2026-09-14
+**Recorded implementation:** 2026-09-12 through 2026-09-17
 
-**Current status:** Phases 0–8 complete; Phase 9 is implemented and production-validated on macOS, with Linux/Bubblewrap validation still pending
+**Current status:** Phases 0–11 complete. Phase 10 (live local model inventory with the explicit per-run Pi adapter) and Phase 11 (simplification cleanup including the extension-provider confinement fix) are implemented and validated on macOS, with Linux/Bubblewrap validation still pending
 
-This is the historical record of how the Inspect, Visual, and Data Science benchmark projects became one suite. It replaces the original Inspect plan, the consolidation plan, and the per-phase completion notes. The root `README.md` is the current operating guide; this file explains the architecture, decisions, methods, tradeoffs, and validation history.
+This is the historical record of how the Inspect, Visual, and Data Science benchmark projects became one suite. It replaces the original Inspect plan, the consolidation plan, the per-phase completion notes, and the 2026-09-17 simplification audit. The root `README.md` is the current operating guide; this file explains the architecture, decisions, methods, tradeoffs, and validation history.
 
 ## 1. Product and ownership model
 
@@ -98,7 +98,7 @@ Run planning added:
 - conservative confirmation defaults for costly or historically blocked tasks;
 - redacted command previews and project-local recent-selection IDs only.
 
-For Ollama and oMLX Inspect runs, Bench snapshots model residency and unloads only a model that the benchmark caused to load. It preserves models already resident before the run.
+For Ollama and oMLX Inspect runs, Bench snapshots model residency and unloads only a model that the benchmark caused to load. It preserves models already resident before the run. Phase 10 later extended this ownership-aware policy to the interactive suites.
 
 ### Compatibility sweep
 
@@ -184,7 +184,7 @@ A zero exit leaves the run `prepared` for Visual capture or Data Science scoring
 Local cleanup policies differ intentionally:
 
 - Inspect retains ownership-aware unload behavior.
-- Visual and Data Science always attempt to unload the selected local model after Pi exits.
+- Visual and Data Science clean up the selected local model after Pi exits under the same ownership-aware policy (Phase 10).
 - Ollama and oMLX have explicit adapters.
 - Unsupported local providers remain usable but show that automatic unload is unavailable.
 
@@ -257,7 +257,7 @@ The current launcher wraps the complete Pi process tree:
 
 Pi’s built-in read, Bash, edit, and write tools were restored. A single OS policy now covers those tools and every descendant instead of maintaining parallel path checks. The host `PATH`, `HOME`, browser cache, runtimes, and provider configuration remain readable.
 
-For reproducibility, interactive runs still disable ambient context, skills, templates, settings, discovered extensions, and session reuse. Bench creates writable private Pi scratch configuration containing only authentication and model catalogs; `settings.json` is excluded because it triggered extension/package installation. Every run gets a fresh session directory. Visual transcripts move to private `.bench-runtime/interactive-sessions/`; Data Science transcripts are discarded because tool output may contain temporary dataset credentials.
+For reproducibility, interactive runs still disable ambient context, skills, templates, settings, discovered extensions, and session reuse. Bench creates writable private Pi scratch configuration containing authentication, model catalogs, and the selected model's definition and resolved credentials (delivered by environment through `src/pi-run-config.mjs`, never command arguments); `settings.json` is excluded because it triggered extension/package installation. Every run gets a fresh session directory. Visual transcripts move to private `.bench-runtime/interactive-sessions/`; Data Science transcripts are discarded because tool output may contain temporary dataset credentials.
 
 Behavioral tests on macOS prove:
 
@@ -278,6 +278,38 @@ Remaining validation is the same confinement contract on a real Linux/Bubblewrap
 
 The boundary is intentionally not confidentiality or network isolation. A benchmark process can read host-accessible files and communicate over the network; it cannot persist changes outside the run and temporary locations under the supported OS policy.
 
+### Phase 10: live local model inventory and the explicit per-run Pi adapter
+
+Static `models.json` entries for local servers drift from what is actually installed, and Bench must not invent token limits, sampling defaults, or capabilities. Bench therefore treats local servers as the source of truth for installed models and default generation settings, and passes the selected definition through private per-run Pi configuration instead of a global catalog sync.
+
+Discovery classifies loopback endpoints as local and reads the live OpenAI-compatible `/v1/models` inventory at startup and whenever a provider is selected. oMLX's `/v1/models/status` and Ollama's `/api/show` supply metadata such as image input, context capacity, and thinking capability, and cost accounting is zero because local APIs do not bill per token. Non-generation models (embedding, reranking) are excluded. If a server does not advertise context or input metadata, the model is shown as unavailable rather than invented; those fields can be supplied explicitly in Pi. Cloud discovery is unchanged, and an offline local server produces a recovery screen rather than a dead end.
+
+Local generation is server-managed unless an explicit Pi override exists. The recorded policy distinguishes output tokens and thinking control. One explicitly loaded Pi extension, loaded only for live-discovered local models, removes Pi's implicit output cap and thinking serialization from local agent requests; explicit `maxTokens`, `samplingParams`, and configured thinking mappings remain effective, and selecting a thinking level in the session restores Pi's normal serialization. The extension never touches tools, messages, authentication, or cloud requests. The picker and the Pi status line show which side controls output and thinking.
+
+The selected model's definition and resolved auth travel through a private environment payload into `src/pi-run-config.mjs`, which writes the provider entry and a mode-`0600` manifest into the run's private scratch configuration. For live-discovered local models the static entry deliberately lists no models: the explicit extension is the only source, so Pi cannot silently fall back to a stale static definition if the extension cannot load. Credentials are never placed in command arguments or run metadata.
+
+Local model lifecycle became ownership-aware for every suite: Bench snapshots residency before the run and unloads only a model the run caused to load (Ollama `keep_alive 0`; the authenticated oMLX unload endpoint). Models already resident are preserved, unknown initial status skips cleanup, and unsupported local providers say so instead of pretending a generic HTTP request is safe.
+
+Validation covered discovery inventories, policy payloads, the per-run config round-trip (including literal-value escaping against config interpolation), and lifecycle ownership through mocked Ollama and oMLX services. A real interactive local-model Sakura validation attempt timed out; production validation of the per-run configuration path completed later through the extension-provider work in Phase 11.
+
+### Phase 11: simplification and architecture cleanup (2026-09-17)
+
+A full read-only audit of ~20.3K LOC (duplication 0.86%, 92 Node + 106 Vitest tests at audit time) examined dryness, dead code, overengineering, vision alignment, and CLI UX. The assessment was healthy: module boundaries matched the documented ownership model and there was genuinely one workflow. The problems concentrated in `bin/bench.mjs`, a god-file mixing CLI parsing, TOML config, embedded Python, task-config CRUD, Inspect auth translation, an 8-stage UI machine, and viewer subcommands, kept testable only by a 25-symbol re-export block. The vision check confirmed the product boundary held; the gaps were CLI UX (no `--help`/`--version`, stale `uv run inspect view` completion advice) and residual dead branches from the retired multi-repository workflow. Cleanup ran in three steps, ordered by risk, with full validation after each: `npm run check`, full Node and Vitest suites, `uv lock --check`, `git diff --check`, and for the structural step `bench --help`, `bench view status`, and `npm run build:static`.
+
+Step 1 — mechanical cleanup: deleted production-dead `writeRawResponse`/`writeRunHtml` and `sentenceHint` with their tests, the undocumented `export:static` path, and the byte-identical `gallery.astro` (now a static redirect to `/`); moved seven `errorMessage()` copies into one `src/errors.mjs` export; merged `formatTokens` into `formatCount`; inlined `optionsPollInterval`, `runInherited`, and the `detailHeading` alias; replaced the `groupModels([])` throw-hack with a direct `noModelsError()`; deduplicated the open-URL helper into `src/open-url.mjs`; added `bench --help`/`--version`; and routed the Inspect completion message to `bench view inspect`.
+
+Step 2 — consolidation: merged verbatim `toRunError`/`isMissingPathError` copies into `src/lib/error-utils.ts`; collapsed the two `stackTone()` implementations into canonical `public/js/stack-tones.js` with a typed shim (browser-served shared code must live under `public/`; Node consumers import via thin shims); created one canonical backend/harness label map (`src/lib/backend-labels.ts`); unified Inspect compatibility rules into a single `inspectCompatibilityIssue()` used by both the display check and the throwing resolver; narrowed run preparation to Pi-only and inlined the tool-prompt builder; shared a `run()` spawn helper between `publish` and `build:static` scripts; collapsed the repeated API route chains behind `writeJsonRoute()`; shared a `recoverFromError()` selector for the repeated error-recovery screens; replaced the hand-listed `check:bench` file list with the self-maintaining `scripts/check-syntax.mjs`; and removed re-export indirections so tests import from real homes.
+
+Step 3 — structural split: `bin/bench.mjs` went from 2,193 to 778 lines. Embedded Python payloads became real files (`scripts/inspect_registry_discovery.py`, `inspect_task_config_template.py`, `inspect_task_config_validate.py`) invoked by path, gaining `compileall` coverage from `check:bench`. Domain modules now own their logic: `src/inspect-discovery.mjs` (task discovery, registry, captured spawning), `src/task-config.mjs` (template/validate/edit flow), `src/inspect-translate.mjs` (`resolveInspectModel` and the compatibility rules), `src/cli-view.mjs` (the `bench view` family), and `src/cli-selection.mjs` (picker and review flows). `selectedOrCancel` moved to `src/ui/bench-ui.mjs`; tests import real modules; the re-export block is gone, leaving only `passthroughArgs` (defined, not re-exported, in `bin/bench.mjs`). The `main()` stage machine was deliberately left hand-wired — the documented lowest-payoff, highest-risk item.
+
+Accepted behavior changes, all documented: context windows of 10k or more render as `262k` instead of `262.1k`; editing a run's backend to `ollama` now records `modelSource: "ollama"` / `Ollama` (previously undefined/lowercase); `lmstudio`/`mlx` providers get canonical labels; Inspect compatibility messaging is unified across picker and resolver. jscpd duplication fell from 0.86% to 0.61%, and the remaining clones are test fixtures.
+
+The Sakura validation run surfaced an unrelated confinement gap: extension-registered Pi providers (e.g. `pi-ollama-cloud-provider` → `ollama-cloud`) were invisible to the confined interactive run because it starts Pi with `--no-extensions` and copies only the authentication and catalog files. The fix extends the Phase 10 per-run configuration to extension-registered providers: Bench detects them via `modelRuntime.extensionProviders`, resolves their auth through Pi, and passes the selected definition through the private per-run configuration, which writes a static provider entry for non-locally-discovered models. Built-in and statically-configured providers are untouched — no payload, no auth resolution. A picker-time guard (`extensionProviderStaticGap()`) warns when an extension provider cannot be faithfully replicated as a static definition — extension-only API names outside pi-ai's built-in registry, or credentials that cannot be pre-staged — defaulting to "Choose another model" with a "Continue anyway" escape. `resolveLocalModelConnection` was renamed to `resolveModelConnection` to match its broader contract.
+
+Production validation then closed the loop: Sakura with `ollama-cloud/glm-5.3-flash` completed under Seatbelt confinement, produced the full artifact set with a 60 FPS capture, and its run metadata recorded the extension-provider backend with no credentials anywhere in the slot. Final suite state: `npm run check` 0/0/0, 95 Bench + 102 Visual tests, lock and diff checks clean, static build and privacy audit passing for 440 files.
+
+Guardrails honored throughout: the confinement and per-run configuration files, viewer ownership logic, `public/export/`, `runs/`, and `comparison-exports/` were untouched by cleanup, and the Kimi and OpenCode Go Inspect adapters plus the historical `opencode`/`hermes` display labels remain as documented intentional exceptions.
+
 ## 4. Durable architecture decisions and tradeoffs
 
 | Decision | Reason | Accepted tradeoff |
@@ -293,6 +325,9 @@ The boundary is intentionally not confidentiality or network isolation. A benchm
 | Visual viewer is the hub | Adds navigation without modifying Inspect | Cross-link is one-way |
 | Explicit publish command | Protects the tracked gallery from accidental refresh | Publishing is a separate deliberate step |
 | OS write confinement, not strict isolation | Keeps normal tools and Chromium working | Host reads and network remain available |
+| Live local inventory; unavailable beats invented | Prevents invented token limits, sampling values, or capabilities | Offline or uncooperative servers surface as unavailable models |
+| Private per-run Pi configuration, never a catalog sync | Pi and local servers stay the single sources of truth | Extension-only provider behavior is approximated by a static definition in the confined run |
+| CLI domain code in named modules | The entrypoint stays reviewable and tests import real homes | `main()` stage transitions remain hand-wired |
 | Fresh private Pi sessions | Reproducibility and diagnostics without session reuse | Additional private runtime files require lifecycle handling |
 
 ## 5. Validation strategy
