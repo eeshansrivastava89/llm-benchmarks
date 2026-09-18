@@ -676,6 +676,10 @@ export class BenchUI {
   }
 
   showLoading(message, context = "") {
+    // A loader owns a refed interval; replacing it without stopping the previous
+    // one leaks that interval for the life of the process (and keeps the event
+    // loop alive after `ui.stop()`), so always release the current loader.
+    this.stopLoader();
     const loader = new CancellableLoader(this.tui, style.accent, style.muted, message);
     loader.onAbort = this.cancelLoading;
     const root = new VStack([

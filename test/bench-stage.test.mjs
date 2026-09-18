@@ -6,7 +6,7 @@ import test from "node:test";
 
 import { main } from "../bin/bench.mjs";
 import { BenchError, SelectionCancelled } from "../src/errors.mjs";
-import { CANCEL } from "../src/ui/bench-ui.mjs";
+import { BenchUI, CANCEL } from "../src/ui/bench-ui.mjs";
 
 // ---------------------------------------------------------------------------
 // Stubs
@@ -221,4 +221,47 @@ test("a failed discovery retries until it succeeds", async () => {
       "each attempt showed the discovery spinner",
     );
   });
+});
+
+// ---------------------------------------------------------------------------
+// Loader lifecycle
+// ---------------------------------------------------------------------------
+
+class FakeTerminal {
+  constructor(rows = 40, columns = 120) {
+    this.rows = rows;
+    this.columns = columns;
+  }
+  hideCursor() {}
+  showCursor() {}
+  start() {}
+  stop() {}
+  write() {}
+}
+
+test("showLoading releases the previous loader so no interval outlives stop()", () => {
+  const ui = new BenchUI({ terminal: new FakeTerminal() });
+  ui.start();
+
+  // The Inspect flow shows two loaders back to back with no screen in between.
+  ui.showLoading("Checking Inspect authentication and model settings…");
+  const first = ui.loader;
+  ui.showLoading("Finding Inspect benchmarks…");
+  const second = ui.loader;
+
+  // Snapshot, then release everything: a regression here leaves refed intervals
+  // that would keep the test runner alive instead of reporting a failure.
+  const firstInterval = first.intervalId;
+  const secondIntervalWhileShown = second.intervalId;
+  ui.stop({ preserveScreen: true });
+  const secondIntervalAfterStop = second.intervalId;
+  const loaderAfterStop = ui.loader;
+  first.stop();
+  second.stop();
+
+  assert.notEqual(first, second, "a new loader was created");
+  assert.equal(firstInterval, null, "the replaced loader's interval was cleared");
+  assert.notEqual(secondIntervalWhileShown, null, "the active loader animates while shown");
+  assert.equal(secondIntervalAfterStop, null, "stop() clears the active loader's interval");
+  assert.equal(loaderAfterStop, null, "stop() releases the loader reference");
 });
