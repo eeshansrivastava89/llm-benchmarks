@@ -157,8 +157,21 @@ async function printVersion() {
   console.log(`bench ${manifest.version}`);
 }
 
-async function main(argv = process.argv.slice(2)) {
-  const cwd = process.cwd();
+// `main` is exported with injectable collaborators so the interactive stage
+// machine can be driven end to end without a terminal, a local model server, or
+// a real Inspect installation. Production callers pass no options.
+export async function main(argv = process.argv.slice(2), options = {}) {
+  const {
+    cwd: cwdOption,
+    createUi = (uiOptions) => new BenchUI(uiOptions),
+    loadConfig: loadInspectConfig = loadConfig,
+    discoverProviderModels = discoverModels,
+    discoverInteractiveSuites = loadInteractiveBenchmarkSuites,
+    resolveInspect = resolveInspectModel,
+    discoverInspectBenchmarks = discoverBenchmarks,
+    skipTtyCheck = false,
+  } = options;
+  const cwd = cwdOption ?? process.cwd();
   if (argv.length === 1 && ["--help", "-h", "help"].includes(argv[0])) {
     console.log(HELP_TEXT);
     return;
@@ -173,11 +186,11 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
   const inspectPassthrough = passthroughArgs(argv);
-  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+  if (!skipTtyCheck && (!process.stdin.isTTY || !process.stdout.isTTY)) {
     throw new BenchError("Bench requires an interactive terminal");
   }
   let ui;
-  ui = new BenchUI({
+  ui = createUi({
     cancelLoading: () => {
       stopActiveCapturedChildren();
       ui.stop();
@@ -198,8 +211,8 @@ async function main(argv = process.argv.slice(2)) {
       ui.showLoading("Finding Pi models and benchmark suites…");
       try {
         const [modelDiscovery, discoveredSuites] = await Promise.all([
-          discoverModels(cwd),
-          loadInteractiveBenchmarkSuites({ repositoryRoot: cwd }),
+          discoverProviderModels(cwd),
+          discoverInteractiveSuites({ repositoryRoot: cwd }),
         ]);
         ({ modelRuntime, providers, diagnostics } = modelDiscovery);
         interactiveSuites = discoveredSuites;
@@ -459,7 +472,7 @@ async function main(argv = process.argv.slice(2)) {
         while (resolutionAction === "retry") {
           ui.showLoading("Checking Inspect authentication and model settings…", `${selectedProvider.provider}/${selectedModel.id}`);
           try {
-            translated = await resolveInspectModel(modelRuntime, selectedModel);
+            translated = await resolveInspect(modelRuntime, selectedModel);
             resolutionAction = "continue";
           } catch (error) {
             const recovery = await recoverFromError(ui, [
@@ -482,11 +495,15 @@ async function main(argv = process.argv.slice(2)) {
           continue;
         }
 
-        while (!benchmarkSources) {
+        // Tracked separately from `stage`: on the happy path `stage` is already
+        // "suite" here, so it cannot also carry the recovery decision.
+        let discoveryAction = "retry";
+        while (discoveryAction === "retry") {
           ui.showLoading("Finding Inspect benchmarks…");
           try {
-            config = await loadConfig(cwd);
-            benchmarkSources = await discoverBenchmarks(cwd, config.customTaskRoots);
+            config = await loadInspectConfig(cwd);
+            benchmarkSources = await discoverInspectBenchmarks(cwd, config.customTaskRoots);
+            discoveryAction = "continue";
           } catch (error) {
             const recovery = await recoverFromError(ui, [
               { action: "suite", label: "Choose another suite", detail: "Return to suite selection" },
@@ -505,13 +522,13 @@ async function main(argv = process.argv.slice(2)) {
               ],
               allowBack: true,
             });
-            if (recovery === BACK || recovery.action === "suite") {
-              stage = "suite";
-              break;
-            }
+            discoveryAction = recovery === BACK || recovery.action === "suite" ? "suite" : "retry";
           }
         }
-        if (stage === "suite") continue;
+        if (discoveryAction !== "continue") {
+          stage = discoveryAction;
+          continue;
+        }
         stage = "benchmark";
         continue;
       }

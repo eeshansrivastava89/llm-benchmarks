@@ -327,7 +327,7 @@ Guardrails honored throughout: the confinement and per-run configuration files, 
 | OS write confinement, not strict isolation | Keeps normal tools and Chromium working | Host reads and network remain available |
 | Live local inventory; unavailable beats invented | Prevents invented token limits, sampling values, or capabilities | Offline or uncooperative servers surface as unavailable models |
 | Private per-run Pi configuration, never a catalog sync | Pi and local servers stay the single sources of truth | Extension-only provider behavior is approximated by a static definition in the confined run |
-| CLI domain code in named modules | The entrypoint stays reviewable and tests import real homes | `main()` stage transitions remain hand-wired |
+| CLI domain code in named modules | The entrypoint stays reviewable and tests import real homes | `main()` takes injected collaborators for tests; production passes none |
 | Fresh private Pi sessions | Reproducibility and diagnostics without session reuse | Additional private runtime files require lifecycle handling |
 
 ## 5. Validation strategy
@@ -344,6 +344,7 @@ Validation was layered rather than relying only on mocked units:
 8. Static export generation and content privacy audit.
 9. Clean-checkout install/build/publish validation.
 10. Platform write-confinement behavior and tool-capability probes.
+11. The interactive stage machine driven end to end through `main()` with an injected UI and stubbed discovery, covering the Inspect resolution/discovery handoff and error recovery.
 
 Generated builds and temporary runs used for verification were removed afterward. Ignored historical runs, logs, comparison exports, sweep artifacts, credentials, and migration evidence were preserved.
 
