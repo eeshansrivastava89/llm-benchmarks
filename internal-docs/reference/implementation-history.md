@@ -310,6 +310,16 @@ Production validation then closed the loop: Sakura with `ollama-cloud/glm-5.3-fl
 
 Guardrails honored throughout: the confinement and per-run configuration files, viewer ownership logic, `public/export/`, `runs/`, and `comparison-exports/` were untouched by cleanup, and the Kimi and OpenCode Go Inspect adapters plus the historical `opencode`/`hermes` display labels remain as documented intentional exceptions.
 
+### Phase 12: dependency security upgrade to Astro 7 / Vite 8 (2026-09-19)
+
+Dependabot reported eight open alerts on the default branch (1 critical, 2 high, 3 moderate, 2 low) across three packages: `astro` (5), `sharp` (2), and `@astrojs/node` (1). All were cleared by moving to current supported majors instead of patching in place: `astro` 6.4.8 → 7.3.3, `@astrojs/node` 10.1.4 → 11.1.6, `@astrojs/check` 0.9.9 → 0.9.10. The critical advisory (GHSA-26w7-cxv4-gfx2, remote code execution through AVIF image optimization) required `astro >= 7.2.8`.
+
+Two consequences drove the rest of the change. First, `sharp` is no longer a direct dependency of Astro: v7 declares it under `optionalDependencies` at `^0.35.4`, which clears both libvips and libheif alerts without a separate bump. The `sharp@0.34.5` `allowScripts` pin was removed rather than re-pinned, because 0.35.4 ships no install script (`0.34.5` ran `node install/check.js || npm run build`). Second, Astro 7 requires `vite ^8`, so the existing `vite` override moved from `^7.3.6` to `^8.3.0`; an override left at 7 would have been unsatisfiable. `esbuild` resolved to 0.28.2 at the root and 0.28.1 nested under `@earendil-works/chord`, so both versions are covered in `allowScripts`, alongside `@google/genai` and `protobufjs`, which install scripts but were already present and uncovered. `npm audit` and `npm ci` now report zero vulnerabilities and no pending install-script advisories.
+
+Astro 7 changes behavior as well as versions, so the risky change was verified rather than assumed. The compiler is now Rust-based and stricter about invalid HTML, and `compressHTML` defaults to `'jsx'`, which strips whitespace between inline elements under JSX rules and can silently glue words together. This viewer prerenders only two routes (`/` and `/gallery/`) and renders everything else client-side, so the blast radius was those two files. A static build was captured before the upgrade and diffed after: the only HTML difference is inter-tag whitespace, and extracted visible text is identical for both routes. The CSS diff is toolchain normalization from the new Lightning CSS (modern range syntax `@media (width>=40rem)`, added `@supports color-mix` fallbacks, duplicated `-webkit-text-decoration`) with no semantic loss. The project uses no remark/rehype plugins, no `astro:transitions` internals, no `@astrojs/db`, and has no `src/fetch.ts`, so the remaining v7 breaking changes did not apply.
+
+Validation: `npm run check` (0/0/0, 39 modules), `npm test` (99 Bench + 102 Visual), `npm run test:e2e` (23 Playwright, including the desktop geometry and mobile-width layout checks), `uv lock --check`, `git diff --check`, `npm run build:static` (440 files, privacy audit passed), and a clean `npm ci` reproducing the CI install path. No source, prompt, run, export, or viewer-ownership file changed.
+
 ## 4. Durable architecture decisions and tradeoffs
 
 | Decision | Reason | Accepted tradeoff |
@@ -329,6 +339,7 @@ Guardrails honored throughout: the confinement and per-run configuration files, 
 | Private per-run Pi configuration, never a catalog sync | Pi and local servers stay the single sources of truth | Extension-only provider behavior is approximated by a static definition in the confined run |
 | CLI domain code in named modules | The entrypoint stays reviewable and tests import real homes | `main()` takes injected collaborators for tests; production passes none |
 | Fresh private Pi sessions | Reproducibility and diagnostics without session reuse | Additional private runtime files require lifecycle handling |
+| Overrides track the framework's required bundler major | An out-of-range `vite` override is unsatisfiable and blocks framework upgrades | `overrides` must be revisited on every Astro major |
 
 ## 5. Validation strategy
 
