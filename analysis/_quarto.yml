@@ -1,0 +1,13 @@
+project:
+  type: default
+
+format:
+  html:
+    embed-resources: true
+
+execute:
+  enabled: true
+  echo: false
+  warning: false
+  error: false
+  cache: false

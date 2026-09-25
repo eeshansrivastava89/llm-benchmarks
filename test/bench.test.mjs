@@ -9,6 +9,7 @@ import { stripTerminalSequences } from "@earendil-works/pi-tui";
 
 import { passthroughArgs } from "../bin/bench.mjs";
 import { buildBenchmarkSources, loadSweepData, sweepWarningLines } from "../src/catalog.mjs";
+import { parseReportCommand, runReportCommand } from "../src/cli-report.mjs";
 import { parseViewCommand, viewerActionLine } from "../src/cli-view.mjs";
 import { BenchError } from "../src/errors.mjs";
 import { discoverRegisteredTasks, discoverTasks } from "../src/inspect-discovery.mjs";
@@ -73,6 +74,67 @@ test("viewer commands are parsed before Inspect passthrough options", () => {
   assert.deepEqual(parseViewCommand(["view", "stop", "visual"]), { action: "stop", target: "visual" });
   assert.throws(() => parseViewCommand(["view", "unknown"]), /Usage: bench view/);
   assert.throws(() => parseViewCommand(["view", "status", "extra"]), /Usage: bench view/);
+});
+
+test("report commands select discovered variants and explicit report cohorts", () => {
+  assert.equal(parseReportCommand([]), null);
+  assert.deepEqual(parseReportCommand(["report"]), { action: "select" });
+  assert.deepEqual(parseReportCommand(["report", "variants"]), { action: "variants" });
+  assert.deepEqual(
+    parseReportCommand([
+      "report",
+      "--model", "Qwen 3.8 27B",
+      "--variant", "ollama/qwen3.8:27b-mlx",
+      "--variant", "omlx/Qwen3.8-27B-oQ4e-mtp",
+      "--output", "reports/qwen38",
+    ]),
+    {
+      action: "build",
+      model: "Qwen 3.8 27B",
+      variants: ["ollama/qwen3.8:27b-mlx", "omlx/Qwen3.8-27B-oQ4e-mtp"],
+      output: "reports/qwen38",
+    },
+  );
+  assert.throws(() => parseReportCommand(["report", "--model", "Qwen"]), /Usage: bench report/);
+  assert.throws(() => parseReportCommand(["report", "unknown"]), /Usage: bench report/);
+});
+
+test("a finished report opens unless opening is disabled", async () => {
+  const { EventEmitter } = await import("node:events");
+  const { Readable } = await import("node:stream");
+  const fakeChild = (stdout) => {
+    const child = new EventEmitter();
+    child.stdout = Readable.from([stdout]);
+    child.stderr = Readable.from([""]);
+    let pending = 2;
+    const finish = () => { if (--pending === 0) child.emit("close", 0, null); };
+    child.stdout.on("end", finish);
+    child.stderr.on("end", finish);
+    return child;
+  };
+  const opened = [];
+  const originalWrite = process.stdout.write;
+  process.stdout.write = () => true;
+  try {
+    await runReportCommand("/tmp", { action: "build", model: "M", variants: ["a/b"] }, {
+      spawnProcess: () => fakeChild("building\nReport: /tmp/reports/m/index.html\nInspect results: 1\n"),
+      openUrl: async (target) => { opened.push(target); },
+    });
+    assert.deepEqual(opened, ["/tmp/reports/m/index.html"]);
+
+    process.env.BENCH_NO_OPEN = "1";
+    try {
+      await runReportCommand("/tmp", { action: "build", model: "M", variants: ["a/b"] }, {
+        spawnProcess: () => fakeChild("Report: /tmp/reports/m/index.html\n"),
+        openUrl: async (target) => { opened.push(target); },
+      });
+    } finally {
+      delete process.env.BENCH_NO_OPEN;
+    }
+    assert.deepEqual(opened, ["/tmp/reports/m/index.html"], "BENCH_NO_OPEN suppresses the open");
+  } finally {
+    process.stdout.write = originalWrite;
+  }
 });
 
 test("viewer action messages distinguish managed, external, and already-stopped services", () => {

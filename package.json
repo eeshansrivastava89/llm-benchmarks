@@ -22,10 +22,11 @@
     "build:static": "node scripts/build-static.mjs",
     "audit:static": "node scripts/audit-static-build.mjs",
     "publish": "node scripts/publish.mjs",
-    "check:bench": "node scripts/check-syntax.mjs && uv run python -m compileall -q ./src/bench_inspect ./benchmarks ./scripts",
+    "report": "uv run --group report python scripts/build_benchmark_report.py",
+    "check:bench": "node scripts/check-syntax.mjs && uv run python -m compileall -q ./src/bench_inspect ./src/bench_analysis ./benchmarks ./scripts",
     "check:visual": "astro check && tsc --noEmit",
     "check": "npm run check:bench && npm run check:visual",
-    "test:bench": "node --test ./test/*.test.mjs",
+    "test:bench": "node --test ./test/*.test.mjs && uv run python -m unittest discover -s test -p 'test_*.py'",
     "test:visual": "vitest run",
     "test": "npm run test:bench && npm run test:visual",
     "test:e2e": "playwright test"

@@ -1,0 +1,251 @@
+---
+pagetitle: "Bench report"
+subtitle: "A reproducible cross-suite view of the evidence currently available for selected deployment configurations."
+jupyter: python3
+---
+
+```{python}
+#| tags: [parameters]
+report_data = ""
+```
+
+```{python}
+#| echo: false
+from __future__ import annotations
+
+import base64
+import json
+import mimetypes
+from pathlib import Path
+
+import pandas as pd
+from IPython.display import Markdown, display
+from inspect_viz import Data, options
+from inspect_viz.view import scores_by_task
+
+# Reports are archive-friendly and open directly from disk. Inspect Viz remains
+# the plotting API, while PNG output avoids a runtime server or external data.
+options.output_format = "png"
+
+report_path = Path(report_data).resolve()
+report = json.loads(report_path.read_text("utf-8"))
+report_dir = report_path.parent
+variants = report["variants"]
+variant_labels = {item["id"]: item["label"] for item in variants}
+inspect_results = pd.DataFrame(report["inspectResults"])
+visual_results = pd.DataFrame(report["visualResults"])
+pairwise_results = pd.DataFrame(report["pairwise"])
+evidence_gaps = pd.DataFrame(report["evidenceGaps"])
+
+
+def status_label(value: str | None) -> str:
+    return {
+        "success": "Available",
+        "error": "Error",
+        "missing": "Missing",
+        "no-preview": "No preview",
+        "prompt-mismatch": "Prompt mismatch",
+    }.get(value or "missing", value or "Missing")
+
+
+def image_data_uri(relative_path: str) -> str:
+    path = report_dir / relative_path
+    media_type = mimetypes.guess_type(path.name)[0] or "image/png"
+    encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{media_type};base64,{encoded}"
+
+
+def markdown_cell(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ")
+```
+
+::: {.callout-warning appearance="simple" icon="false"}
+## Interpretation boundary
+
+The selected rows are **deployment configurations**. Differences may include the model artifact, quantization, MTP or speculative decoding, runtime, and server-managed generation defaults. This report does not attribute differences to the backend alone.
+:::
+
+```{python}
+#| output: asis
+variant_text = " · ".join(item["label"] for item in variants)
+display(Markdown(
+    f"**Configurations:** {variant_text}  \n"
+    f"**Generated:** {report['generatedAt']}  \n"
+    f"**Inspect results:** {len(report['inspectResults'])} · "
+    f"**Visual results:** {len(report['visualResults'])} · "
+    f"**Evidence gaps:** {len(report['evidenceGaps'])}"
+))
+```
+
+## Coverage
+
+The report selects evidence by completeness and prompt comparability, never by score or visual quality. Missing cells remain visible and are also written to `evidence-gaps.csv`.
+
+```{python}
+inspect_tasks = report["coverage"]["inspectTasks"]
+coverage_rows = []
+for task in inspect_tasks:
+    row = {"Inspect task": task}
+    for variant in variants:
+        key = f"{variant['id']}::{task}"
+        row[variant["label"]] = status_label(report["coverage"]["inspect"].get(key))
+    coverage_rows.append(row)
+coverage = pd.DataFrame(coverage_rows)
+if coverage.empty:
+    display(Markdown("*No Inspect evidence is available for the selected configurations.*"))
+else:
+    display(coverage.set_index("Inspect task"))
+```
+
+## Inspect capability profile
+
+Scores use each task's declared headline scorer and metric. Error bars are approximate 95% intervals derived from Inspect's reported standard error.
+
+```{python}
+if inspect_results.empty:
+    display(Markdown("*No successful Inspect logs are available for this cohort.*"))
+else:
+    plot_data = pd.DataFrame({
+        "model_display_name": inspect_results["variant"].map(variant_labels),
+        "task_display_name": inspect_results["taskTitle"],
+        "score_headline_value": inspect_results["score"],
+        "score_headline_stderr": inspect_results["stderr"],
+    }).dropna(subset=["score_headline_value"])
+    if plot_data.empty:
+        display(Markdown("*The selected logs do not expose numeric headline scores.*"))
+    else:
+        display(scores_by_task(
+            Data.from_dataframe(plot_data),
+            title="Headline score by task",
+            width=900,
+            height=max(320, 105 * len(plot_data["task_display_name"].unique())),
+            legend="color",
+        ))
+```
+
+### Result ledger
+
+```{python}
+if not inspect_results.empty:
+    ledger = inspect_results[[
+        "category", "task", "variant", "score", "stderr", "completedSamples",
+        "medianSecondsPerSample", "medianTokensPerSample", "taskVersion", "packageVersion",
+    ]].copy()
+    ledger["variant"] = ledger["variant"].map(variant_labels)
+    ledger = ledger.rename(columns={
+        "category": "Category",
+        "task": "Task",
+        "variant": "Configuration",
+        "score": "Score",
+        "stderr": "Std. error",
+        "completedSamples": "Samples",
+        "medianSecondsPerSample": "Median sec/sample",
+        "medianTokensPerSample": "Median tokens/sample",
+        "taskVersion": "Task version",
+        "packageVersion": "Inspect Evals",
+    })
+    display(ledger.set_index(["Category", "Task"]))
+```
+
+## Paired sample comparison
+
+Only matching dataset sample IDs and epochs are compared. A positive mean delta favors the left configuration.
+
+```{python}
+if pairwise_results.empty:
+    display(Markdown("*No selected runs share sample IDs yet.*"))
+else:
+    paired = pairwise_results.rename(columns={
+        "task": "Task",
+        "left": "Left",
+        "right": "Right",
+        "sharedSamples": "Shared",
+        "leftHigher": "Left higher",
+        "rightHigher": "Right higher",
+        "ties": "Ties",
+        "meanDelta": "Mean delta",
+    }).copy()
+    paired["Left"] = paired["Left"].map(variant_labels)
+    paired["Right"] = paired["Right"].map(variant_labels)
+    display(paired.set_index("Task"))
+```
+
+## Visual evidence
+
+Visual artifacts are presented without an invented quality score. Every comparison row uses one prompt hash; prompt mismatches remain missing.
+
+```{python}
+#| output: asis
+visual_benchmarks = report["coverage"]["visualBenchmarks"]
+for benchmark in visual_benchmarks:
+    matching = [item for item in report["visualResults"] if item["benchmark"] == benchmark]
+    benchmark_title = matching[0]["benchmarkTitle"] if matching else benchmark.replace("-", " ").title()
+    headers = [markdown_cell(item["label"]) for item in variants]
+    cells = []
+    details = []
+    for variant in variants:
+        row = next((item for item in matching if item["variant"] == variant["id"]), None)
+        if row:
+            cells.append(f"![{markdown_cell(benchmark_title)} generated by {markdown_cell(variant['label'])}]({image_data_uri(row['preview'])})")
+            fps = f" · {row['measuredFps']:.1f} FPS" if row.get("measuredFps") is not None else ""
+            details.append(f"Run `{row['runId']}` · prompt `{row['promptHash']}`{fps}")
+        else:
+            key = f"{variant['id']}::{benchmark}"
+            cells.append(f"*{status_label(report['coverage']['visual'].get(key))}*")
+            details.append("—")
+    table = [
+        f"### {benchmark_title}",
+        "",
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+        "| " + " | ".join(cells) + " |",
+        "| " + " | ".join(details) + " |",
+        "",
+    ]
+    display(Markdown("\n".join(table)))
+```
+
+## Evidence gaps
+
+This is the automatically generated next-run queue. Completing the same benchmark for the missing configuration will fill the corresponding report cell on the next build.
+
+```{python}
+if evidence_gaps.empty:
+    display(Markdown("*The selected evidence matrix is complete.*"))
+else:
+    gaps = evidence_gaps.rename(columns={
+        "suite": "Suite",
+        "variant": "Configuration",
+        "benchmark": "Benchmark",
+        "reason": "Reason",
+    }).copy()
+    gaps["Configuration"] = gaps["Configuration"].map(variant_labels)
+    display(gaps.set_index(["Suite", "Benchmark"]))
+```
+
+## Methodology and provenance
+
+::: {.callout-note appearance="simple"}
+### Deterministic selection
+
+- **Inspect:** successful log with the most completed samples for each configuration and task; newest log breaks ties.
+- **Visual:** prompt revision covering the most selected configurations; newest completed preview breaks ties.
+- **Pairs:** only matching dataset sample IDs and epochs.
+- **Missing evidence:** never imputed.
+:::
+
+```{python}
+if not inspect_results.empty:
+    provenance = inspect_results[["variant", "task", "evidenceId", "evidenceSha256"]].copy()
+    provenance["variant"] = provenance["variant"].map(variant_labels)
+    provenance["evidenceSha256"] = provenance["evidenceSha256"].str.slice(0, 16) + "…"
+    provenance = provenance.rename(columns={
+        "variant": "Configuration",
+        "task": "Task",
+        "evidenceId": "Evidence ID",
+        "evidenceSha256": "SHA-256",
+    })
+    display(provenance.set_index(["Configuration", "Task"]))
+```
+
+The report includes derived scores, safe evidence identifiers, and visual previews. It excludes raw Inspect logs, sample inputs and outputs, prompts, generated benchmark HTML, raw responses, commands, local URLs, local filesystem paths, and credentials. The complete machine-readable evidence hashes remain in `report.json` beside this document.

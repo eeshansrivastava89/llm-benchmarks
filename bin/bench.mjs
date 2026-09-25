@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { loadProjectDataScienceAccess, loadInteractiveBenchmarkSuites } from "../src/benchmark-suites.mjs";
 import { BENCHMARK_SUITE_IDS, buildSuiteChoices, suitePassthroughError, updateSuitePreferences } from "../src/suite-workflow.mjs";
 import { BenchError, SelectionCancelled, errorMessage } from "../src/errors.mjs";
+import { parseReportCommand, runReportCommand } from "../src/cli-report.mjs";
 import { confirmInteractiveReview, confirmRun, confirmSweepWarning, modelDetails, providerDetails, selectConcurrency, selectInteractiveBenchmark, selectSamples } from "../src/cli-selection.mjs";
 import { offerViewersAfterRun, parseViewCommand, runViewCommand } from "../src/cli-view.mjs";
 import { discoverBenchmarks, stopActiveCapturedChildren } from "../src/inspect-discovery.mjs";
@@ -138,6 +139,11 @@ Usage:
   bench view status     Show viewer URLs, health, and Bench ownership
   bench view stop [inspect|visual|both]
                         Stop validated Bench-owned viewers (default: both)
+  bench report          Choose evidence-backed model variants interactively
+  bench report variants
+                        List provider/model variants found in local evidence
+  bench report --model <name> --variant <provider/model> [--variant ...]
+                        Compile all available Inspect and Visual evidence
   bench -- [options]    Inspect eval options for the Inspect suite,
                         for example: bench -- --limit 20 --epochs 3
   bench --help          Show this help
@@ -183,6 +189,11 @@ export async function main(argv = process.argv.slice(2), options = {}) {
   const viewCommand = parseViewCommand(argv);
   if (viewCommand) {
     await runViewCommand(cwd, viewCommand);
+    return;
+  }
+  const reportCommand = parseReportCommand(argv);
+  if (reportCommand) {
+    await runReportCommand(cwd, reportCommand);
     return;
   }
   const inspectPassthrough = passthroughArgs(argv);

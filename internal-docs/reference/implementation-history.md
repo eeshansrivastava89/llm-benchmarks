@@ -320,6 +320,16 @@ Astro 7 changes behavior as well as versions, so the risky change was verified r
 
 Validation: `npm run check` (0/0/0, 39 modules), `npm test` (99 Bench + 102 Visual), `npm run test:e2e` (23 Playwright, including the desktop geometry and mobile-width layout checks), `uv lock --check`, `git diff --check`, `npm run build:static` (440 files, privacy audit passed), and a clean `npm ci` reproducing the CI install path. No source, prompt, run, export, or viewer-ownership file changed.
 
+### Phase 13: evidence-backed cross-suite reports (2026-09-19)
+
+A minimal report pipeline was added without merging native result formats or creating another benchmark database. `bench report` discovers exact provider/model variants from ignored Inspect `.eval` logs and Visual run metadata, lets the user select a cohort interactively (or through repeatable CLI flags), and compiles every compatible result it can find into an ignored Quarto report. Inspect remains the source of truth for eval execution and scoring; Visual metadata and captures remain the source of truth for browser artifacts.
+
+Selection is deterministic rather than score-seeking. For each variant/task, the compiler chooses the successful Inspect log with the most completed samples and uses recency only as a tie-breaker. For each Visual benchmark, it chooses the prompt hash covering the most selected variants, then the newest completed preview within that prompt revision. Missing, failed, preview-less, and prompt-mismatched cells remain explicit and are emitted as a machine-readable `evidence-gaps.csv` queue. Pairwise comparisons use only matching dataset sample IDs and epochs. The generated report labels selections as deployment configurations so quantization, model artifact, MTP, runtime, and server defaults are not incorrectly reduced to a backend-only claim.
+
+The presentation boundary is one tracked `analysis/benchmark-report.qmd` using Quarto's default HTML theme and table rendering—there is no brand file, custom CSS, Python-built HTML, or fallback renderer to maintain. Python compiles safe data rather than constructing presentation markup. Inspect Viz renders static PNG output so the final self-contained document opens directly from disk without a runtime server or sidecar data. Reports contain derived aggregate scores, safe evidence identifiers and hashes, and copied preview images. They exclude native logs, sample inputs and outputs, prompts, generated benchmark HTML, raw responses, commands, local URLs, local paths, and credentials. A final privacy audit rejects common operational leaks before generation succeeds. Generated reports remain ignored until a later, deliberate extension of the tracked publish-safe export.
+
+Validation: `npm run check` (0/0/0, 40 modules), `npm test` (100 Node + 4 Python + 102 Visual), `uv lock --check`, `git diff --check`, CLI help and JSON variant-discovery checks, real report builds from the preserved local evidence, and a Playwright file-URL smoke check of the generated Qwen Quarto report (default browser title plus dynamic document title, Inspect Viz plot plus five previews, no console errors, and no horizontal overflow).
+
 ## 4. Durable architecture decisions and tradeoffs
 
 | Decision | Reason | Accepted tradeoff |
@@ -340,6 +350,7 @@ Validation: `npm run check` (0/0/0, 39 modules), `npm test` (99 Bench + 102 Visu
 | CLI domain code in named modules | The entrypoint stays reviewable and tests import real homes | `main()` takes injected collaborators for tests; production passes none |
 | Fresh private Pi sessions | Reproducibility and diagnostics without session reuse | Additional private runtime files require lifecycle handling |
 | Overrides track the framework's required bundler major | An out-of-range `vite` override is unsatisfiable and blocks framework upgrades | `overrides` must be revisited on every Astro major |
+| Reports derive from native evidence without importing it | Inspect and Visual retain their source-of-truth formats while cross-suite stories stay reproducible | Cohort selection and safe summaries are rebuilt when available evidence changes |
 
 ## 5. Validation strategy
 

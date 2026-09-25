@@ -152,6 +152,37 @@ The Visual viewer reads Visual and Data Science runs. In local mode it can:
 
 The static gallery is read-only and excludes those operational controls.
 
+## Compile a model report
+
+Bench can compile the Inspect and Visual evidence already available for exact provider/model variants. The interactive flow discovers evidence, lets you select any number of variants, and asks for the model-family report title:
+
+```bash
+bench report
+```
+
+For scripts, list the variants discovered from native `.eval` logs and Visual run metadata with `bench report variants`, then pass a model-family title and one or more exact variants:
+
+```bash
+bench report \
+  --model "Qwen 3.8 27B local configurations" \
+  --variant "ollama/qwen3.8:27b-mlx" \
+  --variant "omlx/Qwen3.8-27B-oQ4e-mtp"
+```
+
+The default output is `reports/<model-name>/index.html`. Reports are ignored local output until deliberately reviewed and incorporated into the publish-safe export. The CLI installs the locked `report` dependency group on demand, compiles safe data, and executes the tracked `analysis/benchmark-report.qmd` template.
+
+The report presentation is owned entirely by Quarto rather than Python HTML strings. It uses Quarto's default HTML theme and table styling without a brand file, custom CSS, or a second renderer. Inspect Viz renders archive-friendly static plots that work when the HTML is opened directly from disk.
+
+Compilation is deterministic and coverage-driven:
+
+- Inspect selects the successful log with the most completed samples for each variant/task; the newest log breaks ties.
+- Visual comparisons select the prompt revision covering the most selected variants, then the newest completed run with a preview.
+- Pairwise tables include only matching dataset sample IDs and epochs.
+- Missing, failed, preview-less, and prompt-mismatched cells remain visible rather than being imputed, and are written to `evidence-gaps.csv` as the next-run queue.
+- Every selected Inspect log is identified by an evidence ID and SHA-256 hash.
+
+The report contains derived scores, safe identifiers, and copied preview images. It does not copy `.eval` logs, sample inputs or outputs, prompts, generated HTML, raw responses, commands, local URLs, local filesystem paths, or credentials. Generation ends with a privacy audit that rejects local repository paths, loopback URLs, authorization headers, launch commands, raw-response references, and private data-access files. Treat each selection as a deployment configuration: unless model artifacts, quantization, MTP, generation settings, and hardware are identical, the report must not attribute differences to the backend alone.
+
 ## Project configuration
 
 `pyproject.toml` defines Inspect-specific project paths:
@@ -271,6 +302,8 @@ Install `ffmpeg` as well if MP4 conversion is required. The viewer can still ret
 bin/bench.mjs          unified CLI and TUI
 src/*.mjs              provider, workflow, lifecycle, and viewer management
 src/bench_inspect/     Inspect compatibility hooks
+src/bench_analysis/    publish-safe cross-suite data compiler
+analysis/              tracked Quarto report using default styling
 src/lib/               visual/Data Science domain modules
 src/server/            local viewer API
 src/pages/             Astro routes
@@ -281,5 +314,6 @@ logs/                  ignored Inspect logs
 bench-configs/         ignored Inspect task configuration
 runs/                  ignored private Visual/Data Science runs
 comparison-exports/    ignored local comparison videos
+reports/               ignored generated evidence reports
 public/export/         tracked publish-safe gallery snapshot
 ```

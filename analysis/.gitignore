@@ -1,0 +1,4 @@
+/.quarto/
+/_site/
+/benchmark-report_files/
+**/*.quarto_ipynb

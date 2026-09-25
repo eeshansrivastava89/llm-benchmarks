@@ -12,6 +12,15 @@ dependencies = [
     "inspect-ai>=0.3.263",
     "inspect-evals==0.17.0",
     "openai>=3.13.0",
+    "pandas>=2.2.0",
+]
+
+[dependency-groups]
+report = [
+    "inspect-viz>=0.4.1",
+    "papermill>=2.6.0",
+    "playwright>=1.60.0",
+    "quarto-cli>=1.10.18",
 ]
 
 [project.urls]
@@ -23,7 +32,7 @@ Issues = "https://github.com/eeshansrivastava89/llm-benchmarks/issues"
 llm_benchmarks = "bench_inspect._registry"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/bench_inspect"]
+packages = ["src/bench_inspect", "src/bench_analysis"]
 
 [tool.bench]
 custom-task-roots = ["benchmarks"]
