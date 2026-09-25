@@ -1,4 +1,5 @@
 import { sweepWarningLines } from "./catalog.mjs";
+import { viewerReceiptLines } from "./cli-view.mjs";
 import { apiLabel } from "./inspect-translate.mjs";
 import { formatSampleCount, hasInspectOption, inspectOptionValue, localConcurrencyChoices, sampleChoices } from "./run-plan.mjs";
 import { interactiveBenchmarkDetails, buildInteractiveReview } from "./suite-workflow.mjs";
@@ -279,6 +280,7 @@ export async function confirmRun(
   config,
   inspectPassthrough,
   redactedCommand,
+  viewers = [],
   ui,
 ) {
   const cautions = [
@@ -315,6 +317,9 @@ export async function confirmRun(
     "",
     benchUiStyle.muted("RESULTS"),
     `Inspect will save logs under ${config.logDir}`,
+    ...(viewers.length > 0
+      ? ["", benchUiStyle.muted("VIEWERS"), ...viewerReceiptLines(viewers)]
+      : []),
     ...(inspectPassthrough.length > 0
       ? ["", benchUiStyle.muted("COMMAND-LINE OVERRIDES"), inspectPassthrough.join(" ")]
       : []),
@@ -378,7 +383,7 @@ export async function selectInteractiveBenchmark(suite, model, preferredBenchmar
   return result;
 }
 
-export async function confirmInteractiveReview(repositoryRoot, suite, benchmark, model, ui) {
+export async function confirmInteractiveReview(repositoryRoot, suite, benchmark, model, viewers = [], ui) {
   const review = buildInteractiveReview({ repositoryRoot, suite, benchmark, model });
   const receipt = [
     benchUiStyle.muted("MODEL"),
@@ -393,6 +398,7 @@ export async function confirmInteractiveReview(repositoryRoot, suite, benchmark,
     benchUiStyle.muted("EXPECTED OUTPUTS"),
     ...review.expectedAssets.map((asset) => `• ${asset}`),
     "",
+    ...(viewers.length > 0 ? [benchUiStyle.muted("VIEWERS"), ...viewerReceiptLines(viewers), ""] : []),
     benchUiStyle.muted("RUN ROOT"),
     review.runRoot,
     "",

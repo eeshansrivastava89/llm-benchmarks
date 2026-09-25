@@ -37,6 +37,24 @@ const INTERACTIVE_SUITES = [
 
 const INSPECT_CONFIG = { customTaskRoots: ["benchmarks"], logDir: "logs", taskConfigDir: "bench-configs" };
 
+const VIEWER_STATUS = [
+  { id: "inspect", label: "Inspect results", url: "http://127.0.0.1:7575", health: "stopped", owned: false, pid: undefined },
+  { id: "visual", label: "Visual results", url: "http://127.0.0.1:4321", health: "stopped", owned: false, pid: undefined },
+];
+
+function fakeViewerManager(overrides = {}) {
+  return {
+    calls: [],
+    async status() { this.calls.push({ kind: "status" }); return overrides.status?.() ?? VIEWER_STATUS; },
+    async start(target) { this.calls.push({ kind: "start", target }); return overrides.start?.(target) ?? []; },
+    async stop(target) { this.calls.push({ kind: "stop", target }); return overrides.stop?.(target) ?? []; },
+    async open(id, options) {
+      this.calls.push({ kind: "open", id, options });
+      return { id, label: `${id} results`, url: `http://127.0.0.1:${id === "inspect" ? 7575 : 4321}`, opened: true, reason: "opened" };
+    },
+  };
+}
+
 const INSPECT_SOURCES = [
   {
     source: "inspect_evals_recommended",
@@ -124,10 +142,13 @@ async function withTempCwd(run) {
 }
 
 async function runMain(cwd, ui, overrides = {}) {
+  const viewers = overrides.viewers ?? fakeViewerManager();
+  const { viewers: _ignored, ...rest } = overrides;
   return main([], {
     cwd,
     skipTtyCheck: true,
     createUi: () => ui,
+    createViewerManager: () => viewers,
     loadConfig: async () => INSPECT_CONFIG,
     discoverProviderModels: async () => ({
       modelRuntime: MODEL_RUNTIME,
@@ -136,7 +157,7 @@ async function runMain(cwd, ui, overrides = {}) {
     }),
     discoverInteractiveSuites: async () => INTERACTIVE_SUITES,
     resolveInspect: async () => ({ inspectModel: "openai-api/omlx/test-model", baseUrl: "http://127.0.0.1:8000/v1" }),
-    ...overrides,
+    ...rest,
   });
 }
 
@@ -220,6 +241,66 @@ test("a failed discovery retries until it succeeds", async () => {
       2,
       "each attempt showed the discovery spinner",
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Results viewers in the main flow
+// ---------------------------------------------------------------------------
+
+test("step 1 lists Results viewers and returns to the flow after the menu", async () => {
+  await withTempCwd(async (cwd) => {
+    const viewers = fakeViewerManager();
+    let openedMenu = 0;
+    const ui = new ScriptedUI(({ items, options }) => {
+      if (options.step === "Results") {
+        openedMenu += 1;
+        return items.find((item) => item.action === "back");
+      }
+      if (options.step === "1 Provider" && openedMenu === 0) {
+        const entry = items.find((item) => item.kind === "viewers");
+        assert.ok(entry, "the provider list carries a Results viewers entry");
+        assert.match(entry.detail, /0 of 2 running/);
+        return entry;
+      }
+      return happyPathResponder({ items, options });
+    });
+
+    await assert.rejects(runMain(cwd, ui, {
+      viewers,
+      discoverInspectBenchmarks: async () => INSPECT_SOURCES,
+    }), SelectionCancelled);
+
+    assert.equal(openedMenu, 1, "the results menu opened once");
+    assert.equal(ui.steps.filter((step) => step === "1 Provider").length, 2, "control returned to step 1");
+    assert.equal(ui.browsing.length, 1, "the original flow continued after the menu");
+    assert.ok(viewers.calls.some((call) => call.kind === "status"), "the entry reported live viewer status");
+  });
+});
+
+test("the results menu opens and reuses the selected viewer", async () => {
+  await withTempCwd(async (cwd) => {
+    const viewers = fakeViewerManager();
+    let usedEntry = false;
+    let resultsVisits = 0;
+    const ui = new ScriptedUI(({ items, options }) => {
+      if (options.step === "Results") {
+        resultsVisits += 1;
+        return resultsVisits === 1
+          ? items.find((item) => item.action === "open" && item.target === "inspect")
+          : items.find((item) => item.action === "back");
+      }
+      if (options.step === "1 Provider" && !usedEntry) {
+        usedEntry = true;
+        return items.find((item) => item.kind === "viewers");
+      }
+      return CANCEL;
+    });
+
+    await assert.rejects(runMain(cwd, ui, { viewers }), SelectionCancelled);
+
+    assert.deepEqual(viewers.calls.filter((call) => call.kind === "start"), [{ kind: "start", target: "inspect" }]);
+    assert.equal(viewers.calls.filter((call) => call.kind === "open").length, 1);
   });
 });
 

@@ -88,7 +88,7 @@ Visual and Data Science run slots are created only after confirmation. Bench lau
 
 Ambient Pi context, skills, templates, discovered extensions, settings, and session reuse are disabled for reproducibility. Bench copies only Pi's authentication and model catalogs into writable private scratch storage for the run. For local runs, the explicit Pi extension registers the selected model from a private manifest; there is no static-model fallback if the extension cannot load. Bench deletes the scratch storage after exit and never updates the global Pi catalog. Bench retains fresh Visual session diagnostics privately under `.bench-runtime/` and discards Data Science transcripts because they may contain temporary dataset access values. None of these private files are published. When Pi exits, Bench removes temporary Data Science access. Ollama and oMLX models that were already loaded are left alone; models loaded during a Bench run are unloaded afterward. If the initial load status is unknown, cleanup is skipped. Other local providers show a warning and may remain loaded.
 
-Bench can start the relevant results viewer after a successful run. The default is **No**, so runs do not open browser tabs unexpectedly.
+After a successful run Bench starts the matching results viewer and opens it, then prints the live state of both viewers. A viewer Bench already surfaced within the last ten minutes is reported by URL instead of opening a duplicate browser tab. Pass `--no-open` (or set `BENCH_NO_OPEN=1`) to skip the viewer entirely. The same two viewers are also reachable from **Results viewers** in step 1 of the picker, and their status appears in the Review receipt before a run starts.
 
 ### Inspect options
 
@@ -117,11 +117,14 @@ Set `BENCH_VERBOSE=1` to print the complete redacted launch command.
 bench view inspect
 bench view visual
 bench view both
+bench view open inspect
 bench view status
 bench view stop inspect
 bench view stop visual
 bench view stop both
 ```
+
+A viewer that is already running is reused, and its URL is reported instead of opening a second tab. Add `--reopen` (or use `bench view open`) to force a new tab.
 
 `bench view both` starts or reuses both loopback services, then opens the Visual viewer as the hub. Its header opens Inspect results in a new tab.
 

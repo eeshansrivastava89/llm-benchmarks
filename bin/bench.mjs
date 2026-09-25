@@ -10,7 +10,7 @@ import { BENCHMARK_SUITE_IDS, buildSuiteChoices, suitePassthroughError, updateSu
 import { BenchError, SelectionCancelled, errorMessage } from "../src/errors.mjs";
 import { parseReportCommand, runReportCommand } from "../src/cli-report.mjs";
 import { confirmInteractiveReview, confirmRun, confirmSweepWarning, modelDetails, providerDetails, selectConcurrency, selectInteractiveBenchmark, selectSamples } from "../src/cli-selection.mjs";
-import { offerViewersAfterRun, parseViewCommand, runViewCommand } from "../src/cli-view.mjs";
+import { createViewerManagerFor, openViewersAfterRun, parseViewCommand, printViewerSummary, runResultsMenu, runViewCommand, viewerOpenLine, viewerStatuses, viewerStatusLine } from "../src/cli-view.mjs";
 import { discoverBenchmarks, stopActiveCapturedChildren } from "../src/inspect-discovery.mjs";
 import { modelCompatibility, modelPiReady, resolveInspectModel } from "../src/inspect-translate.mjs";
 import { executeInteractiveBenchmark, extensionProviderStaticGap, runForeground } from "../src/interactive-runner.mjs";
@@ -56,6 +56,16 @@ export function passthroughArgs(argv) {
     throw new BenchError("Inspect options must follow `--`, for example: bench -- --limit 20");
   }
   return argv.slice(1);
+}
+
+// Removes a Bench-level flag that appears before the `--` Inspect passthrough
+// separator so it is never mistaken for an Inspect option.
+function takeFlag(argv, flag) {
+  const separator = argv.indexOf("--");
+  const limit = separator === -1 ? argv.length : separator;
+  const index = argv.indexOf(flag);
+  if (index === -1 || index >= limit) return { found: false, argv };
+  return { found: true, argv: [...argv.slice(0, index), ...argv.slice(index + 1)] };
 }
 
 async function loadConfig(cwd) {
@@ -132,13 +142,19 @@ const HELP_TEXT = `Bench — one workflow for Inspect evals, Visual Bench, and D
 
 Usage:
   bench                 Pick a provider, model, suite, and benchmark, then run it
+                        Results viewers are listed in step 1 and open automatically
+                        after a successful run
   bench view            Choose a results viewer interactively
-  bench view inspect    Start or reuse the Inspect results viewer and open it
-  bench view visual     Start or reuse the Visual/Data Science viewer and open it
+  bench view inspect    Start or reuse the Inspect results viewer
+  bench view visual     Start or reuse the Visual/Data Science viewer
   bench view both       Start both viewers and open Visual as the hub
+  bench view open [inspect|visual|both]
+                        Force a viewer open in the browser
   bench view status     Show viewer URLs, health, and Bench ownership
   bench view stop [inspect|visual|both]
                         Stop validated Bench-owned viewers (default: both)
+  bench view ... --reopen
+                        Reopen a viewer Bench already surfaced
   bench report          Choose evidence-backed model variants interactively
   bench report variants
                         List provider/model variants found in local evidence
@@ -149,14 +165,39 @@ Usage:
   bench --help          Show this help
   bench --version       Show the Bench version
 
+Options:
+  --no-open             Do not start or open results viewers after a run
+
 Environment:
   BENCH_INSPECT_VIEWER_PORT, BENCH_VISUAL_VIEWER_PORT
                         Override the default viewer ports (7575, 4321)
+  BENCH_NO_OPEN=1       Same as --no-open
   BENCH_VERBOSE=1       Print the redacted launch command before running
   NO_COLOR              Disable terminal styling
 
 Project guide: README.md in the Bench repository.
 `;
+
+// Every successful run ends with the same answer to "what is running, where,
+// and did Bench open it?". A viewer problem is a warning, never a run failure.
+async function presentResults(cwd, viewerManager, target, options = {}) {
+  if (options.noOpen) {
+    console.log();
+    printViewerSummary(await viewerStatuses(viewerManager));
+    console.log("    Not opened: --no-open is set.");
+    return;
+  }
+  const outcome = await openViewersAfterRun(cwd, target, { manager: viewerManager });
+  if (outcome.error) {
+    console.error(`Warning: could not open the results viewer: ${errorMessage(outcome.error)}`);
+    console.log();
+    printViewerSummary(await viewerStatuses(viewerManager));
+    return;
+  }
+  console.log();
+  printViewerSummary(await viewerStatuses(viewerManager));
+  if (outcome.opened) console.log(`    ${viewerOpenLine(outcome.opened)}`);
+}
 
 async function printVersion() {
   const manifest = JSON.parse(await readFile(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8"));
@@ -175,6 +216,7 @@ export async function main(argv = process.argv.slice(2), options = {}) {
     discoverInteractiveSuites = loadInteractiveBenchmarkSuites,
     resolveInspect = resolveInspectModel,
     discoverInspectBenchmarks = discoverBenchmarks,
+    createViewerManager = createViewerManagerFor,
     skipTtyCheck = false,
   } = options;
   const cwd = cwdOption ?? process.cwd();
@@ -196,10 +238,13 @@ export async function main(argv = process.argv.slice(2), options = {}) {
     await runReportCommand(cwd, reportCommand);
     return;
   }
-  const inspectPassthrough = passthroughArgs(argv);
+  const noOpenFlag = takeFlag(argv, "--no-open");
+  const noOpen = noOpenFlag.found || process.env.BENCH_NO_OPEN === "1";
+  const inspectPassthrough = passthroughArgs(noOpenFlag.argv);
   if (!skipTtyCheck && (!process.stdin.isTTY || !process.stdout.isTTY)) {
     throw new BenchError("Bench requires an interactive terminal");
   }
+  const viewerManager = createViewerManager(cwd);
   let ui;
   ui = createUi({
     cancelLoading: () => {
@@ -273,25 +318,53 @@ export async function main(argv = process.argv.slice(2), options = {}) {
 
     while (stage !== "launch") {
       if (stage === "provider") {
-        let result = selectedOrCancel(await ui.select(providers, {
+        const viewerStatus = await viewerStatuses(viewerManager);
+        const runningViewers = viewerStatus.filter((status) => status.health === "healthy").length;
+        const resultsEntry = {
+          kind: "viewers",
+          label: "Results viewers",
+          detail: viewerStatus.length > 0
+            ? `${runningViewers} of ${viewerStatus.length} running  ·  open, check, or stop`
+            : "Open, check, or stop the results viewers",
+        };
+        let result = selectedOrCancel(await ui.select([resultsEntry, ...providers], {
           step: "1 Provider",
           title: "Choose where your model comes from",
           message: "Local providers run on this machine. Cloud providers send requests to a remote API.",
           listTitle: "Providers",
           detailTitle: "About this provider",
-          label: (provider) => provider.backend.status === "offline"
-            ? benchUiStyle.warning(`⚠ ${provider.provider}`)
-            : provider.provider,
-          summary: ({ models, backend }) => `${backend.location}  ·  ${models.length} model${models.length === 1 ? "" : "s"}${backend.status ? `  ·  ${backend.status}` : ""}`,
-          details: (provider) => [
-            ...providerDetails(provider),
-            ...(diagnostics.length > 0 ? ["", "PI CONFIGURATION NOTICES", ...diagnostics] : []),
-          ],
-          searchText: ({ provider, backend }) => `${provider} ${backend.location} ${backend.status ?? ""}`,
+          label: (entry) => entry.kind === "viewers"
+            ? entry.label
+            : entry.backend.status === "offline"
+              ? benchUiStyle.warning(`⚠ ${entry.provider}`)
+              : entry.provider,
+          summary: (entry) => entry.kind === "viewers"
+            ? entry.detail
+            : `${entry.backend.location}  ·  ${entry.models.length} model${entry.models.length === 1 ? "" : "s"}${entry.backend.status ? `  ·  ${entry.backend.status}` : ""}`,
+          details: (entry) => entry.kind === "viewers"
+            ? [
+                "Results viewers",
+                "",
+                ...(viewerStatus.length > 0 ? viewerStatus.map(viewerStatusLine) : ["Viewer status is unavailable."]),
+                "",
+                "Select this entry to open, check, or stop a viewer without leaving Bench.",
+              ]
+            : [
+                ...providerDetails(entry),
+                ...(diagnostics.length > 0 ? ["", "PI CONFIGURATION NOTICES", ...diagnostics] : []),
+              ],
+          searchText: (entry) => entry.kind === "viewers"
+            ? "results viewers inspect visual status open stop"
+            : `${entry.provider} ${entry.backend.location} ${entry.backend.status ?? ""}`,
           searchPlaceholder: "provider name or local/cloud",
           searchable: true,
-          isInitial: ({ provider }) => provider === selectedProvider?.provider || provider === preferences.provider,
+          isInitial: (entry) => entry.kind !== "viewers"
+            && (entry.provider === selectedProvider?.provider || entry.provider === preferences.provider),
         }));
+        if (result.kind === "viewers") {
+          await runResultsMenu(ui, viewerManager);
+          continue;
+        }
         if (result.refreshModels) {
           ui.showLoading("Refreshing installed models…", result.provider);
           result = await result.refreshModels();
@@ -693,6 +766,7 @@ export async function main(argv = process.argv.slice(2), options = {}) {
             ...inspectPassthrough,
           ],
         );
+        const viewers = await viewerStatuses(viewerManager);
         const confirmed = await confirmRun(
           selectedModel,
           translated,
@@ -704,6 +778,7 @@ export async function main(argv = process.argv.slice(2), options = {}) {
           config,
           inspectPassthrough,
           formatCommand("uv", inspectArgs, translated.apiKeyEnv),
+          viewers,
           ui,
         );
         if (!confirmed) {
@@ -719,11 +794,13 @@ export async function main(argv = process.argv.slice(2), options = {}) {
       }
 
       if (stage === "interactive-review") {
+        const viewers = await viewerStatuses(viewerManager);
         const confirmed = await confirmInteractiveReview(
           cwd,
           selectedSuite,
           selectedInteractiveBenchmark,
           selectedModel,
+          viewers,
           ui,
         );
         stage = confirmed ? "launch" : "interactive-benchmark";
@@ -764,7 +841,7 @@ export async function main(argv = process.argv.slice(2), options = {}) {
         if (execution.cleanupResult.status === "failed") console.error(`Warning: ${cleanupMessage}`);
         else console.log(cleanupMessage);
       }
-      if (exitStatus === 0) await offerViewersAfterRun(cwd, VIEWER_IDS.visual);
+      if (exitStatus === 0) await presentResults(cwd, viewerManager, VIEWER_IDS.visual, { noOpen });
       return;
     }
 
@@ -787,14 +864,14 @@ export async function main(argv = process.argv.slice(2), options = {}) {
     }
     process.exitCode = exitStatus;
     console.log(exitStatus === 0
-      ? `\nBench completed. Results are under ${config.logDir}. Run \`bench view inspect\` to browse them.`
+      ? `\nBench completed. Results are under ${config.logDir}.`
       : `\nBench stopped because Inspect exited with status ${exitStatus}.`);
     if (cleanupResult?.message) {
       const cleanupMessage = `Local model: ${cleanupResult.message}.`;
       if (cleanupResult.status === "failed") console.error(`Warning: ${cleanupMessage}`);
       else console.log(cleanupMessage);
     }
-    if (exitStatus === 0) await offerViewersAfterRun(cwd, VIEWER_IDS.inspect);
+    if (exitStatus === 0) await presentResults(cwd, viewerManager, VIEWER_IDS.inspect, { noOpen });
   } finally {
     ui.stop({ preserveScreen: true });
   }

@@ -50,9 +50,10 @@ function fakeManager(descriptorSet, controls = {}) {
     clock: () => clock,
     pollIntervalMs: 10,
     stopTimeoutMs: 30,
-    now: () => new Date("2026-06-11T12:00:00.000Z"),
+    now: () => controls.now?.() ?? new Date("2026-06-11T12:00:00.000Z"),
     openUrl: async (url) => {
       controls.openedUrl = url;
+      controls.openCount = (controls.openCount ?? 0) + 1;
     },
   });
   return { manager, signals };
@@ -348,4 +349,70 @@ test("startup timeout terminates only the spawned process group", async (t) => {
     { pgid: 4101, signal: "SIGTERM" },
     { pgid: 4101, signal: "SIGKILL" },
   ]);
+});
+
+test("a viewer Bench already surfaced is not reopened until the window elapses", async (t) => {
+  const { descriptorSet } = await viewerFixture(t);
+  let now = new Date("2026-06-11T12:00:00.000Z");
+  const controls = {
+    endpoint: { inspect: "stopped" },
+    groupExists: true,
+    now: () => now,
+    onSleep() { controls.endpoint.inspect = "healthy"; },
+  };
+  const { manager } = fakeManager(descriptorSet, controls);
+
+  const [started] = await manager.start("inspect");
+  assert.equal(started.action, "started");
+
+  const first = await manager.open("inspect");
+  assert.equal(first.opened, true);
+  assert.equal(controls.openCount, 1);
+
+  const second = await manager.open("inspect");
+  assert.equal(second.opened, false);
+  assert.equal(second.reason, "already-open");
+  assert.equal(second.url, "http://127.0.0.1:7575");
+  assert.equal(controls.openCount, 1, "no duplicate tab inside the window");
+
+  const forced = await manager.open("inspect", { force: true });
+  assert.equal(forced.opened, true);
+  assert.equal(controls.openCount, 2, "--reopen forces a tab");
+
+  now = new Date("2026-06-11T13:00:00.000Z");
+  const later = await manager.open("inspect");
+  assert.equal(later.opened, true);
+  assert.equal(controls.openCount, 3, "the window expiry reopens the viewer");
+});
+
+test("status reports when Bench last opened each viewer", async (t) => {
+  const { descriptorSet } = await viewerFixture(t);
+  const controls = {
+    endpoint: { inspect: "stopped" },
+    groupExists: true,
+    onSleep() { controls.endpoint.inspect = "healthy"; },
+  };
+  const { manager } = fakeManager(descriptorSet, controls);
+  await manager.start("inspect");
+  await manager.open("inspect");
+
+  const [inspect] = await manager.status("inspect");
+  assert.equal(inspect.openedAt, "2026-06-11T12:00:00.000Z");
+});
+
+test("stopping a viewer clears its open record so a restart opens a tab", async (t) => {
+  const { descriptorSet } = await viewerFixture(t);
+  const controls = {
+    endpoint: { inspect: "stopped" },
+    groupExists: true,
+    onSleep() { controls.endpoint.inspect = "healthy"; },
+    onSignal() { controls.groupExists = false; },
+  };
+  const { manager } = fakeManager(descriptorSet, controls);
+  await manager.start("inspect");
+  await manager.open("inspect");
+  await manager.stop("inspect");
+
+  const state = JSON.parse(await readFile(descriptorSet.statePath, "utf8"));
+  assert.deepEqual(state.opened, {});
 });

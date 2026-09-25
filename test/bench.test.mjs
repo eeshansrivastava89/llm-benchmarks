@@ -10,7 +10,7 @@ import { stripTerminalSequences } from "@earendil-works/pi-tui";
 import { passthroughArgs } from "../bin/bench.mjs";
 import { buildBenchmarkSources, loadSweepData, sweepWarningLines } from "../src/catalog.mjs";
 import { parseReportCommand, runReportCommand } from "../src/cli-report.mjs";
-import { parseViewCommand, viewerActionLine } from "../src/cli-view.mjs";
+import { openViewersAfterRun, parseViewCommand, runViewCommand, viewerActionLine, viewerOpenLine, viewerReceiptLines, viewerStatuses } from "../src/cli-view.mjs";
 import { BenchError } from "../src/errors.mjs";
 import { discoverRegisteredTasks, discoverTasks } from "../src/inspect-discovery.mjs";
 import { prepareLocalModelLifecycle } from "../src/local-lifecycle.mjs";
@@ -72,8 +72,87 @@ test("viewer commands are parsed before Inspect passthrough options", () => {
   assert.deepEqual(parseViewCommand(["view", "status"]), { action: "status", target: "both" });
   assert.deepEqual(parseViewCommand(["view", "stop"]), { action: "stop", target: "both" });
   assert.deepEqual(parseViewCommand(["view", "stop", "visual"]), { action: "stop", target: "visual" });
+  assert.deepEqual(parseViewCommand(["view", "open"]), { action: "start", target: "both", force: true });
+  assert.deepEqual(parseViewCommand(["view", "open", "visual"]), { action: "start", target: "visual", force: true });
+  assert.deepEqual(parseViewCommand(["view", "inspect", "--reopen"]), { action: "start", target: "inspect", force: true });
+  assert.deepEqual(parseViewCommand(["view", "both", "--open"]), { action: "start", target: "both", force: true });
+  assert.deepEqual(parseViewCommand(["view", "status", "--reopen"]), { action: "status", target: "both" });
   assert.throws(() => parseViewCommand(["view", "unknown"]), /Usage: bench view/);
   assert.throws(() => parseViewCommand(["view", "status", "extra"]), /Usage: bench view/);
+});
+
+test("viewer open and receipt lines explain state without duplicating tabs", () => {
+  assert.match(
+    viewerOpenLine({ label: "Inspect results", url: "http://127.0.0.1:7575", opened: true }),
+    /^Inspect results: opened · http/,
+  );
+  assert.match(
+    viewerOpenLine({ label: "Inspect results", url: "http://127.0.0.1:7575", opened: false }),
+    /already open, not reopening .*--reopen/,
+  );
+  assert.deepEqual(viewerReceiptLines([
+    { label: "Inspect results", health: "healthy", owned: true, url: "http://127.0.0.1:7575" },
+    { label: "Visual results", health: "stopped", owned: false, url: "http://127.0.0.1:4321" },
+  ]), [
+    "Inspect results: healthy · Bench-owned · http://127.0.0.1:7575",
+    "Visual results: stopped · not managed · http://127.0.0.1:4321",
+  ]);
+});
+
+test("viewer status is best-effort and post-run opening never throws", async () => {
+  assert.deepEqual(await viewerStatuses({ status: async () => [{ id: "inspect" }] }), [{ id: "inspect" }]);
+  assert.deepEqual(await viewerStatuses({ status: async () => { throw new Error("bad state"); } }), []);
+
+  const calls = [];
+  const manager = {
+    async start(target) {
+      calls.push(target);
+      return [{ id: target, label: "Inspect results", url: "http://127.0.0.1:7575", health: "healthy", owned: true, action: "reused" }];
+    },
+    async open(id) {
+      return { id, label: "Inspect results", url: "http://127.0.0.1:7575", opened: false, reason: "already-open" };
+    },
+  };
+  const outcome = await openViewersAfterRun("/tmp", "inspect", { manager });
+  assert.equal(outcome.error, null);
+  assert.equal(outcome.opened.opened, false);
+  assert.deepEqual(calls, ["inspect"]);
+
+  const failed = await openViewersAfterRun("/tmp", "inspect", {
+    manager: { async start() { throw new BenchError("port occupied"); } },
+  });
+  assert.match(failed.error.message, /port occupied/);
+});
+
+test("bench view start reuses the viewer and --reopen forces a tab", async () => {
+  const calls = [];
+  const output = [];
+  const originalLog = console.log;
+  console.log = (...args) => output.push(args.join(" "));
+  const manager = {
+    async start(target) {
+      calls.push({ kind: "start", target });
+      return [{ id: target, label: "Inspect results", url: "http://127.0.0.1:7575", health: "healthy", owned: true, action: "reused" }];
+    },
+    async open(id, options) {
+      calls.push({ kind: "open", id, force: options?.force });
+      return { id, label: "Inspect results", url: "http://127.0.0.1:7575", opened: Boolean(options?.force), reason: options?.force ? "opened" : "already-open" };
+    },
+  };
+  try {
+    await runViewCommand("/tmp", parseViewCommand(["view", "inspect"]), { createViewerManager: () => manager });
+    await runViewCommand("/tmp", parseViewCommand(["view", "inspect", "--reopen"]), { createViewerManager: () => manager });
+  } finally {
+    console.log = originalLog;
+  }
+  assert.deepEqual(calls, [
+    { kind: "start", target: "inspect" },
+    { kind: "open", id: "inspect", force: undefined },
+    { kind: "start", target: "inspect" },
+    { kind: "open", id: "inspect", force: true },
+  ]);
+  assert.ok(output.some((line) => line.includes("already open, not reopening")));
+  assert.ok(output.some((line) => line.includes("Inspect results: opened")));
 });
 
 test("report commands select discovered variants and explicit report cohorts", () => {

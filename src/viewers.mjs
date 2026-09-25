@@ -16,6 +16,10 @@ export const VIEWER_IDS = Object.freeze({
 const STATE_SCHEMA_VERSION = 1;
 const DEFAULT_POLL_INTERVAL_MS = 150;
 const DEFAULT_STOP_TIMEOUT_MS = 5_000;
+// Bench cannot see browser tabs, so it uses the last time it opened a viewer as
+// the proxy for "already open". Within this window a reused viewer is reported
+// by URL instead of spawning a duplicate tab.
+const DEFAULT_REOPEN_WINDOW_MS = 10 * 60 * 1000;
 
 export function createViewerDescriptors(options = {}) {
   const repositoryRoot = resolve(options.repositoryRoot ?? process.cwd());
@@ -91,6 +95,7 @@ export function createViewerManager(options = {}) {
     clock: options.clock ?? Date.now,
     pollIntervalMs: options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS,
     stopTimeoutMs: options.stopTimeoutMs ?? DEFAULT_STOP_TIMEOUT_MS,
+    reopenWindowMs: options.reopenWindowMs ?? DEFAULT_REOPEN_WINDOW_MS,
   };
 
   return {
@@ -107,6 +112,7 @@ export function createViewerManager(options = {}) {
         descriptorSet.viewers[id],
         state.viewers[id],
         dependencies,
+        state.opened?.[id] ?? null,
       )));
     },
     async stop(target) {
@@ -115,10 +121,30 @@ export function createViewerManager(options = {}) {
       for (const id of ids) results.push(await stopViewer(descriptorSet, id, dependencies));
       return results;
     },
-    async open(id) {
+    // Opening is idempotent within the reopen window: a viewer Bench already
+    // surfaced is reported by URL rather than opening a duplicate tab. Callers
+    // that represent an explicit user request pass `force`.
+    async open(id, options = {}) {
       const descriptor = viewerDescriptor(descriptorSet, id);
+      const state = await readViewerState(descriptorSet.statePath);
+      const lastOpened = Date.parse(state.opened?.[id] ?? "");
+      const withinWindow = Number.isFinite(lastOpened)
+        && dependencies.now().getTime() - lastOpened < dependencies.reopenWindowMs;
+      if (!options.force && withinWindow) {
+        return {
+          id,
+          label: descriptor.label,
+          url: descriptor.url,
+          opened: false,
+          reason: "already-open",
+          openedAt: state.opened[id],
+        };
+      }
       await dependencies.openUrl(descriptor.url);
-      return descriptor.url;
+      const openedAt = dependencies.now().toISOString();
+      state.opened = { ...(state.opened ?? {}), [id]: openedAt };
+      await writeViewerState(descriptorSet, state);
+      return { id, label: descriptor.label, url: descriptor.url, opened: true, reason: "opened", openedAt };
     },
   };
 }
@@ -173,6 +199,9 @@ async function startViewer(descriptorSet, id, dependencies) {
       };
       state = await readViewerState(descriptorSet.statePath);
       state.viewers[id] = entry;
+      // A process Bench just spawned cannot already have a tab, so clear the
+      // open record and let the caller open it.
+      if (state.opened) delete state.opened[id];
       await writeViewerState(descriptorSet, state);
       return {
         id,
@@ -214,6 +243,7 @@ async function stopViewer(descriptorSet, id, dependencies) {
   const health = await dependencies.endpointStatus(descriptor);
   if (!stateMatches || !groupExists || !processMatches) {
     delete state.viewers[id];
+    if (state.opened) delete state.opened[id];
     await writeViewerState(descriptorSet, state);
     return {
       id,
@@ -254,6 +284,7 @@ async function stopViewer(descriptorSet, id, dependencies) {
   }
 
   delete state.viewers[id];
+  if (state.opened) delete state.opened[id];
   await writeViewerState(descriptorSet, state);
   return {
     id,
@@ -265,7 +296,7 @@ async function stopViewer(descriptorSet, id, dependencies) {
   };
 }
 
-async function viewerStatus(descriptor, entry, dependencies) {
+async function viewerStatus(descriptor, entry, dependencies, openedAt = null) {
   const health = await dependencies.endpointStatus(descriptor);
   if (health === "occupied") {
     return {
@@ -275,6 +306,7 @@ async function viewerStatus(descriptor, entry, dependencies) {
       health,
       owned: false,
       pid: entry?.pid,
+      openedAt,
     };
   }
   if (health !== "healthy") {
@@ -285,6 +317,7 @@ async function viewerStatus(descriptor, entry, dependencies) {
       health: entry ? "stale" : "stopped",
       owned: false,
       pid: entry?.pid,
+      openedAt,
     };
   }
 
@@ -301,6 +334,7 @@ async function viewerStatus(descriptor, entry, dependencies) {
     health: "healthy",
     owned,
     pid: owned ? entry.pid : undefined,
+    openedAt,
   };
 }
 
@@ -400,6 +434,7 @@ async function readViewerState(path) {
   if (value?.schemaVersion !== STATE_SCHEMA_VERSION || !value.viewers || typeof value.viewers !== "object") {
     throw new BenchError(`Viewer state is invalid: ${path}`);
   }
+  if (!value.opened || typeof value.opened !== "object" || Array.isArray(value.opened)) value.opened = {};
   return value;
 }
 
@@ -415,7 +450,7 @@ async function writeViewerState(descriptorSet, state) {
 }
 
 function emptyState() {
-  return { schemaVersion: STATE_SCHEMA_VERSION, viewers: {} };
+  return { schemaVersion: STATE_SCHEMA_VERSION, viewers: {}, opened: {} };
 }
 
 function viewerDescriptor(descriptorSet, id) {
