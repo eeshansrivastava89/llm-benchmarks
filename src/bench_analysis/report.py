@@ -126,8 +126,11 @@ def _visual_provider(metadata: dict[str, Any]) -> str | None:
 def _asset_path(metadata_path: Path, value: Any) -> Path | None:
     if not isinstance(value, str) or not value:
         return None
-    candidate = metadata_path.parent / value
-    return candidate if candidate.is_file() else None
+    run_root = metadata_path.parent.resolve()
+    candidate = (run_root / value).resolve()
+    # Run metadata is not a trusted path source: previews must belong to this
+    # run, even when a relative path or symlink points elsewhere.
+    return candidate if candidate.is_relative_to(run_root) and candidate.is_file() and candidate.suffix.lower() == ".png" else None
 
 
 def scan_visual_runs(repository_root: Path) -> list[VisualRun]:
@@ -262,9 +265,9 @@ def _selected_evals(evals, variant_ids: set[str]):
 def select_visual_runs(
     runs: Iterable[VisualRun], variant_ids: set[str]
 ) -> tuple[list[VisualRun], dict[tuple[str, str], str]]:
-    """Select the prompt revision covering the most variants for each benchmark.
+    """Select the prompt revision with the most usable previews per benchmark.
 
-    Ties prefer the revision with more completed runs, then the most recent run.
+    Ties prefer broader recorded coverage, more completed runs, then recency.
     Within the selected revision, each variant contributes its latest completed
     run with a preview. This rule is deterministic and does not inspect quality.
     """
@@ -280,6 +283,7 @@ def select_visual_runs(
         chosen_hash, chosen_runs = max(
             prompt_groups.items(),
             key=lambda item: (
+                len({run.variant_id for run in item[1] if run.status == "completed" and run.preview_path is not None}),
                 len({run.variant_id for run in item[1]}),
                 sum(run.status == "completed" for run in item[1]),
                 max((run.created_at for run in item[1]), default=""),
@@ -332,6 +336,10 @@ def _sample_scores(selected, samples) -> dict[tuple[str, str], dict[tuple[str, i
         column = f"score_{scorer}" if isinstance(scorer, str) and scorer else None
         value = sample.get(column) if column else None
         if value is None or value != value:
+            continue
+        # Compound scorer payloads have no single scalar to compare. Asking
+        # Inspect to convert them emits warnings with raw score payloads.
+        if isinstance(value, (dict, list)) or isinstance(value, str) and value.lstrip().startswith(("{", "[")):
             continue
         try:
             numeric = float(convert(value))
@@ -417,14 +425,25 @@ def _inspect_results(selected, samples, catalog: dict[str, dict[str, Any]]) -> l
 
 
 def _copy_visual_assets(selected: list[VisualRun], output_dir: Path) -> list[dict[str, Any]]:
+    from PIL import Image
+
     rows: list[dict[str, Any]] = []
     for run in selected:
-        extension = run.preview_path.suffix.lower() if run.preview_path else ".png"
-        destination = Path("assets") / "visual" / slugify(run.variant_id) / f"{slugify(run.benchmark_id)}{extension}"
+        # Slugs alone collide (a.b and a-b, for example). Hash the original
+        # IDs so two configurations cannot overwrite one another's evidence.
+        variant_key = f"{slugify(run.variant_id)}-{_prompt_hash(run.variant_id)}"
+        benchmark_key = f"{slugify(run.benchmark_id)}-{_prompt_hash(run.benchmark_id)}"
+        destination = Path("assets") / "visual" / variant_key / f"{benchmark_key}.png"
         absolute_destination = output_dir / destination
         absolute_destination.parent.mkdir(parents=True, exist_ok=True)
         if run.preview_path:
-            shutil.copy2(run.preview_path, absolute_destination)
+            # Re-encode the pixels rather than publishing uninspected PNG
+            # metadata chunks (which could carry private run material).
+            with Image.open(run.preview_path) as image:
+                if image.format != "PNG":
+                    raise ValueError(f"Invalid PNG preview for {run.variant_id}/{run.benchmark_id}")
+                image.load()
+                image.save(absolute_destination, format="PNG")
         rows.append({
             "variant": run.variant_id,
             "benchmark": run.benchmark_id,
@@ -539,6 +558,39 @@ def render_quarto_report(
     return index
 
 
+def _check_existing_output(output_dir: Path) -> None:
+    """Overwrite only a prior report, never an arbitrary directory."""
+    if not output_dir.exists():
+        return
+    marker = output_dir / "report.json"
+    try:
+        previous = json.loads(marker.read_text("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError(f"Refusing to replace a directory without a valid report.json: {output_dir}") from error
+    invalid = ValueError(f"Refusing to replace a directory that is not exclusively a Bench report: {output_dir}")
+    if (not isinstance(previous, dict) or previous.get("schemaVersion") != 1
+            or not isinstance(previous.get("variants"), list)
+            or not isinstance(previous.get("selectionRules"), dict)
+            or not isinstance(previous.get("visualResults"), list)):
+        raise invalid
+    expected_files = {"report.json", "index.html", "inspect-results.csv", "paired-results.csv", "evidence-gaps.csv"}
+    for row in previous["visualResults"]:
+        if not isinstance(row, dict) or not isinstance(row.get("preview"), str):
+            raise invalid
+        preview = Path(row["preview"])
+        if not preview.parts[:2] == ("assets", "visual") or ".." in preview.parts or preview.suffix != ".png":
+            raise invalid
+        expected_files.add(preview.as_posix())
+    for path in output_dir.rglob("*"):
+        relative = path.relative_to(output_dir).as_posix()
+        if path.is_symlink() or path.is_file() and relative not in expected_files:
+            raise invalid
+        if path.is_dir() and relative not in {"assets", "assets/visual"} and not any(
+            expected.startswith(relative + "/") for expected in expected_files
+        ):
+            raise invalid
+
+
 def build_report(
     repository_root: Path,
     title: str,
@@ -552,8 +604,9 @@ def build_report(
         raise ValueError("Variants must be unique")
 
     output_dir = (output_dir or repository_root / "reports" / slugify(title)).resolve()
-    if output_dir == repository_root or output_dir == Path(output_dir.anchor):
-        raise ValueError("Refusing to use the repository root or filesystem root as report output")
+    if repository_root.is_relative_to(output_dir):
+        raise ValueError("Refusing to use the repository root or an ancestor as report output")
+    _check_existing_output(output_dir)
     if output_dir.exists():
         shutil.rmtree(output_dir)
     output_dir.mkdir(parents=True)
@@ -598,7 +651,7 @@ def build_report(
         "variants": [{"id": variant.id, "label": variant.label} for variant in variants],
         "selectionRules": {
             "inspect": "Most completed successful run per variant/task; newest breaks ties.",
-            "visual": "Prompt revision with greatest selected-variant coverage; newest completed preview per variant.",
+            "visual": "Prompt revision with greatest usable selected-variant coverage; newest completed preview per variant.",
         },
         "coverage": {
             "inspectTasks": inspect_tasks,

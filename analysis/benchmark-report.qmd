@@ -229,7 +229,7 @@ else:
 ### Deterministic selection
 
 - **Inspect:** successful log with the most completed samples for each configuration and task; newest log breaks ties.
-- **Visual:** prompt revision covering the most selected configurations; newest completed preview breaks ties.
+- **Visual:** prompt revision with usable previews for the most selected configurations; newest completed preview per configuration.
 - **Pairs:** only matching dataset sample IDs and epochs.
 - **Missing evidence:** never imputed.
 :::

@@ -19,6 +19,7 @@ dependencies = [
 report = [
     "inspect-viz>=0.4.1",
     "papermill>=2.6.0",
+    "pillow>=10.0.0",
     "playwright>=1.60.0",
     "quarto-cli>=1.10.18",
 ]

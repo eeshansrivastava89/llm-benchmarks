@@ -172,14 +172,14 @@ bench report \
   --variant "omlx/Qwen3.8-27B-oQ4e-mtp"
 ```
 
-The default output is `reports/<model-name>/index.html`. Reports are ignored local output until deliberately reviewed and incorporated into the publish-safe export. The CLI installs the locked `report` dependency group on demand, compiles safe data, and executes the tracked `analysis/benchmark-report.qmd` template.
+The default output is `reports/<model-name>/index.html`. Rebuilding replaces an existing Bench report, but refuses to overwrite unrelated or augmented directories. Reports are ignored local output until deliberately reviewed and incorporated into the publish-safe export. The CLI installs the locked `report` dependency group on demand, compiles safe data, and executes the tracked `analysis/benchmark-report.qmd` template.
 
 The report presentation is owned entirely by Quarto rather than Python HTML strings. It uses Quarto's default HTML theme and table styling without a brand file, custom CSS, or a second renderer. Inspect Viz renders archive-friendly static plots that work when the HTML is opened directly from disk.
 
 Compilation is deterministic and coverage-driven:
 
 - Inspect selects the successful log with the most completed samples for each variant/task; the newest log breaks ties.
-- Visual comparisons select the prompt revision covering the most selected variants, then the newest completed run with a preview.
+- Visual comparisons select the prompt revision with usable previews for the most selected variants, then the newest completed run with a preview.
 - Pairwise tables include only matching dataset sample IDs and epochs.
 - Missing, failed, preview-less, and prompt-mismatched cells remain visible rather than being imputed, and are written to `evidence-gaps.csv` as the next-run queue.
 - Every selected Inspect log is identified by an evidence ID and SHA-256 hash.

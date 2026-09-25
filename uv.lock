@@ -1911,6 +1911,7 @@ dependencies = [
 report = [
     { name = "inspect-viz" },
     { name = "papermill" },
+    { name = "pillow" },
     { name = "playwright" },
     { name = "quarto-cli" },
 ]
@@ -1929,6 +1930,7 @@ requires-dist = [
 report = [
     { name = "inspect-viz", specifier = ">=0.4.1" },
     { name = "papermill", specifier = ">=2.6.0" },
+    { name = "pillow", specifier = ">=10.0.0" },
     { name = "playwright", specifier = ">=1.60.0" },
     { name = "quarto-cli", specifier = ">=1.10.18" },
 ]
