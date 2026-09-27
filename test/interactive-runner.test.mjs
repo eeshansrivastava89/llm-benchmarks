@@ -144,6 +144,7 @@ test("live local models and resolved auth reach only private run configuration",
       return confinement.confinementLaunchImpl(command, args, options);
     },
     lifecycleFactory: async () => ({ cleanup: async () => ({ status: "unloaded" }) }),
+    inspectOutcomeImpl: async () => ({ status: "ok" }),
     runForegroundImpl: async () => ({ code: 0, status: 0 }),
   });
   assert.deepEqual(payload, { model, auth });
@@ -167,6 +168,7 @@ test("extension-registered providers travel through the private per-run configur
       payload = options.localModel;
       return confinement.confinementLaunchImpl(command, args, options);
     },
+    inspectOutcomeImpl: async () => ({ status: "ok" }),
     runForegroundImpl: async () => ({ code: 0, status: 0 }),
   });
 
@@ -193,6 +195,7 @@ test("plain cloud providers stay on Pi's own copied configuration", async (t) =>
       payload = options.localModel;
       return confinement.confinementLaunchImpl(command, args, options);
     },
+    inspectOutcomeImpl: async () => ({ status: "ok" }),
     runForegroundImpl: async () => ({ code: 0, status: 0 }),
   });
 
@@ -371,6 +374,7 @@ test("successful execution prepares one slot, launches in it, and leaves it prep
     onPrepared: ({ prepared }) => {
       events.push(`prepared:${prepared.paths.runDirectory}`);
     },
+    inspectOutcomeImpl: async () => ({ status: "ok" }),
     runForegroundImpl: async (command, args, options) => {
       events.push(`launch:${options.cwd}`);
       launch = { command, args, options };
@@ -503,6 +507,7 @@ test("normal Pi exit preserves an already-loaded Ollama model", async (t) => {
         return new Response(JSON.stringify({ done: true }));
       },
     },
+    inspectOutcomeImpl: async () => ({ status: "ok" }),
     runForegroundImpl: async () => ({
       code: 0,
       signal: null,
@@ -651,4 +656,87 @@ test("launch failures are sanitized, recorded, cleaned up, and remove access fil
   assert.equal(metadata.error.message, "Could not launch Pi.");
   assert.doesNotMatch(JSON.stringify(metadata), /do-not-record-this-secret/);
   await assert.rejects(stat(preparedPaths.supabaseConfigPath), { code: "ENOENT" });
+});
+
+test("an interactive run whose Pi session ended in a model error is failed", async (t) => {
+  const runsRoot = await temporaryRunsRoot(t);
+  let prepared;
+  await assert.rejects(
+    executeInteractiveBenchmark({
+      repositoryRoot: process.cwd(),
+      runsRoot,
+      benchmark: visualBenchmark(),
+      model: cloudModel(),
+      modelRuntime: {},
+      ...confinementTestOptions(runsRoot),
+      onPrepared: ({ prepared: value }) => { prepared = value; },
+      inspectOutcomeImpl: async () => ({ status: "failed", reason: "Pi ended the run with a model error." }),
+      runForegroundImpl: async () => ({ code: 0, signal: null, interruptedBy: null, status: 0 }),
+    }),
+    /model error/,
+  );
+
+  const metadata = JSON.parse(await readFile(prepared.paths.metadataPath, "utf8"));
+  assert.equal(metadata.status, "failed");
+  assert.equal(metadata.error.message, "Pi ended the run with a model error.");
+});
+
+test("an unverified Pi session is not reported as a success", async (t) => {
+  const runsRoot = await temporaryRunsRoot(t);
+  let prepared;
+  await assert.rejects(
+    executeInteractiveBenchmark({
+      repositoryRoot: process.cwd(),
+      runsRoot,
+      benchmark: visualBenchmark(),
+      model: cloudModel(),
+      modelRuntime: {},
+      ...confinementTestOptions(runsRoot),
+      onPrepared: ({ prepared: value }) => { prepared = value; },
+      inspectOutcomeImpl: async () => ({ status: "unverified", reason: "Pi recorded no finished assistant response for this run." }),
+      runForegroundImpl: async () => ({ code: 0, signal: null, interruptedBy: null, status: 0 }),
+    }),
+    /no finished assistant response/,
+  );
+
+  assert.equal(JSON.parse(await readFile(prepared.paths.metadataPath, "utf8")).status, "failed");
+});
+
+test("an aborted Pi session is cancelled rather than failed", async (t) => {
+  const runsRoot = await temporaryRunsRoot(t);
+  let prepared;
+  await assert.rejects(
+    executeInteractiveBenchmark({
+      repositoryRoot: process.cwd(),
+      runsRoot,
+      benchmark: visualBenchmark(),
+      model: cloudModel(),
+      modelRuntime: {},
+      ...confinementTestOptions(runsRoot),
+      onPrepared: ({ prepared: value }) => { prepared = value; },
+      inspectOutcomeImpl: async () => ({ status: "cancelled", reason: "The Pi run was aborted before it finished." }),
+      runForegroundImpl: async () => ({ code: 0, signal: null, interruptedBy: null, status: 0 }),
+    }),
+    /aborted/,
+  );
+
+  const metadata = JSON.parse(await readFile(prepared.paths.metadataPath, "utf8"));
+  assert.equal(metadata.status, "cancelled");
+  assert.ok(metadata.cancelledAt);
+});
+
+test("a verified Pi turn leaves the run prepared for capture", async (t) => {
+  const runsRoot = await temporaryRunsRoot(t);
+  const execution = await executeInteractiveBenchmark({
+    repositoryRoot: process.cwd(),
+    runsRoot,
+    benchmark: visualBenchmark(),
+    model: cloudModel(),
+    modelRuntime: {},
+    ...confinementTestOptions(runsRoot),
+    inspectOutcomeImpl: async () => ({ status: "ok" }),
+    runForegroundImpl: async () => ({ code: 0, signal: null, interruptedBy: null, status: 0 }),
+  });
+
+  assert.equal((await metadataFor(execution)).status, "prepared");
 });

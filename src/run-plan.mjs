@@ -77,7 +77,7 @@ export function formatCommand(command, args, apiKeyEnv) {
   return `${prefix}${[command, ...args].map(shellQuote).join(" ")}`;
 }
 
-export function buildInspectInvocation(task, model, translated, config, inspectPassthrough = []) {
+export function buildInspectInvocation(task, model, translated, config, inspectPassthrough = [], runId = null) {
   const modelSelection = translated.extraHeaders
     ? [
         "--model-spec",
@@ -110,6 +110,19 @@ export function buildInspectInvocation(task, model, translated, config, inspectP
     metadataArg("pi_api", model.api),
     "--log-dir",
     config.logDir,
+    ...(runId ? ["--metadata", metadataArg("bench_run_id", runId)] : []),
     ...inspectPassthrough,
   ];
+}
+
+// Inspect options following `--` may override the configured log directory.
+// Track the effective destination rather than assuming the project default.
+export function inspectLogDir(args) {
+  let directory = null;
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === "--log-dir") directory = args[++index];
+    else if (args[index].startsWith("--log-dir=")) directory = args[index].slice("--log-dir=".length);
+  }
+  if (!directory || directory.startsWith("--")) throw new Error("Inspect log directory is missing");
+  return directory;
 }

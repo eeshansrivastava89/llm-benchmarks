@@ -88,6 +88,8 @@ Visual and Data Science run slots are created only after confirmation. Bench lau
 
 Ambient Pi context, skills, templates, discovered extensions, settings, and session reuse are disabled for reproducibility. Bench copies only Pi's authentication and model catalogs into writable private scratch storage for the run. For local runs, the explicit Pi extension registers the selected model from a private manifest; there is no static-model fallback if the extension cannot load. Bench deletes the scratch storage after exit and never updates the global Pi catalog. Bench retains fresh Visual session diagnostics privately under `.bench-runtime/` and discards Data Science transcripts because they may contain temporary dataset access values. None of these private files are published. When Pi exits, Bench removes temporary Data Science access. Ollama and oMLX models that were already loaded are left alone; models loaded during a Bench run are unloaded afterward. If the initial load status is unknown, cleanup is skipped. Other local providers show a warning and may remain loaded.
 
+After an interactive run, Bench reads the recorded Pi session to confirm the final assistant turn actually completed. Pi's interactive exit code only reflects how the terminal was closed, so a provider error still exits 0; Bench marks an errored or unverifiable run as failed and does not report it as completed or open the viewer.
+
 After a successful run Bench starts the matching results viewer and opens it, then prints the live state of both viewers. A viewer Bench already surfaced within the last ten minutes is reported by URL instead of opening a duplicate browser tab. Pass `--no-open` (or set `BENCH_NO_OPEN=1`) to skip the viewer entirely. The same two viewers are also reachable from **Results viewers** in step 1 of the picker, and their status appears in the Review receipt before a run starts.
 
 ### Inspect options
@@ -106,6 +108,8 @@ Inspect provides three task sources:
 - **Recommended Inspect Evals**: tasks that passed the saved one-sample compatibility sweep
 - **All Inspect Evals**: the installed Inspect Evals catalog, including saved blocker warnings
 - **Local tests**: project tasks found under `[tool.bench].custom-task-roots`
+
+Selecting a cloud model sends one short request through Pi's model connection to verify live provider access before a suite is chosen. This may incur provider usage; resolving Pi credentials alone cannot detect an expired subscription. Local models are never probed, because a request would load them, and an unknown backend location is reported instead of probed. After an Inspect eval, Bench checks its native `.eval` status as well as Inspect's process exit code; failed evals remain in `logs/` but are not reported as completed or opened automatically.
 
 Saved task configurations are created lazily under `bench-configs/`. Partial sample choices use deterministic shuffle seed `42`. For Ollama and oMLX Inspect runs, Bench unloads a model only when Bench caused it to load.
 

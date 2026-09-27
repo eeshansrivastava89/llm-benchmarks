@@ -49,6 +49,12 @@ Use `npm run build:static` when changing the viewer, export pipeline, or deploym
 
 `npm run publish` refreshes `public/export/`, runs aggregate checks and tests, and creates the static build. Public exports must not include raw generated HTML, prepared prompts, raw responses, logs, command files, local URLs, local paths, or secrets.
 
+## End-to-end bug fixes
+
+When a bug is reported, trace the behavior through the full Bench workflow before changing code. Identify the root cause and check adjacent paths that share it; fix the underlying contract or shared logic rather than patching only the observed symptom. First present the root-cause analysis and minimal proposed fix, including uncertainty and validation scope, then wait for the user's approval before implementing the fix. Keep fixes coherent and small (DRY/KISS), with regression coverage for the reported behavior and relevant related cases. Validate the affected path end to end when practical.
+
+Do not hardcode provider, model, server, path, generation, or capability assumptions where Pi, the local server, Inspect, or the visual application is the source of truth. Do not add silent fallbacks that conceal missing metadata, unsupported behavior, or failures; report the issue explicitly instead. Preserve intentional, documented defaults.
+
 ## Keep changes focused
 
 Preserve the native Inspect and visual result formats. Prefer shared domain modules over parallel implementations, and do not add compatibility paths for the retired multi-repository workflow.

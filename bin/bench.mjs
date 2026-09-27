@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { randomUUID } from "node:crypto";
 import { realpathSync } from "node:fs";
 import { access, readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
@@ -12,12 +13,14 @@ import { parseReportCommand, runReportCommand } from "../src/cli-report.mjs";
 import { confirmInteractiveReview, confirmRun, confirmSweepWarning, modelDetails, providerDetails, selectConcurrency, selectInteractiveBenchmark, selectSamples } from "../src/cli-selection.mjs";
 import { createViewerManagerFor, openViewersAfterRun, parseViewCommand, printViewerSummary, runResultsMenu, runViewCommand, viewerOpenLine, viewerStatuses, viewerStatusLine } from "../src/cli-view.mjs";
 import { discoverBenchmarks, stopActiveCapturedChildren } from "../src/inspect-discovery.mjs";
+import { checkInspectOutcome, inspectLogNames } from "../src/inspect-guard.mjs";
 import { modelCompatibility, modelPiReady, resolveInspectModel } from "../src/inspect-translate.mjs";
 import { executeInteractiveBenchmark, extensionProviderStaticGap, runForeground } from "../src/interactive-runner.mjs";
 import { prepareLocalModelLifecycle } from "../src/local-lifecycle.mjs";
+import { probeCloudModelAccess } from "../src/model-access.mjs";
 import { loadBenchPreferences, saveBenchPreferences } from "../src/preferences.mjs";
 import { annotateProviderBackends, discoverModels } from "../src/providers.mjs";
-import { buildInspectInvocation, formatCommand } from "../src/run-plan.mjs";
+import { buildInspectInvocation, formatCommand, inspectLogDir } from "../src/run-plan.mjs";
 import { selectTaskConfiguration } from "../src/task-config.mjs";
 import { BACK, BenchUI, benchUiStyle, selectedOrCancel } from "../src/ui/bench-ui.mjs";
 import { formatCount } from "../src/ui/presentation.mjs";
@@ -215,6 +218,9 @@ export async function main(argv = process.argv.slice(2), options = {}) {
     discoverProviderModels = discoverModels,
     discoverInteractiveSuites = loadInteractiveBenchmarkSuites,
     resolveInspect = resolveInspectModel,
+    probeModel = probeCloudModelAccess,
+    checkOutcome = checkInspectOutcome,
+    runInspect = runForeground,
     discoverInspectBenchmarks = discoverBenchmarks,
     createViewerManager = createViewerManagerFor,
     skipTtyCheck = false,
@@ -310,6 +316,7 @@ export async function main(argv = process.argv.slice(2), options = {}) {
     let samples = null;
     let concurrency = null;
     let inspectArgs = null;
+    let inspectRunId = null;
     let dataScienceAccess = null;
     let configureWasInteractive = false;
     let samplesWereInteractive = false;
@@ -478,6 +485,33 @@ export async function main(argv = process.argv.slice(2), options = {}) {
         translated = null;
         lifecycle = null;
         dataScienceAccess = null;
+
+        if (selectedModel.backend?.location === "cloud") {
+          let accessAction = "retry";
+          while (accessAction === "retry") {
+            ui.showLoading("Checking model access…", `${selectedModel.provider}/${selectedModel.id}`);
+            try {
+              await probeModel(modelRuntime, selectedModel);
+              accessAction = "continue";
+            } catch (error) {
+              const recovery = await recoverFromError(ui, [
+                { action: "model", label: "Choose another model", detail: "Return to the model browser" },
+                { action: "retry", label: "Retry", detail: "Check the same model again" },
+              ], {
+                step: "2 Model",
+                context: `${selectedModel.provider}/${selectedModel.id}`,
+                title: "This model is not accessible",
+                message: "Check provider access and credentials, or choose a different model.",
+                details: () => ["TECHNICAL DETAILS", errorMessage(error)],
+                allowBack: true,
+              });
+              accessAction = recovery === BACK ? "model" : recovery.action;
+            }
+          }
+          if (accessAction !== "continue") continue;
+        } else if (selectedModel.backend?.location !== "local") {
+          ui.flash("Model access was not checked because the backend location is unknown.");
+        }
         stage = "suite";
         continue;
       }
@@ -754,6 +788,7 @@ export async function main(argv = process.argv.slice(2), options = {}) {
       }
 
       if (stage === "review") {
+        inspectRunId = randomUUID();
         inspectArgs = buildInspectInvocation(
           selectedTask,
           selectedModel,
@@ -765,6 +800,7 @@ export async function main(argv = process.argv.slice(2), options = {}) {
             ...(concurrency?.args ?? []),
             ...inspectPassthrough,
           ],
+          inspectRunId,
         );
         const viewers = await viewerStatuses(viewerManager);
         const confirmed = await confirmRun(
@@ -852,20 +888,31 @@ export async function main(argv = process.argv.slice(2), options = {}) {
     }
     console.log();
 
+    const logDir = inspectLogDir(inspectArgs);
+    const existingLogs = await inspectLogNames(cwd, logDir);
     let exitStatus = 1;
     let cleanupResult = null;
+    let outcomeError = null;
     try {
-      exitStatus = (await runForeground("uv", inspectArgs, {
+      exitStatus = (await runInspect("uv", inspectArgs, {
         cwd,
         env: translated.childEnv,
       })).status;
+      if (exitStatus === 0) {
+        try {
+          await checkOutcome(cwd, logDir, existingLogs, inspectRunId);
+        } catch (error) {
+          outcomeError = error;
+          exitStatus = 1;
+        }
+      }
     } finally {
       cleanupResult = await lifecycle?.cleanup();
     }
     process.exitCode = exitStatus;
     console.log(exitStatus === 0
-      ? `\nBench completed. Results are under ${config.logDir}.`
-      : `\nBench stopped because Inspect exited with status ${exitStatus}.`);
+      ? `\nBench completed. Results are under ${logDir}.`
+      : `\nBench stopped. ${outcomeError ? errorMessage(outcomeError) : `Inspect exited with status ${exitStatus}`}. Logs are under ${logDir}.`);
     if (cleanupResult?.message) {
       const cleanupMessage = `Local model: ${cleanupResult.message}.`;
       if (cleanupResult.status === "failed") console.error(`Warning: ${cleanupMessage}`);

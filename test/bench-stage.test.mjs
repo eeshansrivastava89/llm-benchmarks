@@ -25,6 +25,32 @@ const PROVIDER = {
   }],
 };
 
+const UNKNOWN_PROVIDER = {
+  provider: "mystery",
+  backend: { location: "unknown" },
+  models: [{
+    id: "mystery-model",
+    provider: "mystery",
+    api: "openai-completions",
+    backend: { location: "unknown" },
+    contextWindow: 4_096,
+    input: ["text"],
+  }],
+};
+
+const CLOUD_PROVIDER = {
+  provider: "kimi",
+  backend: { location: "cloud" },
+  models: [{
+    id: "k3",
+    provider: "kimi",
+    api: "openai-completions",
+    backend: { location: "cloud" },
+    contextWindow: 4_096,
+    input: ["text"],
+  }],
+};
+
 const MODEL_RUNTIME = {
   isUsingSubscription: () => false,
   extensionProviders: new Set(),
@@ -156,7 +182,11 @@ async function runMain(cwd, ui, overrides = {}) {
       diagnostics: [],
     }),
     discoverInteractiveSuites: async () => INTERACTIVE_SUITES,
-    resolveInspect: async () => ({ inspectModel: "openai-api/omlx/test-model", baseUrl: "http://127.0.0.1:8000/v1" }),
+    resolveInspect: async () => ({
+      inspectModel: "openai-api/omlx/test-model", baseUrl: "http://127.0.0.1:8000/v1",
+      modelArgs: {}, childEnv: process.env,
+    }),
+    probeModel: async () => ({}),
     ...rest,
   });
 }
@@ -241,6 +271,92 @@ test("a failed discovery retries until it succeeds", async () => {
       2,
       "each attempt showed the discovery spinner",
     );
+  });
+});
+
+test("an errored Inspect log prevents the success message and viewer opening", async () => {
+  await withTempCwd(async (cwd) => {
+    const viewers = fakeViewerManager();
+    const ui = new ScriptedUI((state) => {
+      if (state.options.step === "7 Concurrency") return state.items.find((item) => item.action === "static");
+      if (state.options.step === "8 Review") return state.items.find((item) => item.action === "run");
+      return happyPathResponder(state);
+    });
+    ui.browseBenchmarks = async () => ({
+      source: "local",
+      task: { spec: "smoke.py@smoke", displayName: "smoke", source: "local", sampleCount: 1, params: [] },
+    });
+    const originalExitCode = process.exitCode;
+    const lines = [];
+    const originalLog = console.log;
+    console.log = (line) => { lines.push(line); };
+    try {
+      await runMain(cwd, ui, {
+        viewers,
+        discoverInspectBenchmarks: async () => INSPECT_SOURCES,
+        runInspect: async () => ({ status: 0 }),
+        checkOutcome: async () => { throw new BenchError("Inspect log status: error"); },
+      });
+      assert.equal(process.exitCode, 1);
+      assert.match(lines.join("\n"), /Bench stopped.*Inspect log status: error/);
+      assert.doesNotMatch(lines.join("\n"), /Bench completed/);
+      assert.equal(viewers.calls.some((call) => call.kind === "start" || call.kind === "open"), false);
+    } finally {
+      process.exitCode = originalExitCode;
+      console.log = originalLog;
+    }
+  });
+});
+
+test("an inaccessible cloud model is gated at selection before any suite runs", async () => {
+  await withTempCwd(async (cwd) => {
+    let attempts = 0;
+    let discoveries = 0;
+    const ui = new ScriptedUI(({ items, options }) => {
+      if (options.step === "1 Provider") return CLOUD_PROVIDER;
+      if (options.step === "2 Model") {
+        const recovery = items.find((item) => item.action);
+        if (recovery) return { action: "retry" };
+        return { model: CLOUD_PROVIDER.models[0], piReady: true, compatibility: { ready: true, short: "ready", reason: "" } };
+      }
+      if (options.step === "3 Suite") return CANCEL;
+      throw new Error(`Unexpected picker at step ${options.step}`);
+    });
+
+    await assert.rejects(runMain(cwd, ui, {
+      discoverProviderModels: async () => ({ modelRuntime: MODEL_RUNTIME, providers: [CLOUD_PROVIDER], diagnostics: [] }),
+      probeModel: async () => {
+        attempts += 1;
+        if (attempts === 1) throw new BenchError("Model request failed (APIStatusError, HTTP 403).");
+      },
+      discoverInspectBenchmarks: async () => { discoveries += 1; return INSPECT_SOURCES; },
+    }), SelectionCancelled);
+
+    assert.equal(attempts, 2, "the cloud model was probed again after retry");
+    assert.equal(discoveries, 0, "no suite ran before access was verified");
+    assert.equal(ui.browsing.length, 0);
+    assert.ok(ui.loadings.includes("Checking model access…"), "the access gate showed a spinner");
+    assert.equal(ui.steps.filter((step) => step === "2 Model").length, 2, "model picker, recovery screen");
+  });
+});
+
+test("an unknown backend location is reported instead of probed", async () => {
+  await withTempCwd(async (cwd) => {
+    let probed = 0;
+    const ui = new ScriptedUI(({ items, options }) => {
+      if (options.step === "1 Provider") return UNKNOWN_PROVIDER;
+      if (options.step === "2 Model") return { model: UNKNOWN_PROVIDER.models[0], piReady: true, compatibility: { ready: true, short: "ready", reason: "" } };
+      if (options.step === "3 Suite") return CANCEL;
+      throw new Error(`Unexpected picker at step ${options.step}`);
+    });
+
+    await assert.rejects(runMain(cwd, ui, {
+      discoverProviderModels: async () => ({ modelRuntime: MODEL_RUNTIME, providers: [UNKNOWN_PROVIDER], diagnostics: [] }),
+      probeModel: async () => { probed += 1; },
+    }), SelectionCancelled);
+
+    assert.equal(probed, 0, "an unknown location is never probed");
+    assert.ok(ui.calls.some((call) => call.kind === "flash" && /location is unknown/.test(call.message)));
   });
 });
 

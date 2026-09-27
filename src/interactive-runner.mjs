@@ -8,6 +8,7 @@ import { prepareInteractiveBenchmarkRun } from "./benchmark-suites.mjs";
 import { BenchError, errorMessage } from "./errors.mjs";
 import { backendIdentity, isBackendKey } from "./lib/backend-labels.ts";
 import { prepareLocalModelLifecycle } from "./local-lifecycle.mjs";
+import { inspectPiSessionOutcome } from "./pi-session-outcome.mjs";
 import { updateRunMetadata, markRunFailed } from "./lib/runs.ts";
 import { formatCommand } from "./run-plan.mjs";
 import {
@@ -230,6 +231,7 @@ export async function executeInteractiveBenchmark(input) {
   let cleanupResult = null;
   let launchError = null;
   let executionError = null;
+  let outcomeError = null;
   const finalizationErrors = [];
 
   try {
@@ -316,6 +318,24 @@ export async function executeInteractiveBenchmark(input) {
         prepared.paths,
         new Error(`Pi exited with status ${childResult.status}`),
       );
+    } else if (childResult) {
+      // Exit 0 only means the TUI closed cleanly. Verify the actual turn before
+      // reporting success, reading the session before cleanup discards it.
+      const outcome = await (input.inspectOutcomeImpl ?? inspectPiSessionOutcome)(
+        diagnosticPaths.stagingDirectory,
+      );
+      if (outcome.status === "failed" || outcome.status === "unverified") {
+        await (input.markFailedImpl ?? markRunFailed)(prepared.paths, new Error(outcome.reason));
+        outcomeError = new BenchError(outcome.reason);
+      } else if (outcome.status === "cancelled") {
+        const timestamp = new Date().toISOString();
+        await (input.updateMetadataImpl ?? updateRunMetadata)(prepared.paths, {
+          status: "cancelled",
+          updatedAt: timestamp,
+          cancelledAt: timestamp,
+        });
+        outcomeError = new BenchError(outcome.reason);
+      }
     }
   } catch (error) {
     executionError = error;
@@ -354,6 +374,7 @@ export async function executeInteractiveBenchmark(input) {
   }
   if (executionError) throw executionError;
   if (launchError) throw launchError;
+  if (outcomeError) throw outcomeError;
   return { prepared, args, launchCommand, childResult, cleanupResult };
 }
 

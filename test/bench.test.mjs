@@ -21,6 +21,7 @@ import { annotateProviderBackends, classifyBackend, groupModels, probeTcp } from
 import {
   buildInspectInvocation,
   formatSampleCount,
+  inspectLogDir,
   inspectOptionValue,
   localConcurrencyChoices,
   sampleChoices,
@@ -638,6 +639,17 @@ test("regular Inspect invocation includes metadata and unchanged user arguments"
   assert.ok(args.includes('pi_model="vendor/model"'));
   assert.ok(args.includes('pi_api="openai-completions"'));
   assert.equal(args.join(" ").includes("test-secret"), false);
+});
+
+test("Inspect log verification follows explicit log-directory overrides and run IDs", async () => {
+  const selected = model();
+  const args = buildInspectInvocation(
+    { file: "smoke.py", name: "smoke" }, selected,
+    await resolveInspectModel(modelRuntime(), selected),
+    { logDir: "logs" }, ["--log-dir=custom-logs"], "run-123",
+  );
+  assert.equal(inspectLogDir(args), "custom-logs");
+  assert.ok(args.includes('bench_run_id="run-123"'));
 });
 
 test("OpenCode Go invocation carries generated headers in an inline model spec", async () => {
