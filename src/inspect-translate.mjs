@@ -146,12 +146,19 @@ export async function resolveInspectModel(modelRuntime, model) {
     : null;
   if (adapter) childEnv.BENCH_KIMI_FIXED_SAMPLING = "1";
 
-  const extraHeaders = model.provider === "opencode-go"
-    ? {
-        "x-opencode-client": "inspect-ai",
-        "x-opencode-session": randomUUID(),
-      }
-    : undefined;
+  const extraHeaders = opencodeSessionHeaders(model, "inspect-ai");
 
   return { inspectModel, baseUrl, modelArgs, extraHeaders, childEnv, apiKeyEnv, adapter };
+}
+
+// The opencode-go API requires a session header on every request. Pi's own
+// agent adds it internally, but direct ModelRuntime calls (the Inspect child
+// process, the Bench access probe) must supply it themselves.
+export function opencodeSessionHeaders(model, client) {
+  return model.provider === "opencode-go"
+    ? {
+      "x-opencode-client": client,
+      "x-opencode-session": randomUUID(),
+    }
+    : undefined;
 }
