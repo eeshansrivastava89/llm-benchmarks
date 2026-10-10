@@ -90,7 +90,7 @@ Ambient Pi context, skills, templates, discovered extensions, settings, and sess
 
 After an interactive run, Bench reads the recorded Pi session to confirm the final assistant turn actually completed. Pi's interactive exit code only reflects how the terminal was closed, so a provider error still exits 0; Bench marks an errored or unverifiable run as failed and does not report it as completed or open the viewer.
 
-After a successful run Bench starts the matching results viewer and opens it, then prints the live state of both viewers. A viewer Bench already surfaced within the last ten minutes is reported by URL instead of opening a duplicate browser tab. Pass `--no-open` (or set `BENCH_NO_OPEN=1`) to skip the viewer entirely. The same two viewers are also reachable from **Results viewers** in step 1 of the picker, and their status appears in the Review receipt before a run starts.
+After a successful run Bench starts the matching results viewer and opens it, printing one line with its URL. A viewer Bench already surfaced is reported by URL without a duplicate browser tab until it is stopped or restarted. Pass `--no-open` (or set `BENCH_NO_OPEN=1`) to skip the viewer entirely. The same two viewers are also reachable from **Results viewers** in step 1 of the picker, and their status appears in the Review receipt before a run starts.
 
 ### Inspect options
 

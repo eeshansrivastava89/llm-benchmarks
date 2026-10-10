@@ -55,12 +55,12 @@ export function viewerActionLine(result) {
   return `${result.label}: ${action} · ${result.url}${result.owned && result.pid ? ` · PID ${result.pid}` : ""}`;
 }
 
-// Bench never reopens a viewer it already surfaced inside the reopen window.
-// Saying so is more useful than silently spawning another browser tab.
+// Bench never reopens a viewer it already surfaced: it reports the URL instead
+// of spawning another browser tab.
 export function viewerOpenLine(result) {
   return result.opened
     ? `${result.label}: opened · ${result.url}`
-    : `${result.label}: already open, not reopening · ${result.url} (use --reopen to force)`;
+    : `${result.label}: ${result.url} (already open)`;
 }
 
 export function viewerReceiptLines(results) {
@@ -204,13 +204,3 @@ export async function openViewersAfterRun(cwd, target, options = {}) {
   }
 }
 
-// Prints the full two-viewer state so a finished run always ends with the same
-// answer to "what is running and where do I look?".
-export function printViewerSummary(statuses) {
-  console.log("  Results viewers");
-  if (statuses.length === 0) {
-    console.log("    Status unavailable.");
-    return;
-  }
-  for (const status of statuses) console.log(`    ${viewerStatusLine(status)}`);
-}

@@ -89,7 +89,7 @@ test("viewer open and receipt lines explain state without duplicating tabs", () 
   );
   assert.match(
     viewerOpenLine({ label: "Inspect results", url: "http://127.0.0.1:7575", opened: false }),
-    /already open, not reopening .*--reopen/,
+    /^Inspect results: http:\/\/127\.0\.0\.1:7575 \(already open\)$/,
   );
   assert.deepEqual(viewerReceiptLines([
     { label: "Inspect results", health: "healthy", owned: true, url: "http://127.0.0.1:7575" },
@@ -152,7 +152,7 @@ test("bench view start reuses the viewer and --reopen forces a tab", async () =>
     { kind: "start", target: "inspect" },
     { kind: "open", id: "inspect", force: true },
   ]);
-  assert.ok(output.some((line) => line.includes("already open, not reopening")));
+  assert.ok(output.some((line) => line.includes("(already open)")));
   assert.ok(output.some((line) => line.includes("Inspect results: opened")));
 });
 

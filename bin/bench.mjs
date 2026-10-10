@@ -11,7 +11,7 @@ import { BENCHMARK_SUITE_IDS, buildSuiteChoices, suitePassthroughError, updateSu
 import { BenchError, SelectionCancelled, errorMessage } from "../src/errors.mjs";
 import { parseReportCommand, runReportCommand } from "../src/cli-report.mjs";
 import { confirmInteractiveReview, confirmRun, confirmSweepWarning, modelDetails, providerDetails, selectConcurrency, selectInteractiveBenchmark, selectSamples } from "../src/cli-selection.mjs";
-import { createViewerManagerFor, openViewersAfterRun, parseViewCommand, printViewerSummary, runResultsMenu, runViewCommand, viewerOpenLine, viewerStatuses, viewerStatusLine } from "../src/cli-view.mjs";
+import { createViewerManagerFor, openViewersAfterRun, parseViewCommand, runResultsMenu, runViewCommand, viewerOpenLine, viewerStatuses, viewerStatusLine } from "../src/cli-view.mjs";
 import { discoverBenchmarks, stopActiveCapturedChildren } from "../src/inspect-discovery.mjs";
 import { checkInspectOutcome, inspectLogNames } from "../src/inspect-guard.mjs";
 import { modelCompatibility, modelPiReady, resolveInspectModel } from "../src/inspect-translate.mjs";
@@ -181,25 +181,22 @@ Environment:
 Project guide: README.md in the Bench repository.
 `;
 
-// Every successful run ends with the same answer to "what is running, where,
-// and did Bench open it?". A viewer problem is a warning, never a run failure.
+// Every successful run ends with one line about the matching results viewer:
+// opened once, otherwise its URL. A viewer problem is a warning plus the
+// target's status — diagnostics, never a run failure.
 async function presentResults(cwd, viewerManager, target, options = {}) {
-  if (options.noOpen) {
-    console.log();
-    printViewerSummary(await viewerStatuses(viewerManager));
-    console.log("    Not opened: --no-open is set.");
-    return;
-  }
+  if (options.noOpen) return;
   const outcome = await openViewersAfterRun(cwd, target, { manager: viewerManager });
   if (outcome.error) {
     console.error(`Warning: could not open the results viewer: ${errorMessage(outcome.error)}`);
-    console.log();
-    printViewerSummary(await viewerStatuses(viewerManager));
+    for (const status of await viewerStatuses(viewerManager, target)) {
+      console.log(`  ${viewerStatusLine(status)}`);
+    }
     return;
   }
+  if (!outcome.opened) return;
   console.log();
-  printViewerSummary(await viewerStatuses(viewerManager));
-  if (outcome.opened) console.log(`    ${viewerOpenLine(outcome.opened)}`);
+  console.log(`  ${viewerOpenLine(outcome.opened)}`);
 }
 
 async function printVersion() {
