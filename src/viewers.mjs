@@ -16,10 +16,6 @@ export const VIEWER_IDS = Object.freeze({
 const STATE_SCHEMA_VERSION = 1;
 const DEFAULT_POLL_INTERVAL_MS = 150;
 const DEFAULT_STOP_TIMEOUT_MS = 5_000;
-// Bench cannot see browser tabs, so it uses the last time it opened a viewer as
-// the proxy for "already open". Within this window a reused viewer is reported
-// by URL instead of spawning a duplicate tab.
-const DEFAULT_REOPEN_WINDOW_MS = 10 * 60 * 1000;
 
 export function createViewerDescriptors(options = {}) {
   const repositoryRoot = resolve(options.repositoryRoot ?? process.cwd());
@@ -95,7 +91,6 @@ export function createViewerManager(options = {}) {
     clock: options.clock ?? Date.now,
     pollIntervalMs: options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS,
     stopTimeoutMs: options.stopTimeoutMs ?? DEFAULT_STOP_TIMEOUT_MS,
-    reopenWindowMs: options.reopenWindowMs ?? DEFAULT_REOPEN_WINDOW_MS,
   };
 
   return {
@@ -121,16 +116,15 @@ export function createViewerManager(options = {}) {
       for (const id of ids) results.push(await stopViewer(descriptorSet, id, dependencies));
       return results;
     },
-    // Opening is idempotent within the reopen window: a viewer Bench already
-    // surfaced is reported by URL rather than opening a duplicate tab. Callers
-    // that represent an explicit user request pass `force`.
+    // Opening is idempotent for a viewer Bench already surfaced since it was
+    // last started or stopped: it is reported by URL rather than opening a
+    // duplicate tab. Callers that represent an explicit user request pass
+    // `force`.
     async open(id, options = {}) {
       const descriptor = viewerDescriptor(descriptorSet, id);
       const state = await readViewerState(descriptorSet.statePath);
       const lastOpened = Date.parse(state.opened?.[id] ?? "");
-      const withinWindow = Number.isFinite(lastOpened)
-        && dependencies.now().getTime() - lastOpened < dependencies.reopenWindowMs;
-      if (!options.force && withinWindow) {
+      if (!options.force && Number.isFinite(lastOpened)) {
         return {
           id,
           label: descriptor.label,

@@ -351,7 +351,7 @@ test("startup timeout terminates only the spawned process group", async (t) => {
   ]);
 });
 
-test("a viewer Bench already surfaced is not reopened until the window elapses", async (t) => {
+test("a viewer Bench already surfaced is never reopened", async (t) => {
   const { descriptorSet } = await viewerFixture(t);
   let now = new Date("2026-06-11T12:00:00.000Z");
   const controls = {
@@ -373,16 +373,16 @@ test("a viewer Bench already surfaced is not reopened until the window elapses",
   assert.equal(second.opened, false);
   assert.equal(second.reason, "already-open");
   assert.equal(second.url, "http://127.0.0.1:7575");
-  assert.equal(controls.openCount, 1, "no duplicate tab inside the window");
+  assert.equal(controls.openCount, 1, "no duplicate tab");
 
   const forced = await manager.open("inspect", { force: true });
   assert.equal(forced.opened, true);
   assert.equal(controls.openCount, 2, "--reopen forces a tab");
 
-  now = new Date("2026-06-11T13:00:00.000Z");
+  now = new Date("2026-06-12T12:00:00.000Z");
   const later = await manager.open("inspect");
-  assert.equal(later.opened, true);
-  assert.equal(controls.openCount, 3, "the window expiry reopens the viewer");
+  assert.equal(later.opened, false);
+  assert.equal(controls.openCount, 2, "a day later is still no duplicate tab");
 });
 
 test("status reports when Bench last opened each viewer", async (t) => {
