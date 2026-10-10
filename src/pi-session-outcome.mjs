@@ -27,10 +27,13 @@ export async function inspectPiSessionOutcome(sessionDirectory, options = {}) {
     return unverified();
   }
 
-  const assistant = [...branch]
-    .reverse()
-    .find((entry) => entry?.type === "message" && entry.message?.role === "assistant");
-  if (!assistant) return unverified();
+  // A finished run ends with an assistant response after its last input;
+  // without one the final turn died and the previous turn must not decide.
+  const roles = branch.map((entry) => (entry?.type === "message" ? entry.message?.role : undefined));
+  const lastInput = Math.max(roles.lastIndexOf("user"), roles.lastIndexOf("toolResult"));
+  const assistantIndex = roles.lastIndexOf("assistant");
+  if (assistantIndex < 0 || assistantIndex < lastInput) return unverified();
+  const assistant = branch[assistantIndex];
 
   switch (assistant.message.stopReason) {
     case "error":

@@ -20,8 +20,12 @@ export async function probeCloudModelAccess(modelRuntime, model) {
   } catch (error) {
     throw new BenchError(accessFailureMessage(error));
   }
-  // Pi can resolve an errored stream instead of throwing; inspect the result.
+  // Pi can resolve an errored or aborted stream instead of throwing; inspect
+  // the result. Truncation ("length") still proves access.
   if (response?.stopReason === "error") throw new BenchError(accessFailureMessage(response));
+  if (response?.stopReason === "aborted") {
+    throw new BenchError("Model request aborted before completing. Check provider access and credentials.");
+  }
   return { status: "ready" };
 }
 

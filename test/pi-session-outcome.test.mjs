@@ -7,6 +7,10 @@ function assistant(stopReason) {
   return { type: "message", message: { role: "assistant", stopReason } };
 }
 
+function input(role) {
+  return { type: "message", message: { role } };
+}
+
 function options(branch, names = ["run.jsonl"]) {
   return {
     readdirImpl: async () => names,
@@ -30,6 +34,22 @@ test("a recovered retry passes when the active branch ends successfully", async 
 test("an aborted turn is reported as cancelled", async () => {
   const outcome = await inspectPiSessionOutcome("/run/.bench-session", options([assistant("aborted")]));
   assert.equal(outcome.status, "cancelled");
+});
+
+test("a final turn that dies without an assistant response is never success", async () => {
+  const outcome = await inspectPiSessionOutcome(
+    "/run/.bench-session",
+    options([assistant("stop"), input("user")]),
+  );
+  assert.equal(outcome.status, "unverified");
+});
+
+test("a tool result without a following assistant response is never success", async () => {
+  const outcome = await inspectPiSessionOutcome(
+    "/run/.bench-session",
+    options([input("user"), assistant("stop"), input("toolResult")]),
+  );
+  assert.equal(outcome.status, "unverified");
 });
 
 test("a session with no finished assistant response is never success", async () => {

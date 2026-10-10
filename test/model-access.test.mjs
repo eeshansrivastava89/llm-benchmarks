@@ -81,6 +81,16 @@ test("an errored stream result counts as a denial", async () => {
   await assert.rejects(probeCloudModelAccess(runtime, model("cloud")), /Model request failed/);
 });
 
+test("an aborted stream result counts as not ready", async () => {
+  const runtime = { completeSimple: async () => ({ stopReason: "aborted" }) };
+  await assert.rejects(probeCloudModelAccess(runtime, model("cloud")), /aborted before completing/);
+});
+
+test("a truncated response still proves access", async () => {
+  const runtime = { completeSimple: async () => ({ stopReason: "length" }) };
+  assert.deepEqual(await probeCloudModelAccess(runtime, model("cloud")), { status: "ready" });
+});
+
 test("accessFailureMessage omits unavailable detail", () => {
   assert.equal(
     accessFailureMessage({}),
