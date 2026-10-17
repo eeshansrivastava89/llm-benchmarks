@@ -16,6 +16,7 @@ export const VIEWER_IDS = Object.freeze({
 const STATE_SCHEMA_VERSION = 1;
 const DEFAULT_POLL_INTERVAL_MS = 150;
 const DEFAULT_STOP_TIMEOUT_MS = 5_000;
+const PORT_SCAN_ATTEMPTS = 20;
 
 export function createViewerDescriptors(options = {}) {
   const repositoryRoot = resolve(options.repositoryRoot ?? process.cwd());
@@ -52,6 +53,7 @@ export function createViewerDescriptors(options = {}) {
         ],
         cwd: runtimeRoot,
         commandId: "inspect-viewer-v1",
+        portEnv: "BENCH_INSPECT_VIEWER_PORT",
         processMarkers: ["uv", "inspect", "view", "start", String(endpoints.inspect.port)],
         startupTimeoutMs: 20_000,
         logPath: join(runtimeRoot, "inspect-viewer.log"),
@@ -65,9 +67,14 @@ export function createViewerDescriptors(options = {}) {
         url: endpoints.visual.url,
         healthPath: "/api/benchmarks",
         command: "npm",
-        args: ["run", "dev", "--", "--host", endpoints.visual.host, "--port", String(endpoints.visual.port)],
+        args: ["run", "dev", "--", "--host", endpoints.visual.host, "--port", String(endpoints.visual.port), "--strictPort"],
         cwd: repositoryRoot,
         commandId: "visual-viewer-v1",
+        portEnv: "BENCH_VISUAL_VIEWER_PORT",
+        // Bench owns the viewer process group. Astro 7 auto-backgrounds when it
+        // detects an agent environment, which makes the spawned parent exit and
+        // breaks ownership; this variable disables that detection.
+        env: { ASTRO_DEV_BACKGROUND: "1" },
         processMarkers: ["npm", "run", "dev", String(endpoints.visual.port)],
         startupTimeoutMs: 30_000,
         logPath: join(runtimeRoot, "visual-viewer.log"),
@@ -81,6 +88,7 @@ export function createViewerManager(options = {}) {
   const descriptorSet = options.descriptorSet ?? createViewerDescriptors(options);
   const dependencies = {
     endpointStatus: options.endpointStatus ?? defaultEndpointStatus,
+    portIsFree: options.portIsFree ?? defaultPortIsFree,
     spawnViewer: options.spawnViewer ?? defaultSpawnViewer,
     processMatches: options.processMatches ?? defaultProcessMatches,
     groupExists: options.groupExists ?? defaultGroupExists,
@@ -103,12 +111,15 @@ export function createViewerManager(options = {}) {
     },
     async status(target = "both") {
       const state = await readViewerState(descriptorSet.statePath);
-      return Promise.all(targetViewerIds(target).map((id) => viewerStatus(
-        descriptorSet.viewers[id],
-        state.viewers[id],
-        dependencies,
-        state.opened?.[id] ?? null,
-      )));
+      return Promise.all(targetViewerIds(target).map((id) => {
+        const entry = state.viewers[id];
+        return viewerStatus(
+          descriptorForEntry(descriptorSet.viewers[id], entry),
+          entry,
+          dependencies,
+          state.opened?.[id] ?? null,
+        );
+      }));
     },
     async stop(target) {
       const ids = targetViewerIds(target);
@@ -121,8 +132,8 @@ export function createViewerManager(options = {}) {
     // duplicate tab. Callers that represent an explicit user request pass
     // `force`.
     async open(id, options = {}) {
-      const descriptor = viewerDescriptor(descriptorSet, id);
       const state = await readViewerState(descriptorSet.statePath);
+      const descriptor = descriptorForEntry(descriptorSet.viewers[id], state.viewers[id]);
       const lastOpened = Date.parse(state.opened?.[id] ?? "");
       if (!options.force && Number.isFinite(lastOpened)) {
         return {
@@ -150,22 +161,25 @@ export function targetViewerIds(target) {
 }
 
 async function startViewer(descriptorSet, id, dependencies) {
-  const descriptor = viewerDescriptor(descriptorSet, id);
   let state = await readViewerState(descriptorSet.statePath);
-  const current = await viewerStatus(descriptor, state.viewers[id], dependencies);
+  const configured = viewerDescriptor(descriptorSet, id);
+  const existing = state.viewers[id];
+  const current = await viewerStatus(
+    descriptorForEntry(configured, existing),
+    existing,
+    dependencies,
+  );
 
   if (current.health === "healthy") {
-    if (state.viewers[id] && !current.owned) {
+    if (existing && !current.owned) {
       delete state.viewers[id];
       await writeViewerState(descriptorSet, state);
     }
     return { ...current, action: "reused" };
   }
-  if (current.health === "occupied") {
-    throw new BenchError(`${descriptor.label} port ${descriptor.port} is occupied by an unknown application`);
-  }
-  if (state.viewers[id]) {
+  if (existing) {
     delete state.viewers[id];
+    if (state.opened) delete state.opened[id];
     await writeViewerState(descriptorSet, state);
   }
 
@@ -174,6 +188,26 @@ async function startViewer(descriptorSet, id, dependencies) {
   if (id === VIEWER_IDS.inspect) {
     await mkdir(join(descriptorSet.repositoryRoot, "logs"), { recursive: true });
   }
+
+  const port = await freeViewerPort(
+    configured,
+    otherViewerPorts(descriptorSet, id, state),
+    dependencies,
+  );
+  if (port === undefined) throw noFreePortError(configured);
+  let descriptor = descriptorWithPort(configured, port);
+  if (id === VIEWER_IDS.visual) {
+    const inspectPort = entryPort(state.viewers.inspect) ?? descriptorSet.viewers.inspect.port;
+    descriptor = {
+      ...descriptor,
+      env: {
+        ...descriptor.env,
+        BENCH_INSPECT_VIEWER_PORT: String(inspectPort),
+        BENCH_VISUAL_VIEWER_PORT: String(port),
+      },
+    };
+  }
+
   const child = await dependencies.spawnViewer(descriptor);
   if (!Number.isInteger(child.pid) || child.pid <= 0) {
     throw new BenchError(`${descriptor.label} did not provide a valid process ID`);
@@ -186,6 +220,7 @@ async function startViewer(descriptorSet, id, dependencies) {
       const entry = {
         pid: child.pid,
         pgid: child.pid,
+        port: descriptor.port,
         url: descriptor.url,
         commandId: descriptor.commandId,
         startedAt: dependencies.now().toISOString(),
@@ -223,9 +258,9 @@ async function startViewer(descriptorSet, id, dependencies) {
 }
 
 async function stopViewer(descriptorSet, id, dependencies) {
-  const descriptor = viewerDescriptor(descriptorSet, id);
   const state = await readViewerState(descriptorSet.statePath);
   const entry = state.viewers[id];
+  const descriptor = descriptorForEntry(viewerDescriptor(descriptorSet, id), entry);
   if (!entry) {
     const status = await viewerStatus(descriptor, null, dependencies);
     return { ...status, action: status.health === "stopped" ? "already-stopped" : "not-owned" };
@@ -348,6 +383,10 @@ async function defaultEndpointStatus(descriptor) {
   }
 }
 
+async function defaultPortIsFree(host, port) {
+  return !(await probeTcp({ hostname: host, port }, 250));
+}
+
 async function defaultSpawnViewer(descriptor) {
   const log = await open(descriptor.logPath, "a", 0o600);
   let child;
@@ -355,7 +394,7 @@ async function defaultSpawnViewer(descriptor) {
     await log.chmod(0o600);
     child = spawn(descriptor.command, descriptor.args, {
       cwd: descriptor.cwd,
-      env: process.env,
+      env: descriptor.env ? { ...process.env, ...descriptor.env } : process.env,
       detached: true,
       stdio: ["ignore", log.fd, log.fd],
     });
@@ -451,6 +490,66 @@ function viewerDescriptor(descriptorSet, id) {
   const descriptor = descriptorSet.viewers[id];
   if (!descriptor) throw new BenchError(`Unknown viewer: ${id}`);
   return descriptor;
+}
+
+function descriptorForEntry(descriptor, entry) {
+  return descriptorWithPort(descriptor, entryPort(entry) ?? descriptor.port);
+}
+
+function entryPort(entry) {
+  if (!entry) return undefined;
+  if (Number.isInteger(entry.port) && entry.port > 0 && entry.port <= 65_535) return entry.port;
+  try {
+    const port = Number(new URL(entry.url).port);
+    return port > 0 ? port : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function descriptorWithPort(descriptor, port) {
+  if (port === descriptor.port) return descriptor;
+  const previous = String(descriptor.port);
+  const next = String(port);
+  const args = [...descriptor.args];
+  const portIndex = args.lastIndexOf("--port");
+  if (portIndex >= 0 && portIndex < args.length - 1) args[portIndex + 1] = next;
+  return {
+    ...descriptor,
+    port,
+    url: `http://${descriptor.host}:${port}`,
+    args,
+    processMarkers: descriptor.processMarkers.map((marker) => (marker === previous ? next : marker)),
+  };
+}
+
+function otherViewerPorts(descriptorSet, id, state) {
+  const ports = new Set();
+  for (const otherId of Object.values(VIEWER_IDS)) {
+    if (otherId === id) continue;
+    ports.add(descriptorSet.viewers[otherId].port);
+    const recorded = entryPort(state.viewers?.[otherId]);
+    if (recorded) ports.add(recorded);
+  }
+  return ports;
+}
+
+async function freeViewerPort(descriptor, excluded, dependencies) {
+  for (let port = descriptor.port; port <= scanEnd(descriptor); port += 1) {
+    if (excluded.has(port)) continue;
+    if (await dependencies.portIsFree(descriptor.host, port)) return port;
+  }
+  return undefined;
+}
+
+function scanEnd(descriptor) {
+  return Math.min(65_535, descriptor.port + PORT_SCAN_ATTEMPTS - 1);
+}
+
+function noFreePortError(descriptor) {
+  return new BenchError(
+    `${descriptor.label}: no free port from ${descriptor.port} to ${scanEnd(descriptor)}; stop the occupying application or set ${descriptor.portEnv}`,
+  );
 }
 
 async function defaultOpenUrl(url) {

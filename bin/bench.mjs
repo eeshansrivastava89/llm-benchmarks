@@ -173,7 +173,8 @@ Options:
 
 Environment:
   BENCH_INSPECT_VIEWER_PORT, BENCH_VISUAL_VIEWER_PORT
-                        Override the default viewer ports (7575, 4321)
+                        Preferred viewer ports (defaults 7575, 4321); Bench
+                        shifts to the next free port when occupied
   BENCH_NO_OPEN=1       Same as --no-open
   BENCH_VERBOSE=1       Print the redacted launch command before running
   NO_COLOR              Disable terminal styling

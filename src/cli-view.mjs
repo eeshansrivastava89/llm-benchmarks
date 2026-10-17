@@ -122,7 +122,7 @@ export async function runResultsMenu(ui, manager, options = {}) {
       step: "Results",
       context: standalone ? undefined : "Available before or after a run",
       title: "Results viewers",
-      message: "Bench reuses matching viewers, refuses unknown applications, and never reopens one it already surfaced.",
+      message: "Bench reuses matching viewers, moves to the next free port when one is occupied, and never reopens one it already surfaced.",
       label: (item) => item.label,
       summary: (item) => item.detail,
       details: () => (statuses.length > 0 ? statuses.map(viewerStatusLine) : ["Viewer status is unavailable."]),

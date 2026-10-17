@@ -139,7 +139,7 @@ Inspect: http://127.0.0.1:7575
 Visual:  http://127.0.0.1:4321
 ```
 
-Override fixed ports when needed:
+Override the preferred starting ports when needed:
 
 ```bash
 BENCH_INSPECT_VIEWER_PORT=17575 \
@@ -147,7 +147,7 @@ BENCH_VISUAL_VIEWER_PORT=14321 \
 bench view both
 ```
 
-Viewer ownership and private logs live under ignored `.bench-runtime/`. Bench reuses a healthy matching service, refuses an unknown application on the configured port, and stops only a process group whose identity still matches its ownership record. Opening an existing unmanaged viewer does not transfer ownership: Bench labels it explicitly and leaves it running on `bench view stop`. Do not delete `.bench-runtime/viewers.json` while managed viewers are running.
+Viewer ownership and private logs live under ignored `.bench-runtime/`. Bench reuses a healthy matching service, prefers the configured port, moves to the next free port when an unknown application holds it, and stops only a process group whose identity still matches its ownership record. The recorded and reported URL always reflects the port actually used. Opening an existing unmanaged viewer does not transfer ownership: Bench labels it explicitly and leaves it running on `bench view stop`. Do not delete `.bench-runtime/viewers.json` while managed viewers are running.
 
 The Visual viewer reads Visual and Data Science runs. In local mode it can:
 
@@ -278,7 +278,7 @@ Check ownership first:
 bench view status
 ```
 
-Stop Bench-owned viewers with `bench view stop`. If another application owns the port, stop it yourself or set `BENCH_INSPECT_VIEWER_PORT` and `BENCH_VISUAL_VIEWER_PORT` to two distinct free ports. Bench will not kill an unknown process or silently choose another port.
+Stop Bench-owned viewers with `bench view stop`. If another application owns the configured port, Bench starts the viewer on the next free port and reports that URL; use `bench view status` to see it. Set `BENCH_INSPECT_VIEWER_PORT` and `BENCH_VISUAL_VIEWER_PORT` to two distinct ports to change the preferred starting points. Bench will not kill an unknown process.
 
 ### A viewer fails to start
 

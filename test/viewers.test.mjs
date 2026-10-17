@@ -30,7 +30,14 @@ function fakeManager(descriptorSet, controls = {}) {
   const signals = [];
   const manager = createViewerManager({
     descriptorSet,
-    endpointStatus: async (descriptor) => controls.endpoint?.[descriptor.id] ?? "stopped",
+    endpointStatus: async (descriptor) => {
+      const value = controls.endpoint?.[descriptor.id];
+      return typeof value === "function" ? value(descriptor) : value ?? "stopped";
+    },
+    portIsFree: async (_host, port) => {
+      controls.probedPorts = [...(controls.probedPorts ?? []), port];
+      return controls.portFree ? controls.portFree(port) : true;
+    },
     spawnViewer: async (descriptor) => {
       controls.spawnCount = (controls.spawnCount ?? 0) + 1;
       controls.spawnedIds = [...(controls.spawnedIds ?? []), descriptor.id];
@@ -73,8 +80,9 @@ test("viewer descriptors use fixed loopback endpoints and explicit commands", ()
   assert.equal(descriptors.viewers.inspect.cwd, "/project/.bench-runtime");
   assert.equal(descriptors.viewers.visual.url, "http://127.0.0.1:4321");
   assert.deepEqual(descriptors.viewers.visual.args, [
-    "run", "dev", "--", "--host", "127.0.0.1", "--port", "4321",
+    "run", "dev", "--", "--host", "127.0.0.1", "--port", "4321", "--strictPort",
   ]);
+  assert.equal(descriptors.viewers.visual.env.ASTRO_DEV_BACKGROUND, "1");
   assert.equal(descriptors.viewers.inspect.signature({ inspect_version: "0.3.263" }), true);
   assert.equal(descriptors.viewers.inspect.signature({ benchmarks: [] }), false);
   assert.equal(descriptors.viewers.visual.signature({ benchmarks: [] }), true);
@@ -146,6 +154,7 @@ test("starting records ownership, reuses the healthy process, and opens its URL"
   assert.deepEqual(state.viewers.inspect, {
     pid: 4101,
     pgid: 4101,
+    port: 7575,
     url: "http://127.0.0.1:7575",
     commandId: "inspect-viewer-v1",
     startedAt: "2026-06-11T12:00:00.000Z",
@@ -260,13 +269,121 @@ test("ownership survives the launching CLI exiting and a new CLI can stop the re
   assert.equal((await run("stop")).action, "already-stopped");
 });
 
-test("an unknown application on a configured port blocks startup", async (t) => {
+test("an occupied configured port starts on the next free port and records it", async (t) => {
   const { descriptorSet } = await viewerFixture(t);
-  const controls = { endpoint: { visual: "occupied" } };
+  const controls = {
+    endpoint: {
+      visual: (descriptor) => {
+        if (descriptor.port === 4321) return "occupied";
+        return controls.healthy ? "healthy" : "stopped";
+      },
+    },
+    portFree: (port) => port === 4322,
+    groupExists: true,
+    onSpawn(descriptor) {
+      controls.spawnedPort = descriptor.port;
+      controls.healthy = true;
+    },
+  };
+  const { manager, signals } = fakeManager(descriptorSet, controls);
+
+  const [started] = await manager.start("visual");
+  assert.equal(started.action, "started");
+  assert.equal(started.url, "http://127.0.0.1:4322");
+  assert.equal(controls.spawnedPort, 4322);
+
+  const state = JSON.parse(await readFile(descriptorSet.statePath, "utf8"));
+  assert.equal(state.viewers.visual.url, "http://127.0.0.1:4322");
+  assert.equal(state.viewers.visual.port, 4322);
+
+  const [reused] = await manager.start("visual");
+  assert.equal(reused.action, "reused");
+  assert.equal(reused.owned, true);
+  assert.equal(reused.url, "http://127.0.0.1:4322");
+  assert.equal(controls.spawnCount, 1);
+
+  const [status] = await manager.status("visual");
+  assert.equal(status.url, "http://127.0.0.1:4322");
+  assert.equal(status.owned, true);
+
+  await manager.open("visual");
+  assert.equal(controls.openedUrl, "http://127.0.0.1:4322");
+
+  controls.onSignal = () => {
+    controls.groupExists = false;
+    controls.healthy = false;
+  };
+  const [stopped] = await manager.stop("visual");
+  assert.equal(stopped.action, "stopped");
+  assert.deepEqual(signals, [{ pgid: 4102, signal: "SIGTERM" }]);
+});
+
+test("port selection skips the other viewer's configured port", async (t) => {
+  const { descriptorSet } = await viewerFixture(t, {
+    environment: {
+      BENCH_INSPECT_VIEWER_PORT: "4322",
+      BENCH_VISUAL_VIEWER_PORT: "4321",
+    },
+  });
+  const controls = {
+    endpoint: {
+      visual: (descriptor) => (descriptor.port === 4321 ? "occupied" : controls.healthy ? "healthy" : "stopped"),
+    },
+    portFree: (port) => port === 4322 || port === 4323,
+    groupExists: true,
+    onSpawn(descriptor) {
+      controls.spawnedPort = descriptor.port;
+      controls.healthy = true;
+    },
+  };
   const { manager } = fakeManager(descriptorSet, controls);
 
-  await assert.rejects(manager.start("visual"), /occupied by an unknown application/);
+  const [started] = await manager.start("visual");
+  assert.equal(started.url, "http://127.0.0.1:4323");
+  assert.equal(controls.spawnedPort, 4323);
+});
+
+test("startup fails clearly when no nearby port is free", async (t) => {
+  const { descriptorSet } = await viewerFixture(t);
+  const controls = { endpoint: { visual: "occupied" }, portFree: () => false };
+  const { manager } = fakeManager(descriptorSet, controls);
+
+  await assert.rejects(manager.start("visual"), /no free port from 4321 to 4340/);
   assert.equal(controls.spawnCount, undefined);
+});
+
+test("Visual receives the actual Inspect port when Inspect shifts", async (t) => {
+  const { descriptorSet } = await viewerFixture(t);
+  const controls = {
+    endpoint: {
+      inspect: (descriptor) => {
+        if (descriptor.port === 7575) return "occupied";
+        return controls.inspectHealthy ? "healthy" : "stopped";
+      },
+      visual: () => (controls.visualHealthy ? "healthy" : "stopped"),
+    },
+    portFree: (port) => port === 7576 || port === 4321,
+    groupExists: true,
+    onSpawn(descriptor) {
+      if (descriptor.id === "inspect") {
+        controls.inspectHealthy = true;
+        controls.inspectPort = descriptor.port;
+      } else {
+        controls.visualHealthy = true;
+        controls.visualEnv = descriptor.env;
+      }
+    },
+  };
+  const { manager } = fakeManager(descriptorSet, controls);
+
+  const results = await manager.start("both");
+  assert.deepEqual(results.map(({ url }) => url), [
+    "http://127.0.0.1:7576",
+    "http://127.0.0.1:4321",
+  ]);
+  assert.equal(controls.inspectPort, 7576);
+  assert.equal(controls.visualEnv.BENCH_INSPECT_VIEWER_PORT, "7576");
+  assert.equal(controls.visualEnv.BENCH_VISUAL_VIEWER_PORT, "4321");
 });
 
 test("stop signals only a validated owned process group and removes state", async (t) => {

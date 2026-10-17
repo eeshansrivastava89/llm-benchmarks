@@ -201,7 +201,7 @@ Inspect: http://127.0.0.1:7575
 Visual:  http://127.0.0.1:4321
 ```
 
-Fixed, configurable ports make cross-links deterministic. Bench refuses an unknown application on either port rather than silently selecting another.
+Configurable ports define the preferred endpoint. Bench reuses a matching viewer or starts the next free port when an unknown application holds the configured one, records and reports the actual URL, and keeps status, stop, and cross-links aligned with that URL.
 
 Each viewer descriptor defines its command, working directory, URL, signature check, startup timeout, and private log. Bench reuses only a matching healthy endpoint. Bench-owned viewers run as detached process groups and are recorded in mode-`0600` `.bench-runtime/viewers.json`; stop operations revalidate process and endpoint identity before signaling the group. External matching viewers may be reused but are never claimed or stopped.
 
