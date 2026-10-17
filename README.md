@@ -31,6 +31,8 @@ npm link
 
 `npm link` installs `bench` for the active Node installation. If you switch Node versions, run it again from this repository.
 
+Media capture also installs Chromium on demand when the browser binary is missing, so a cache cleanup does not require re-running the install step manually.
+
 Authenticate providers through Pi:
 
 ```bash

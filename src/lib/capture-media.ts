@@ -9,8 +9,10 @@ import {
   captureChromiumLaunchArgs,
   captureFrameRateErrorMessage,
   convertWebmToMp4IfAvailable,
+  ensurePlaywrightBrowsers,
   fileExists,
   isAnimationFrameRateAcceptable,
+  launchWithBrowserInstall,
   parseFrameRateFromError
 } from "./capture-validation";
 import { toRunError } from "./error-utils";
@@ -239,10 +241,15 @@ async function captureRunMediaWithPlaywright(
 
   const launchArgs = captureChromiumLaunchArgs();
   console.log(`[capture] chromium launch args: ${launchArgs.join(" ")}`);
-  const browser = await chromium.launch({
-    headless: true,
-    args: launchArgs
-  });
+  const browser = await launchWithBrowserInstall(
+    () =>
+      chromium.launch({
+        headless: true,
+        args: launchArgs
+      }),
+    () => ensurePlaywrightBrowsers(console),
+    console
+  );
   let video;
   let frameRate: AnimationFrameRateMeasurement | undefined;
   let context;
