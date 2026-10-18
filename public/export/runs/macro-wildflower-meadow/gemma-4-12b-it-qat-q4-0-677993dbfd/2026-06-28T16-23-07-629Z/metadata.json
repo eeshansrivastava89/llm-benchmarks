@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "kind": "visual",
+  "runId": "2026-06-28T16-23-07-629Z",
+  "benchmark": {
+    "id": "macro-wildflower-meadow",
+    "kind": "visual",
+    "title": "Macro Wildflower Meadow",
+    "description": "Close-up colorful meadow scene with detailed butterflies, bees, flowers, and wind motion.",
+    "prompt": "Create a complete, self-contained HTML file for the request below. Write the file as `index.html` in the current working directory. Do not create any folders, do not infer a filesystem path, and do not print the HTML in chat. The HTML must include all CSS and JavaScript inline and must not depend on external network assets.\n\nCreate a full-screen animated close-up meadow scene on a bright breezy day, as if viewed from inside a small patch of wildflowers. Show foreground flowers with detailed petals, stems, and leaves, with butterflies and bees moving through the scene on curved flight paths. Use a vivid, saturated color palette with fresh greens and warm sunlight. Add wind motion: stems sway gently, petals flutter, and insects ride small gusts.\n\nCompose the subject centered and fully visible within the viewport. Keep rendering lightweight so the animation runs smoothly in real time and loops naturally. Use a full-page canvas and no external libraries.\n\nAfter generating the HTML, review it with Playwright. Take a screenshot and compare what you see against the scene described above. If the result doesn't match — missing elements, wrong composition, broken layout, or anything that looks off — identify the root cause and fix it with one decisive change, then re-check. Stop once the output is accurate and aesthetically pleasing. Keep it to a few steps; don't refine indefinitely."
+  },
+  "model": {
+    "id": "gemma-4-12B-it-QAT-Q4_0",
+    "slug": "gemma-4-12b-it-qat-q4-0-677993dbfd",
+    "displayName": "Gemma 4 12B QAT (it) › Q4_0"
+  },
+  "status": "completed",
+  "createdAt": "2026-06-28T16:23:07.629Z",
+  "updatedAt": "2026-06-28T16:34:41.933Z",
+  "preparedAt": "2026-06-28T16:23:07.629Z",
+  "completedAt": "2026-06-28T16:34:41.933Z",
+  "runDirectory": "export/runs/macro-wildflower-meadow/gemma-4-12b-it-qat-q4-0-677993dbfd/2026-06-28T16-23-07-629Z",
+  "assets": {
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
+  },
+  "runner": {
+    "mode": "external",
+    "modelSource": "llama-cpp",
+    "intendedRunner": "Pi",
+    "backendLabel": "llama.cpp",
+    "model": "gemma-4-12B-it-QAT-Q4_0",
+    "retries": 0,
+    "tokenMetrics": {
+      "reported": true,
+      "promptTokens": 18565,
+      "completionTokens": 5215,
+      "totalTokens": 23780
+    }
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-06-28T16:34:41.933Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-06-28T16:34:41.933Z",
+      "quality": {
+        "measuredFps": 68.3,
+        "minFps": 12,
+        "sampleMs": 1610,
+        "frames": 110,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
+  }
+}
