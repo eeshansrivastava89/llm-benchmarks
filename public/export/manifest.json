@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-18T15:32:49.775Z",
+  "generatedAt": "2026-10-18T15:40:56.071Z",
   "benchmarks": [
     {
       "id": "ab-test-analysis",
@@ -61,13 +61,16 @@
         "id": "deepseek-flash",
         "slug": "deepseek-flash"
       },
-      "status": "prepared",
+      "status": "completed",
       "createdAt": "2026-10-17T23:18:37.645Z",
-      "updatedAt": "2026-10-17T23:18:37.645Z",
+      "updatedAt": "2026-10-18T15:40:18.206Z",
       "preparedAt": "2026-10-17T23:18:37.645Z",
+      "completedAt": "2026-10-18T15:40:18.206Z",
       "runDirectory": "export/runs/sunset-ocean-study/deepseek-flash/2026-10-17T23-18-37-645Z",
       "assets": {
-        "metadata": "metadata.json"
+        "metadata": "metadata.json",
+        "preview": "preview.png",
+        "videoMp4": "preview.mp4"
       },
       "runner": {
         "mode": "external",
@@ -77,6 +80,26 @@
         "backendLabel": "deepseek",
         "model": "deepseek-flash",
         "retries": 0
+      },
+      "capture": {
+        "preview": {
+          "status": "ready",
+          "capturedAt": "2026-10-18T15:40:18.206Z"
+        },
+        "video": {
+          "status": "ready",
+          "capturedAt": "2026-10-18T15:40:18.206Z",
+          "quality": {
+            "measuredFps": 60,
+            "minFps": 12,
+            "sampleMs": 1617,
+            "frames": 97,
+            "viewport": {
+              "width": 1600,
+              "height": 900
+            }
+          }
+        }
       }
     },
     {
@@ -11250,7 +11273,7 @@
     }
   ],
   "machineProfile": {
-    "collectedAt": "2026-10-18T15:32:49.776Z",
+    "collectedAt": "2026-10-18T15:40:56.072Z",
     "platform": {
       "node": "v26.3.0",
       "platform": "darwin",
@@ -11260,7 +11283,7 @@
       "type": "Darwin",
       "release": "27.2.0",
       "hostname": "Eeshans-MacBook-Pro-31.local",
-      "uptimeSeconds": 141414
+      "uptimeSeconds": 141901
     },
     "cpu": {
       "model": "Apple M4 Pro",
@@ -11269,10 +11292,10 @@
     },
     "memory": {
       "totalBytes": 51539607552,
-      "availableBytes": 21817032704,
-      "freeBytes": 94011392,
-      "usedBytes": 29722574848,
-      "pressurePercent": 57.7,
+      "availableBytes": 22630088704,
+      "freeBytes": 336052224,
+      "usedBytes": 28909518848,
+      "pressurePercent": 56.1,
       "pressureLabel": "low",
       "source": "macOS VM stats, cached and purgeable memory excluded"
     },

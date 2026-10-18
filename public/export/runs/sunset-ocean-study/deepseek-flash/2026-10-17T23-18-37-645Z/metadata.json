@@ -13,13 +13,16 @@
     "id": "deepseek-flash",
     "slug": "deepseek-flash"
   },
-  "status": "prepared",
+  "status": "completed",
   "createdAt": "2026-10-17T23:18:37.645Z",
-  "updatedAt": "2026-10-17T23:18:37.645Z",
+  "updatedAt": "2026-10-18T15:40:18.206Z",
   "preparedAt": "2026-10-17T23:18:37.645Z",
+  "completedAt": "2026-10-18T15:40:18.206Z",
   "runDirectory": "export/runs/sunset-ocean-study/deepseek-flash/2026-10-17T23-18-37-645Z",
   "assets": {
-    "metadata": "metadata.json"
+    "metadata": "metadata.json",
+    "preview": "preview.png",
+    "videoMp4": "preview.mp4"
   },
   "runner": {
     "mode": "external",
@@ -29,5 +32,25 @@
     "backendLabel": "deepseek",
     "model": "deepseek-flash",
     "retries": 0
+  },
+  "capture": {
+    "preview": {
+      "status": "ready",
+      "capturedAt": "2026-10-18T15:40:18.206Z"
+    },
+    "video": {
+      "status": "ready",
+      "capturedAt": "2026-10-18T15:40:18.206Z",
+      "quality": {
+        "measuredFps": 60,
+        "minFps": 12,
+        "sampleMs": 1617,
+        "frames": 97,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      }
+    }
   }
 }
